@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(dep/private)
 add_subdirectory(dep/interface)
 
-add_library(ScheduliteBackend SHARED
+add_library(ScheduliteBackend STATIC
         src/Environment.cpp
         src/User.cpp
         src/Instance.cpp

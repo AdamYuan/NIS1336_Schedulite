@@ -6,7 +6,6 @@ project(platform_folders VERSION 4.2.0 LANGUAGES CXX)
 add_library(platform_folders STATIC
         sago/platform_folders.cpp
         )
-set_property(TARGET platform_folders PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # set_target_properties(platform_folders PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
