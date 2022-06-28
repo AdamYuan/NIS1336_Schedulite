@@ -14,4 +14,4 @@ endif ()
 
 add_subdirectory(backend)
 add_subdirectory(cli)
-#add_subdirectory(frontend-gui)
+#add_subdirectory(gui)

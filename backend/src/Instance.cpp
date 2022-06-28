@@ -6,21 +6,19 @@
 
 namespace backend {
 
-struct InstanceCons : public Instance {
-	explicit InstanceCons(std::string_view app_dir_path) {
-		m_app_dir_path = ghc::filesystem::path{app_dir_path}.string();
-		m_user_dir_path = ghc::filesystem::path{app_dir_path}.append(kUserDirName).string();
-	}
-};
+Instance::Instance(std::string_view app_dir_path) {
+	m_app_dir_path = ghc::filesystem::path{app_dir_path}.string();
+	m_user_dir_path = ghc::filesystem::path{app_dir_path}.append(kUserDirName).string();
+}
 
 std::shared_ptr<Instance> Instance::Create() {
-	std::shared_ptr<Instance> ret = std::make_shared<InstanceCons>(GetDefaultAppDirPath());
+	auto ret = std::make_shared<Instance>(GetDefaultAppDirPath());
 	if (!ret->MaintainDirs())
 		return nullptr;
 	return ret;
 }
 std::shared_ptr<Instance> Instance::Create(std::string_view app_dir_path) {
-	std::shared_ptr<Instance> ret = std::make_shared<InstanceCons>(app_dir_path);
+	auto ret = std::make_shared<Instance>(app_dir_path);
 	if (!ret->MaintainDirs())
 		return nullptr;
 	return ret;

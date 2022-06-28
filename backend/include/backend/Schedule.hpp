@@ -3,6 +3,7 @@
 
 #include <backend/Error.hpp>
 #include <backend/Time.hpp>
+#include <backend/User.hpp>
 
 #include <memory>
 #include <string>
@@ -19,7 +20,6 @@
 
 namespace backend {
 
-class User;
 class Schedule {
 public:
 	inline static constexpr const char *kStringHeader = "Schedule";
@@ -38,12 +38,12 @@ public:
 		inline bool KeyEqual(const Task &r) const { return begin_time == r.begin_time && name == r.name; }
 	};
 
-protected:
+private:
 	std::shared_ptr<User> m_user_ptr;
 	std::string m_file_path;
 
 	struct SyncObject;
-	std::unique_ptr<SyncObject> m_sync_object;
+	std::shared_ptr<SyncObject> m_sync_object;
 
 	std::vector<Task> m_local_tasks;
 
@@ -70,7 +70,8 @@ protected:
 	static Error operate(std::vector<Task> *tasks, const Operation &operation);
 
 public:
-	static std::tuple<std::unique_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr, bool create_file);
+	explicit Schedule(const std::shared_ptr<User> &user_ptr);
+	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr, bool create_file);
 	~Schedule();
 
 	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }

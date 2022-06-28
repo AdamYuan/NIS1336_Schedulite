@@ -1,11 +1,10 @@
 #include <backend/Schedule.hpp>
 
 #include <backend/Encryption.hpp>
-#include <backend/User.hpp>
 
 #include <ghc/filesystem.hpp>
-#include <libipc/condition.h>
 #include <libipc/mutex.h>
+#include <libipc/semaphore.h>
 #include <libipc/shm.h>
 #include <readerwriterqueue.h>
 
@@ -13,34 +12,23 @@ namespace backend {
 
 struct Schedule::SyncObject {
 	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_SCHEDULE_MUTEX__";
-	static constexpr const char *kIPCConditionMutexHeader = "__SCHEDULITE_SCHEDULE_CONDITION_MUTEX__";
-	static constexpr const char *kIPCConditionHeader = "__SCHEDULITE_SCHEDULE_CONDITION__";
-	ipc::sync::mutex ipc_mutex, ipc_condition_mutex;
-	ipc::sync::condition ipc_condition;
-	ipc::shm::id_t shm_id{};
+	static constexpr const char *kIPCConterSHMHeader = "__SCHEDULITE_COUNTER_SHM__";
+	ipc::sync::mutex ipc_mutex;
 	moodycamel::BlockingReaderWriterQueue<Operation> operation_queue;
 	explicit SyncObject(std::string_view username)
-	    : ipc_mutex{std::string{kIPCMutexHeader + std::string(username)}.c_str()},
-	      ipc_condition_mutex{std::string{kIPCConditionMutexHeader + std::string(username)}.c_str()},
-	      ipc_condition{std::string{kIPCConditionHeader + std::string(username)}.c_str()} {}
-	~SyncObject() {
-		if (shm_id)
-			ipc::shm::release(shm_id);
-	}
+	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(username)}.c_str()) {}
+	~SyncObject() = default;
 };
 
-struct ScheduleCons : public Schedule {
-	explicit ScheduleCons(const std::shared_ptr<User> &user_ptr) {
-		m_user_ptr = user_ptr;
-		m_file_path = ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetUserDirPath()}
-		                  .append(m_user_ptr->GetName())
-		                  .string();
-		m_sync_object = std::make_unique<SyncObject>(m_user_ptr->GetName());
-	}
-};
+Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
+	m_user_ptr = user_ptr;
+	m_file_path =
+	    ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetUserDirPath()}.append(m_user_ptr->GetName()).string();
+	m_sync_object = std::make_shared<SyncObject>(m_user_ptr->GetName());
+}
 
-std::tuple<std::unique_ptr<Schedule>, Error> Schedule::Create(const std::shared_ptr<User> &user_ptr, bool create_file) {
-	std::unique_ptr<Schedule> ret = std::make_unique<ScheduleCons>(user_ptr);
+std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_ptr<User> &user_ptr, bool create_file) {
+	std::shared_ptr<Schedule> ret = std::make_shared<Schedule>(user_ptr);
 	Error error;
 	if (create_file) {
 		if ((error = ret->create_file()) != Error::kOK)
@@ -58,7 +46,6 @@ Schedule::~Schedule() {
 	m_thread_run.store(false, std::memory_order_release);
 
 	m_sync_object->operation_queue.enqueue({Operation::kQuit});
-	m_sync_object->ipc_condition.broadcast(m_sync_object->ipc_condition_mutex);
 
 	if (m_sync_thread.joinable())
 		m_sync_thread.join();
@@ -194,7 +181,7 @@ inline TimeInt time_int_from_str(std::string_view str) {
 }
 std::tuple<std::vector<Schedule::Task>, Error> Schedule::parse_string(std::string_view str) {
 	if (str.length() < kStringHeaderLength || str.substr(0, kStringHeaderLength) != kStringHeader)
-		return {std::vector<Task>{}, Error::kScheduleWrongHeader};
+		return {std::vector<Task>{}, Error::kUserWrongPassword};
 
 	std::vector<Task> ret;
 	str = str.substr(kStringHeaderLength);
@@ -239,8 +226,6 @@ void Schedule::operation_thread_func() {
 				continue;
 			}
 
-			m_sync_object->ipc_condition.broadcast(m_sync_object->ipc_condition_mutex);
-
 			error = store_tasks(tasks, false);
 			operation.error_promise.set_value(error);
 		}
@@ -249,11 +234,12 @@ void Schedule::operation_thread_func() {
 
 void Schedule::sync_thread_func() {
 	while (m_thread_run.load(std::memory_order_acquire)) {
-		// TODO: fix file content sync
-		m_sync_object->ipc_condition.wait(m_sync_object->ipc_condition_mutex);
-		if (m_thread_run.load(std::memory_order_acquire))
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		printf("Receive\n"); // TODO: Debug
+		if (!m_thread_run.load(std::memory_order_acquire))
 			return;
-		printf("Receive\n");
+		Error error;
+		std::tie(m_local_tasks, error) = load_tasks(true);
 	}
 }
 

@@ -7,10 +7,13 @@
 
 namespace backend {
 class Instance {
-protected:
+private:
 	std::string m_app_dir_path, m_user_dir_path;
 
 public:
+	explicit Instance(std::string_view app_dir_path);
+	inline ~Instance() = default;
+
 	static std::shared_ptr<Instance> Create();
 	static std::shared_ptr<Instance> Create(std::string_view app_dir_path);
 

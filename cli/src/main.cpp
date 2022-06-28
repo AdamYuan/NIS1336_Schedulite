@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	if (result.count("help")) {
+	if (result.count("help") || result.arguments().empty()) {
 		printf("%s\n", options.help().c_str());
 		return 0;
 	}
@@ -116,6 +116,7 @@ int main(int argc, char **argv) {
 
 	// User
 	std::shared_ptr<backend::User> user;
+	std::shared_ptr<backend::Schedule> schedule;
 
 	if (result.count("username")) {
 		std::string username = result["username"].as<std::string>();
@@ -123,13 +124,13 @@ int main(int argc, char **argv) {
 		std::string password = EnterPassword();
 
 		if (result.count("register")) {
-			std::tie(user, error) = backend::User::Register(instance, username, password);
+			std::tie(user, schedule, error) = backend::User::Register(instance, username, password);
 		} else {
-			std::tie(user, error) = backend::User::Login(instance, username, password);
+			std::tie(user, schedule, error) = backend::User::Login(instance, username, password);
 		}
 
 		if (!user) {
-			printf("%d\n", (int)error);
+			printf("%s\n", backend::GetErrorMessage(error));
 			exit(EXIT_FAILURE);
 		}
 	}
