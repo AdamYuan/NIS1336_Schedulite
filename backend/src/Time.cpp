@@ -22,7 +22,7 @@ inline TimeInfo ToTimeInfo(const TimePoint &time_point) {
 }
 inline TimePoint ToTimePoint(TimeInt time_int) { return TimePoint{} + TimeDuration(time_int); }
 inline TimePoint ToTimePoint(const TimeInfo &time_info) {
-	auto zoned_time_point =
+	std::chrono::time_point<date::local_t, std::chrono::seconds> zoned_time_point =
 	    date::local_days{date::day(time_info.day) / date::month(time_info.month) / date::year(time_info.year)} +
 	    std::chrono::hours(time_info.hour) + std::chrono::minutes(time_info.minute);
 	std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> time_point =
