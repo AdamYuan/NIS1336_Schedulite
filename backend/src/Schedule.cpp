@@ -4,15 +4,12 @@
 
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
-#include <libipc/semaphore.h>
-#include <libipc/shm.h>
 #include <readerwriterqueue.h>
 
 namespace backend {
 
 struct Schedule::SyncObject {
 	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_SCHEDULE_MUTEX__";
-	static constexpr const char *kIPCConterSHMHeader = "__SCHEDULITE_COUNTER_SHM__";
 	ipc::sync::mutex ipc_mutex;
 	moodycamel::BlockingReaderWriterQueue<Operation> operation_queue;
 	explicit SyncObject(std::string_view username)
