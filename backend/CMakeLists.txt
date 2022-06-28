@@ -23,3 +23,5 @@ target_link_libraries(ScheduliteBackend
         PUBLIC schedulite::backend::dep::interface Threads::Threads
         )
 target_include_directories(ScheduliteBackend PUBLIC include)
+
+install(TARGETS ScheduliteBackend LIBRARY DESTINATION)
