@@ -34,8 +34,10 @@ public:
 		TimeInt begin_time, remind_time;
 		Priority priority;
 		Type type;
-		inline bool KeyLess(const Task &r) const { return std::tie(begin_time, name) < std::tie(r.begin_time, r.name); }
-		inline bool KeyEqual(const Task &r) const { return begin_time == r.begin_time && name == r.name; }
+		inline bool operator<(const Task &r) const {
+			return std::tie(begin_time, name) < std::tie(r.begin_time, r.name);
+		}
+		inline bool operator==(const Task &r) const { return begin_time == r.begin_time && name == r.name; }
 	};
 
 private:
@@ -45,7 +47,9 @@ private:
 	struct SyncObject;
 	std::shared_ptr<SyncObject> m_sync_object;
 
-	std::vector<Task> m_local_tasks;
+	mutable std::shared_mutex m_sync_tasks_mutex;
+	mutable uint32_t m_sync_tasks_version{0};
+	mutable std::vector<Task> m_sync_tasks;
 
 	struct Operation {
 		enum Op { kInsert, kErase, kQuit } op{};
@@ -64,6 +68,8 @@ private:
 	Error store_tasks(const std::vector<Task> &tasks, bool lock);
 	std::tuple<std::vector<Task>, Error> load_tasks(bool lock);
 
+	void push_sync_tasks(std::vector<Task> &&tasks) const;
+
 	static std::string get_string(const std::vector<Task> &tasks);
 	static std::tuple<std::vector<Task>, Error> parse_string(std::string_view str);
 
@@ -75,7 +81,7 @@ public:
 	~Schedule();
 
 	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }
-	inline const std::vector<Task> &GetTasks() const { return m_local_tasks; }
+	inline const std::vector<Task> &GetTasks() const;
 	inline const std::string &GetFilePath() const { return m_file_path; }
 
 	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,

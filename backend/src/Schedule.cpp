@@ -34,7 +34,11 @@ std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_
 		if ((error = ret->create_file()) != Error::kOK)
 			return {nullptr, error};
 	}
-	std::tie(ret->m_local_tasks, error) = ret->load_tasks(true);
+
+	std::vector<Task> tasks;
+	std::tie(tasks, error) = ret->load_tasks(true);
+	ret->push_sync_tasks(std::move(tasks));
+
 	if (error != Error::kOK)
 		return {nullptr, error};
 	ret->m_operation_thread = std::thread{&Schedule::operation_thread_func, ret.get()};
@@ -56,11 +60,12 @@ Schedule::~Schedule() {
 Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &operation) {
 	if (operation.op == Operation::kInsert) {
 		// insert
-		auto it = std::lower_bound(tasks->begin(), tasks->end(), operation.task,
-		                           [](const Task &l, const Task &r) { return l.KeyLess(r); });
-		if (it != tasks->end() && operation.task.KeyEqual(*it))
+		printf("size=%ld\n", tasks->size());
+		auto it = std::lower_bound(tasks->begin(), tasks->end(), operation.task);
+		if (it != tasks->end() && operation.task == *it)
 			return Error::kTaskAlreadyExist;
 		tasks->insert(it == tasks->end() ? it : it + 1, operation.task);
+		printf("size=%ld\n", tasks->size());
 	} else {
 		// erase
 		auto id = operation.task.id;
@@ -166,6 +171,8 @@ inline void str_append_time_int(std::string *str, TimeInt time_int) {
 std::string Schedule::get_string(const std::vector<Task> &tasks) {
 	std::string ret = kStringHeader;
 	for (const Task &task : tasks) {
+		for (auto c : task.id.as_bytes()) // 16 bytes for id
+			ret += (char)c;
 		str_append_time_int(&ret, task.begin_time);
 		str_append_time_int(&ret, task.remind_time);
 		ret += (char)task.priority;
@@ -185,21 +192,36 @@ std::tuple<std::vector<Schedule::Task>, Error> Schedule::parse_string(std::strin
 
 	std::vector<Task> ret;
 	str = str.substr(kStringHeaderLength);
+
+	while (str.length() > 16 + 4 + 4 + 1 + 1) {
+		Task task{};
+		task.id = uuids::uuid((unsigned char const *)str.data(), (unsigned char const *)str.data() + 16);
+		str = str.substr(16);
+		task.begin_time = time_int_from_str(str);
+		str = str.substr(4);
+		task.remind_time = time_int_from_str(str);
+		str = str.substr(4);
+		task.priority = (Priority)str[0];
+		task.type = (Type)str[1];
+		str = str.substr(2);
+		{
+			auto num = str.find_first_of('\0');
+			if (num == std::string::npos) {
+				task.name = str;
+				str = str.substr(str.length());
+			} else {
+				task.name = str.substr(0, num);
+				str = str.substr(num + 1); // also remove the zero
+			}
+		}
+		ret.push_back(task);
+	}
 	for (size_t begin = str.find_first_not_of('\0'), end = str.find('\0'); begin != std::string_view::npos;
 	     begin = str.find_first_not_of('\0', end), end = str.find('\0', begin)) {
 		std::string_view part = str.substr(begin, end - begin);
 
-		if (part.length() < 4 + 4 + 1 + 1)
+		if (part.length() < 16 + 4 + 4 + 1 + 1)
 			continue;
-
-		Task task{};
-		task.begin_time = time_int_from_str(part);
-		task.remind_time = time_int_from_str(part.substr(4, 4));
-		task.priority = (Priority)part[8];
-		task.type = (Type)part[9];
-		task.name = part.substr(4 + 4 + 1 + 1);
-
-		ret.push_back(task);
 	}
 	return {std::move(ret), Error::kOK};
 }
@@ -220,6 +242,8 @@ void Schedule::operation_thread_func() {
 				operation.error_promise.set_value(error);
 				continue;
 			}
+
+			printf("Operate\n"); // TODO: Debug
 			error = operate(&tasks, operation);
 			if (error != Error::kOK) {
 				operation.error_promise.set_value(error);
@@ -233,14 +257,38 @@ void Schedule::operation_thread_func() {
 }
 
 void Schedule::sync_thread_func() {
+	std::vector<Task> tasks;
 	while (m_thread_run.load(std::memory_order_acquire)) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		printf("Receive\n"); // TODO: Debug
 		if (!m_thread_run.load(std::memory_order_acquire))
 			return;
 		Error error;
-		std::tie(m_local_tasks, error) = load_tasks(true);
+		std::tie(tasks, error) = load_tasks(true);
+		push_sync_tasks(std::move(tasks));
 	}
+}
+
+void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
+	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
+	if (tasks != m_sync_tasks) {
+		printf("Sync to new version\n"); // TODO: Debug
+		m_sync_tasks = std::move(tasks);
+		++m_sync_tasks_version;
+	}
+}
+
+const std::vector<Schedule::Task> &Schedule::GetTasks() const {
+	thread_local uint32_t local_tasks_version{0};
+	thread_local std::vector<Schedule::Task> local_tasks;
+	{
+		std::shared_lock tasks_read_lock{m_sync_tasks_mutex};
+		if (m_sync_tasks_version > local_tasks_version) {
+			printf("Get new version\n"); // TODO: Debug
+			local_tasks = m_sync_tasks;
+			local_tasks_version = m_sync_tasks_version;
+		}
+	}
+	return local_tasks;
 }
 
 } // namespace backend

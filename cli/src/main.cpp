@@ -1,5 +1,6 @@
 #include <backend/Environment.hpp>
 #include <backend/Instance.hpp>
+#include <backend/Schedule.hpp>
 #include <backend/Time.hpp>
 #include <backend/User.hpp>
 
@@ -31,6 +32,25 @@ void SetStdinEcho(bool enable = true) {
 		tty.c_lflag |= ECHO;
 	(void)tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 #endif
+}
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#include <Windows.h>
+#elif defined(__linux__)
+#include <sys/ioctl.h>
+#endif // Windows/Linux
+
+uint32_t GetTerminalWidth() {
+#if defined(_WIN32)
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	return (uint32_t)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
+#elif defined(__linux__)
+	winsize w{};
+	ioctl(fileno(stdout), TIOCGWINSZ, &w);
+	return (uint32_t)(w.ws_col);
+#endif // Windows/Linux
 }
 
 std::string EnterPassword() {
@@ -134,6 +154,13 @@ int main(int argc, char **argv) {
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	printf("width=%u\n", GetTerminalWidth());
+
+	auto ins = schedule->Insert("Test", backend::GetTimeIntNow(), backend::GetTimeIntNow());
+	ins.wait();
+
+	printf("%s\n", backend::GetErrorMessage(ins.get()));
 
 	return 0;
 }
