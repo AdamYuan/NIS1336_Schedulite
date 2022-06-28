@@ -8,8 +8,8 @@ namespace backend {
 
 struct InstanceCons : public Instance {
 	explicit InstanceCons(std::string_view app_dir_path) {
-		m_app_dir_path = ghc::filesystem::path{app_dir_path};
-		m_user_dir_path = ghc::filesystem::path{app_dir_path} / kUserDirName;
+		m_app_dir_path = ghc::filesystem::path{app_dir_path}.string();
+		m_user_dir_path = ghc::filesystem::path{app_dir_path}.append(kUserDirName).string();
 	}
 };
 

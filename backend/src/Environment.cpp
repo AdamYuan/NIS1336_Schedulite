@@ -6,7 +6,7 @@
 namespace backend {
 
 std::string GetDefaultAppDirPath() {
-	static const std::string ret = ghc::filesystem::path{sago::getDataHome()}.append(kAppDirName);
+	static const std::string ret = ghc::filesystem::path{sago::getDataHome()}.append(kAppDirName).string();
 	return ret;
 }
 

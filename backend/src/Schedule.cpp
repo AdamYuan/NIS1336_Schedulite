@@ -32,7 +32,9 @@ struct Schedule::SyncObject {
 struct ScheduleCons : public Schedule {
 	explicit ScheduleCons(const std::shared_ptr<User> &user_ptr) {
 		m_user_ptr = user_ptr;
-		m_file_path = ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetUserDirPath()} / m_user_ptr->GetName();
+		m_file_path = ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetUserDirPath()}
+		                  .append(m_user_ptr->GetName())
+		                  .string();
 		m_sync_object = std::make_unique<SyncObject>(m_user_ptr->GetName());
 	}
 };
