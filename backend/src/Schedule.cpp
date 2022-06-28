@@ -4,7 +4,7 @@
 #include <backend/User.hpp>
 
 #include <filesystem.hpp>
-#include <libipc/ipc.h>
+#include <libipc/condition.h>
 #include <libipc/mutex.h>
 #include <libipc/shm.h>
 #include <readerwriterqueue.h>
@@ -13,16 +13,20 @@ namespace backend {
 
 struct Schedule::SyncObject {
 	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_SCHEDULE_MUTEX__";
-	static constexpr const char *kIPCChannelHeader = "__SCHEDULITE_SCHEDULE_CHANNEL__";
-	ipc::sync::mutex ipc_mutex;
-	ipc::channel ipc_receiver, ipc_sender;
+	static constexpr const char *kIPCConditionMutexHeader = "__SCHEDULITE_SCHEDULE_CONDITION_MUTEX__";
+	static constexpr const char *kIPCConditionHeader = "__SCHEDULITE_SCHEDULE_CONDITION__";
+	ipc::sync::mutex ipc_mutex, ipc_condition_mutex;
+	ipc::sync::condition ipc_condition;
 	ipc::shm::id_t shm_id{};
 	moodycamel::BlockingReaderWriterQueue<Operation> operation_queue;
 	explicit SyncObject(std::string_view username)
 	    : ipc_mutex{std::string{kIPCMutexHeader + std::string(username)}.c_str()},
-	      ipc_receiver{std::string{kIPCChannelHeader + std::string(username)}.c_str(), ipc::receiver},
-	      ipc_sender{std::string{kIPCChannelHeader + std::string(username)}.c_str(), ipc::sender} {}
-	~SyncObject() { ipc::shm::release(shm_id); }
+	      ipc_condition_mutex{std::string{kIPCConditionMutexHeader + std::string(username)}.c_str()},
+	      ipc_condition{std::string{kIPCConditionHeader + std::string(username)}.c_str()} {}
+	~SyncObject() {
+		if (shm_id)
+			ipc::shm::release(shm_id);
+	}
 };
 
 struct ScheduleCons : public Schedule {
@@ -44,12 +48,15 @@ std::tuple<std::unique_ptr<Schedule>, Error> Schedule::Create(const std::shared_
 	if (error != Error::kOK)
 		return {nullptr, error};
 	ret->m_operation_thread = std::thread{&Schedule::operation_thread_func, ret.get()};
+	ret->m_sync_thread = std::thread{&Schedule::sync_thread_func, ret.get()};
 	return {std::move(ret), Error::kOK};
 }
 
 Schedule::~Schedule() {
 	m_thread_run.store(false, std::memory_order_release);
+
 	m_sync_object->operation_queue.enqueue({Operation::kQuit});
+	m_sync_object->ipc_condition.broadcast(m_sync_object->ipc_condition_mutex);
 
 	if (m_sync_thread.joinable())
 		m_sync_thread.join();
@@ -103,10 +110,9 @@ Error Schedule::create_file() {
 
 		{
 			std::ifstream in{m_file_path};
-			if (!in.is_open())
+			if (in.is_open())
 				return Error::kUserAlreadyExist;
 		}
-
 		std::ofstream out{m_file_path};
 		if (!out.is_open())
 			return Error::kFileIOError;
@@ -230,9 +236,22 @@ void Schedule::operation_thread_func() {
 				operation.error_promise.set_value(error);
 				continue;
 			}
+
+			m_sync_object->ipc_condition.broadcast(m_sync_object->ipc_condition_mutex);
+
 			error = store_tasks(tasks, false);
 			operation.error_promise.set_value(error);
 		}
+	}
+}
+
+void Schedule::sync_thread_func() {
+	while (m_thread_run.load(std::memory_order_acquire)) {
+		// TODO: fix file content sync
+		m_sync_object->ipc_condition.wait(m_sync_object->ipc_condition_mutex);
+		if (m_thread_run.load(std::memory_order_acquire))
+			return;
+		printf("Receive\n");
 	}
 }
 

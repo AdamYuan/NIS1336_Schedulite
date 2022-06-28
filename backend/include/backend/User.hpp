@@ -28,8 +28,6 @@ protected:
 
 	std::unique_ptr<Schedule> m_schedule;
 
-	void file_io_thread_func();
-
 public:
 	~User();
 

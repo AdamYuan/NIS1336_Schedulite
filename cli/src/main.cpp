@@ -33,6 +33,16 @@ void SetStdinEcho(bool enable = true) {
 #endif
 }
 
+std::string EnterPassword() {
+	printf("Password: ");
+	std::string password;
+	SetStdinEcho(false);
+	std::getline(std::cin, password);
+	SetStdinEcho(true);
+	putchar('\n');
+	return password;
+}
+
 int main(int argc, char **argv) {
 	cxxopts::Options options{backend::kAppName, "A simple schedule program"};
 	options.add_options()         //
@@ -110,14 +120,7 @@ int main(int argc, char **argv) {
 	if (result.count("username")) {
 		std::string username = result["username"].as<std::string>();
 
-		printf("Password: ");
-		std::string password;
-		{
-			SetStdinEcho(false);
-			std::getline(std::cin, password);
-			SetStdinEcho(true);
-			putchar('\n');
-		}
+		std::string password = EnterPassword();
 
 		if (result.count("register")) {
 			std::tie(user, error) = backend::User::Register(instance, username, password);

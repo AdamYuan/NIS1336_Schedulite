@@ -31,13 +31,6 @@ bool User::ValidateUsername(std::string_view username) {
 	return std::all_of(username.begin(), username.end(), isalnum);
 }
 
-void User::file_io_thread_func() {
-	while (m_file_io_thread_run.load(std::memory_order_acquire)) {
-		m_file_io_semaphore.Wait();
-		// save_schedule();
-	}
-}
-
 std::tuple<std::shared_ptr<User>, Error> User::Register(const std::shared_ptr<Instance> &instance_ptr,
                                                         std::string_view username, std::string_view password) {
 	if (!ValidateUsername(username))

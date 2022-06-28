@@ -57,6 +57,7 @@ protected:
 	std::thread m_operation_thread, m_sync_thread;
 
 	void operation_thread_func();
+	void sync_thread_func();
 
 	Error create_file();
 
