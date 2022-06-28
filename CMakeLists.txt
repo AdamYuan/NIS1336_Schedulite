@@ -15,5 +15,3 @@ endif ()
 add_subdirectory(backend)
 add_subdirectory(cli)
 #add_subdirectory(frontend-gui)
-
-install(TARGETS ScheduliteBackend ScheduliteCLI RUNTIME DESTINATION)
