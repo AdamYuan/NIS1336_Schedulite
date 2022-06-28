@@ -22,12 +22,11 @@ inline TimeInfo ToTimeInfo(const TimePoint &time_point) {
 }
 inline TimePoint ToTimePoint(TimeInt time_int) { return TimePoint{} + TimeDuration(time_int); }
 inline TimePoint ToTimePoint(const TimeInfo &time_info) {
-	std::chrono::time_point<date::local_t, std::chrono::seconds> zoned_time_point =
+	auto zoned_time_point =
 	    date::local_days{date::day(time_info.day) / date::month(time_info.month) / date::year(time_info.year)} +
 	    std::chrono::hours(time_info.hour) + std::chrono::minutes(time_info.minute);
-	std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> time_point =
-	    date::zoned_time{date::current_zone(), zoned_time_point}.get_sys_time();
-	return std::chrono::time_point_cast<TimeDuration>(time_point);
+	return std::chrono::time_point_cast<TimeDuration>(
+	    date::zoned_time{date::current_zone(), zoned_time_point}.get_sys_time());
 }
 
 inline TimePoint GetTimePointNow() { return std::chrono::time_point_cast<TimeDuration>(Clock::now()); }
