@@ -4,98 +4,18 @@
 #include <backend/Time.hpp>
 #include <backend/User.hpp>
 
+#include <cli/Format.hpp>
+#include <cli/Shell.hpp>
+#include <cli/Util.hpp>
+
 #include <cxxopts.hpp>
-#include <tabulate/table.hpp>
 
-#include <type_traits>
-
-// From https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
-#ifdef WIN32
-#include <windows.h>
-#else
-#include <termios.h>
-#include <unistd.h>
-#endif
-void SetStdinEcho(bool enable = true) {
-#ifdef WIN32
-	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-	DWORD mode;
-	GetConsoleMode(hStdin, &mode);
-	if (!enable)
-		mode &= ~ENABLE_ECHO_INPUT;
-	else
-		mode |= ENABLE_ECHO_INPUT;
-	SetConsoleMode(hStdin, mode);
-#else
-	termios tty{};
-	tcgetattr(STDIN_FILENO, &tty);
-	if (!enable)
-		tty.c_lflag &= ~ECHO;
-	else
-		tty.c_lflag |= ECHO;
-	(void)tcsetattr(STDIN_FILENO, TCSANOW, &tty);
-#endif
-}
-#if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#define VC_EXTRALEAN
-#include <Windows.h>
-#elif defined(__linux__)
-#include <sys/ioctl.h>
-#endif // Windows/Linux
-
-uint32_t GetTerminalWidth() {
-#if defined(_WIN32)
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	return (uint32_t)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
-#elif defined(__linux__)
-	winsize w{};
-	ioctl(fileno(stdout), TIOCGWINSZ, &w);
-	return (uint32_t)(w.ws_col);
-#endif // Windows/Linux
-}
-
-std::string EnterPassword() {
-	printf("Password: ");
-	std::string password;
-	SetStdinEcho(false);
-	std::getline(std::cin, password);
-	SetStdinEcho(true);
-	putchar('\n');
-	return password;
-}
-
-template <typename Iter> std::string MakeOptionStr(Iter begin, Iter end) {
-	std::string ret{*(begin++)};
-	for (Iter i = begin; i != end; ++i) {
-		ret += '/';
-		ret += std::string{*i};
-	}
-	return ret;
-}
-template <typename Container> std::string MakeOptionStr(Container container) {
-	return MakeOptionStr(std::begin(container), std::end(container));
-}
-
-void PrintTasks(const std::vector<backend::Task> &tasks) {
-	tabulate::Table table;
-	table.add_row({"ID", "Name", "Begin time", "Remind time", "Priority", "Type", "Status"});
-	uint32_t row = 1;
-	backend::TimeInt time_int_now = backend::GetTimeIntNow();
-	for (const auto &task : tasks) {
-		auto status = backend::TaskStatusFromTask(task, time_int_now);
-		table.add_row({std::to_string(task.id), task.name, backend::ToTimeStr(task.begin_time),
-		               backend::ToTimeStr(task.remind_time), backend::StrFromTaskPriority(task.priority),
-		               backend::StrFromTaskType(task.type), backend::StrFromTaskStatus(status)});
-		if (status == backend::TaskStatus::kBegun)
-			table.row(row).format().font_style({tabulate::FontStyle::bold});
-		else if (status == backend::TaskStatus::kDone)
-			table.row(row).format().font_style({tabulate::FontStyle::dark});
-		++row;
-	}
-	std::cout << table << std::endl;
-}
+static constexpr const char *kExampleUserRegister = " -u USER_NAME -r";
+static constexpr const char *kExampleListTasks = " -u USER_NAME -l";
+static constexpr const char *kExampleInsertTask =
+    " -u USER_NAME -i -t TASK_NAME -b BEGIN_TIME -m REMIND_TIME --priority PRIORITY --type TYPE";
+static constexpr const char *kExampleEraseTasks = " -u USER_NAME -e TASK_ID";
+static constexpr const char *kExampleDoneTasks = " -u USER_NAME -d TASK_ID";
 
 int main(int argc, char **argv) {
 	cxxopts::Options options{backend::kAppName, "A simple schedule program"};
@@ -110,8 +30,6 @@ int main(int argc, char **argv) {
 	options.add_options("User")                                   //
 	    ("u,username", "Username", cxxopts::value<std::string>()) //
 	    ("r,register", "Register")                                //
-	    // ("new_username", "New username", cxxopts::value<std::string>()) //
-	    // ("new_password", "New password", cxxopts::value<std::string>()) //
 	    ;
 
 	options.add_options("Schedule")                                                       //
@@ -128,9 +46,9 @@ int main(int argc, char **argv) {
 	     cxxopts::value<std::string>()->default_value(time_str_now)) //
 	    ("m,rtime", "Remind time (local time, \"YYYY/MM/DD hh:mm\")",
 	     cxxopts::value<std::string>()->default_value(time_str_now)) //
-	    ("priority", "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")",
+	    ("priority", "Priority (" + cli::MakeOptionStr(backend::GetTaskPriorityStrings()) + ")",
 	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskPriority(backend::kDefaultTaskPriority))) //
-	    ("type", "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")",
+	    ("type", "Type (" + cli::MakeOptionStr(backend::GetTaskTypeStrings()) + ")",
 	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskType(backend::kDefaultTaskType))) //
 	    ;
 
@@ -144,6 +62,19 @@ int main(int argc, char **argv) {
 
 	if (result.count("help") || result.arguments().empty()) {
 		printf("%s\n", options.help().c_str());
+		std::cout << (                                              //
+		    std::string{"Examples:"} +                              //
+		    "\n  Register: " +                                      //
+		    "\n      " + backend::kAppName + kExampleUserRegister + //
+		    "\n  List Tasks: " +                                    //
+		    "\n      " + backend::kAppName + kExampleListTasks +    //
+		    "\n  Insert Tasks: " +                                  //
+		    "\n      " + backend::kAppName + kExampleInsertTask +   //
+		    "\n  Erase Tasks: " +                                   //
+		    "\n      " + backend::kAppName + kExampleEraseTasks +   //
+		    "\n  Done Tasks: " +                                    //
+		    "\n      " + backend::kAppName + kExampleDoneTasks +    //
+		    "\n");
 		return 0;
 	}
 
@@ -167,7 +98,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (result.count("shell")) {
-		// TODO: Enter shell
+		cli::Shell shell{instance};
+		shell.Run();
 		return 0;
 	}
 
@@ -178,9 +110,14 @@ int main(int argc, char **argv) {
 	if (result.count("username")) {
 		std::string username = result["username"].as<std::string>();
 
-		std::string password = EnterPassword();
+		std::string password = cli::EnterPassword();
 
 		if (result.count("register")) {
+			std::string password2 = cli::EnterPassword("Repeat Password: ");
+			if (password != password2) {
+				printf("Not equal\n");
+				exit(EXIT_FAILURE);
+			}
 			std::tie(user, schedule, error) = backend::User::Register(instance, username, password);
 		} else {
 			std::tie(user, schedule, error) = backend::User::Login(instance, username, password);
@@ -193,7 +130,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (result.count("list")) {
-		PrintTasks(schedule->GetTasks());
+		cli::PrintTasks(schedule->GetTasks());
 		return 0;
 	}
 

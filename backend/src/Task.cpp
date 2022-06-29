@@ -4,7 +4,7 @@
 
 namespace backend {
 
-inline void str_append_uint32(std::string *str, uint32_t n) {
+inline static void str_append_uint32(std::string *str, uint32_t n) {
 	(*str) += char(n & 0xffu);
 	n >>= 8u;
 	(*str) += char(n & 0xffu);
@@ -13,7 +13,7 @@ inline void str_append_uint32(std::string *str, uint32_t n) {
 	(*str) += char(n >> 8u);
 }
 
-inline uint32_t uint32_from_str(std::string_view str) {
+inline static uint32_t uint32_from_str(std::string_view str) {
 	return uint8_t(str[0]) | (uint8_t(str[1]) << 8u) | (uint8_t(str[2]) << 16u) | (uint8_t(str[3]) << 24u);
 }
 

@@ -8,8 +8,14 @@ if (NOT TARGET schedulite::backend)
 endif ()
 add_subdirectory(dep)
 
-add_executable(ScheduliteCLI src/main.cpp)
+add_executable(ScheduliteCLI
+        src/main.cpp
+        src/Util.cpp
+        src/Format.cpp
+        src/Shell.cpp
+        )
 
 target_link_libraries(ScheduliteCLI PRIVATE schedulite::cli::dep schedulite::backend)
+target_include_directories(ScheduliteCLI PRIVATE include)
 
 install(TARGETS ScheduliteCLI RUNTIME DESTINATION)
