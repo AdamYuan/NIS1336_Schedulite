@@ -3,8 +3,7 @@ project(Schedulite)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(dep/private)
-add_subdirectory(dep/interface)
+add_subdirectory(dep)
 
 add_library(ScheduliteBackend STATIC
         src/Environment.cpp
@@ -19,7 +18,7 @@ add_library(schedulite::backend ALIAS ScheduliteBackend)
 find_package(Threads REQUIRED)
 
 target_link_libraries(ScheduliteBackend
-        PRIVATE schedulite::backend::dep::private
-        PUBLIC schedulite::backend::dep::interface Threads::Threads
+        PRIVATE schedulite::backend::dep
+        PUBLIC Threads::Threads
         )
 target_include_directories(ScheduliteBackend PUBLIC include)

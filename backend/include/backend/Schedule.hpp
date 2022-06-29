@@ -16,8 +16,6 @@
 #include <shared_mutex>
 #include <thread>
 
-#include <uuid.h>
-
 namespace backend {
 
 class Schedule {
@@ -29,7 +27,7 @@ public:
 	enum class Type : char { kNone = 0, kStudy, kPlay, kLife };
 
 	struct Task {
-		uuids::uuid id;
+		uint32_t id;
 		std::string name;
 		TimeInt begin_time, remind_time;
 		Priority priority;
@@ -86,7 +84,7 @@ public:
 
 	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
 	                          Priority priority = Priority::kMedium, Type type = Type::kNone);
-	std::future<Error> Erase(const uuids::uuid &id);
+	std::future<Error> Erase(uint32_t id);
 };
 
 } // namespace backend

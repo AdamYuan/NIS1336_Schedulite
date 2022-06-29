@@ -58,14 +58,22 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 	if (operation.op == Operation::kInsert) {
 		// insert
 		printf("size=%ld\n", tasks->size());
-		auto it = std::lower_bound(tasks->begin(), tasks->end(), operation.task);
-		if (it != tasks->end() && operation.task == *it)
+
+		uint32_t max_id = 0;
+		for (auto &task : *tasks)
+			max_id = std::max(task.id, max_id);
+
+		auto task = operation.task;
+		task.id = max_id + 1;
+
+		auto it = std::lower_bound(tasks->begin(), tasks->end(), task);
+		if (it != tasks->end() && task == *it)
 			return Error::kTaskAlreadyExist;
-		tasks->insert(it == tasks->end() ? it : it + 1, operation.task);
+		tasks->insert(it == tasks->end() ? it : it + 1, task);
 		printf("size=%ld\n", tasks->size());
 	} else {
 		// erase
-		auto id = operation.task.id;
+		uint32_t id = operation.task.id;
 		auto it = std::find_if(tasks->begin(), tasks->end(), [&id](const Task &c) { return c.id == id; });
 		if (it == tasks->end())
 			return Error::kTaskNotFound;
@@ -79,13 +87,11 @@ std::future<Error> Schedule::Insert(std::string_view name, TimeInt begin_time, T
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	m_sync_object->operation_queue.enqueue(
-	    {Operation::kInsert,
-	     {uuids::uuid_system_generator{}(), std::string{name}, begin_time, remind_time, priority, type},
-	     std::move(promise)});
+	    {Operation::kInsert, {0, std::string{name}, begin_time, remind_time, priority, type}, std::move(promise)});
 	return ret;
 }
 
-std::future<Error> Schedule::Erase(const uuids::uuid &id) {
+std::future<Error> Schedule::Erase(uint32_t id) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	m_sync_object->operation_queue.enqueue({Operation::kErase, {id}, std::move(promise)});
@@ -157,21 +163,20 @@ Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
 	return Error::kOK;
 }
 
-inline void str_append_time_int(std::string *str, TimeInt time_int) {
-	(*str) += char(time_int & 0xffu);
-	time_int >>= 8u;
-	(*str) += char(time_int & 0xffu);
-	time_int >>= 8u;
-	(*str) += char(time_int & 0xffu);
-	(*str) += char(time_int >> 8u);
+inline void str_append_uint32(std::string *str, uint32_t n) {
+	(*str) += char(n & 0xffu);
+	n >>= 8u;
+	(*str) += char(n & 0xffu);
+	n >>= 8u;
+	(*str) += char(n & 0xffu);
+	(*str) += char(n >> 8u);
 }
 std::string Schedule::get_string(const std::vector<Task> &tasks) {
 	std::string ret = kStringHeader;
 	for (const Task &task : tasks) {
-		for (auto c : task.id.as_bytes()) // 16 bytes for id
-			ret += (char)c;
-		str_append_time_int(&ret, task.begin_time);
-		str_append_time_int(&ret, task.remind_time);
+		str_append_uint32(&ret, task.id);
+		str_append_uint32(&ret, task.begin_time);
+		str_append_uint32(&ret, task.remind_time);
 		ret += (char)task.priority;
 		ret += (char)task.type;
 		ret += task.name;
@@ -180,7 +185,7 @@ std::string Schedule::get_string(const std::vector<Task> &tasks) {
 	return ret;
 }
 
-inline TimeInt time_int_from_str(std::string_view str) {
+inline uint32_t uint32_from_str(std::string_view str) {
 	return uint8_t(str[0]) | (uint8_t(str[1]) << 8u) | (uint8_t(str[2]) << 16u) | (uint8_t(str[3]) << 24u);
 }
 std::tuple<std::vector<Schedule::Task>, Error> Schedule::parse_string(std::string_view str) {
@@ -190,13 +195,13 @@ std::tuple<std::vector<Schedule::Task>, Error> Schedule::parse_string(std::strin
 	std::vector<Task> ret;
 	str = str.substr(kStringHeaderLength);
 
-	while (str.length() > 16 + 4 + 4 + 1 + 1) {
+	while (str.length() > 4 + 4 + 4 + 1 + 1) {
 		Task task{};
-		task.id = uuids::uuid((unsigned char const *)str.data(), (unsigned char const *)str.data() + 16);
-		str = str.substr(16);
-		task.begin_time = time_int_from_str(str);
+		task.id = uint32_from_str(str);
 		str = str.substr(4);
-		task.remind_time = time_int_from_str(str);
+		task.begin_time = uint32_from_str(str);
+		str = str.substr(4);
+		task.remind_time = uint32_from_str(str);
 		str = str.substr(4);
 		task.priority = (Priority)str[0];
 		task.type = (Type)str[1];
