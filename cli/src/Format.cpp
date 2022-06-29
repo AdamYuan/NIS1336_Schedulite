@@ -18,7 +18,15 @@ void PrintTasks(const std::vector<backend::Task> &tasks) {
 			table.row(row).format().font_style({tabulate::FontStyle::bold});
 		else if (status == backend::TaskStatus::kDone)
 			table.row(row).format().font_style({tabulate::FontStyle::dark});
+
 		++row;
+	}
+	table.row(0).format().border_top("-").border_bottom("-").border_left("").border_right("").corner("");
+	if (row > 1) {
+		table.row(1).format().border_top("-").border_bottom(" ").border_left("").border_right("").corner("");
+		for (int i = 2; i < row - 1; ++i)
+			table.row(i).format().border_top(" ").border_bottom(" ").border_left("").border_right("").corner("");
+		table.row(row - 1).format().border_top(" ").border_bottom("-").border_left("").border_right("").corner("");
 	}
 	std::cout << table << std::endl;
 }
