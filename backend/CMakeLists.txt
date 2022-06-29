@@ -12,6 +12,7 @@ add_library(ScheduliteBackend STATIC
         src/Time.cpp
         src/Schedule.cpp
         src/Encryption.cpp
+        src/Task.cpp
         )
 add_library(schedulite::backend ALIAS ScheduliteBackend)
 

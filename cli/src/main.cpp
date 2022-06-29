@@ -64,13 +64,21 @@ std::string EnterPassword() {
 	return password;
 }
 
-void PrintTasks(const std::vector<backend::Schedule::Task> &tasks) {
+void PrintTasks(const std::vector<backend::Task> &tasks) {
 	tabulate::Table table;
-	table.add_row({"ID", "Name", "Begin time", "Remind time", "Priority", "Type"});
+	table.add_row({"ID", "Name", "Begin time", "Remind time", "Priority", "Type", "Status"});
+	uint32_t row = 1;
+	backend::TimeInt time_int_now = backend::GetTimeIntNow();
 	for (const auto &task : tasks) {
+		auto status = backend::StatusFromTask(task, time_int_now);
 		table.add_row({std::to_string(task.id), task.name, backend::ToTimeStr(task.begin_time),
-		               backend::ToTimeStr(task.remind_time), backend::Schedule::GetPriorityStr(task.priority),
-		               backend::Schedule::GetTypeStr(task.type)});
+		               backend::ToTimeStr(task.remind_time), backend::StrFromTaskPriority(task.priority),
+		               backend::StrFromTaskType(task.type), backend::StrFromTaskStatus(status)});
+		if (status == backend::TaskStatus::kBegun)
+			table.row(row).format().font_style({tabulate::FontStyle::bold});
+		else if (status == backend::TaskStatus::kDone)
+			table.row(row).format().font_style({tabulate::FontStyle::dark});
+		++row;
 	}
 	std::cout << table << std::endl;
 }
@@ -92,10 +100,11 @@ int main(int argc, char **argv) {
 	    // ("new_password", "New password", cxxopts::value<std::string>()) //
 	    ;
 
-	options.add_options("Schedule")                                          //
-	    ("l,list", "List")                                                   //
-	    ("i,insert", "Insert task")                                          //
-	    ("e,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>()) //
+	options.add_options("Schedule")                                                       //
+	    ("l,list", "List")                                                                //
+	    ("i,insert", "Insert task")                                                       //
+	    ("e,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>())              //
+	    ("d,done", "Done with a task (toggle, with task ID)", cxxopts::value<uint32_t>()) //
 	    ;
 
 	std::string time_str_now = backend::GetTimeStrNow();
@@ -180,10 +189,18 @@ int main(int argc, char **argv) {
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
+	if (result.count("done")) {
+		auto id = result["done"].as<uint32_t>();
+		auto error_future = schedule->ToggleDone(id);
+		error = error_future.get();
+		printf("%s\n", backend::GetErrorMessage(error));
+		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+	}
+
 	printf("width=%u\n", GetTerminalWidth());
 
 	auto ins = schedule->Insert("Test", backend::GetTimeIntNow(), backend::GetTimeIntNow(),
-	                            backend::Schedule::Priority::kHigh, backend::Schedule::Type::kStudy);
+	                            backend::TaskPriority::kHigh, backend::TaskType::kStudy);
 	ins.wait();
 	printf("%s\n", backend::GetErrorMessage(ins.get()));
 

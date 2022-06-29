@@ -2,6 +2,7 @@
 #define SCHEDULITE_SCHEDULE_HPP
 
 #include <backend/Error.hpp>
+#include <backend/Task.hpp>
 #include <backend/Time.hpp>
 #include <backend/User.hpp>
 
@@ -19,52 +20,10 @@
 namespace backend {
 
 class Schedule {
-public:
+private:
 	inline static constexpr const char *kStringHeader = "Schedule";
 	inline static constexpr uint32_t kStringHeaderLength = std::string_view(kStringHeader).length();
 
-	enum class Priority : char { kLow, kMedium, kHigh };
-	inline static constexpr const char *GetPriorityStr(Priority priority) {
-		switch (priority) {
-		case Priority::kLow:
-			return "Low";
-		case Priority::kMedium:
-			return "Medium";
-		case Priority::kHigh:
-			return "High";
-		default:
-			return "Unknown";
-		}
-	}
-	enum class Type : char { kNone = 0, kStudy, kPlay, kLife };
-	inline static constexpr const char *GetTypeStr(Type type) {
-		switch (type) {
-		case Type::kNone:
-			return "None";
-		case Type::kStudy:
-			return "Study";
-		case Type::kPlay:
-			return "Play";
-		case Type::kLife:
-			return "Life";
-		default:
-			return "Unknown";
-		}
-	}
-
-	struct Task {
-		uint32_t id;
-		std::string name;
-		TimeInt begin_time, remind_time;
-		Priority priority;
-		Type type;
-		inline bool operator<(const Task &r) const {
-			return std::tie(begin_time, name) < std::tie(r.begin_time, r.name);
-		}
-		inline bool operator==(const Task &r) const { return begin_time == r.begin_time && name == r.name; }
-	};
-
-private:
 	std::shared_ptr<User> m_user_ptr;
 	std::string m_file_path;
 
@@ -76,7 +35,7 @@ private:
 	mutable std::vector<Task> m_sync_tasks;
 
 	struct Operation {
-		enum Op { kInsert, kErase, kQuit } op{};
+		enum Op { kInsert, kErase, kToggleDone, kQuit } op{};
 		Task task;
 		std::promise<Error> error_promise;
 	};
@@ -110,8 +69,9 @@ public:
 	const std::vector<Task> &GetTasks() const;
 
 	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
-	                          Priority priority = Priority::kMedium, Type type = Type::kNone);
+	                          TaskPriority priority = TaskPriority::kMedium, TaskType type = TaskType::kNone);
 	std::future<Error> Erase(uint32_t id);
+	std::future<Error> ToggleDone(uint32_t id);
 };
 
 } // namespace backend

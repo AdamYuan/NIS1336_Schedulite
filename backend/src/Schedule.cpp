@@ -69,18 +69,23 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 			return Error::kTaskAlreadyExist;
 		tasks->insert(it == tasks->end() ? it : it + 1, task);
 	} else {
-		// erase
+		// ID based operations
 		uint32_t id = operation.task.id;
 		auto it = std::find_if(tasks->begin(), tasks->end(), [&id](const Task &c) { return c.id == id; });
 		if (it == tasks->end())
 			return Error::kTaskNotFound;
-		tasks->erase(it);
+
+		if (operation.op == Operation::kErase) {
+			tasks->erase(it);
+		} else if (operation.op == Operation::kToggleDone) {
+			it->done ^= 1;
+		}
 	}
 	return Error::kSuccess;
 }
 
 std::future<Error> Schedule::Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
-                                    Schedule::Priority priority, Schedule::Type type) {
+                                    TaskPriority priority, TaskType type) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	m_sync_object->operation_queue.enqueue(
@@ -92,6 +97,13 @@ std::future<Error> Schedule::Erase(uint32_t id) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	m_sync_object->operation_queue.enqueue({Operation::kErase, {id}, std::move(promise)});
+	return ret;
+}
+
+std::future<Error> Schedule::ToggleDone(uint32_t id) {
+	std::promise<Error> promise;
+	auto ret = promise.get_future();
+	m_sync_object->operation_queue.enqueue({Operation::kToggleDone, {id}, std::move(promise)});
 	return ret;
 }
 
@@ -116,7 +128,7 @@ Error Schedule::create_file() {
 	return Error::kSuccess;
 }
 
-std::tuple<std::vector<Schedule::Task>, Error> Schedule::load_tasks(bool lock) {
+std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
 	if (!m_user_ptr->GetInstanceSPtr()->MaintainDirs())
 		return {std::vector<Task>{}, Error::kFileIOError};
 
@@ -160,60 +172,27 @@ Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
 	return Error::kSuccess;
 }
 
-inline void str_append_uint32(std::string *str, uint32_t n) {
-	(*str) += char(n & 0xffu);
-	n >>= 8u;
-	(*str) += char(n & 0xffu);
-	n >>= 8u;
-	(*str) += char(n & 0xffu);
-	(*str) += char(n >> 8u);
-}
 std::string Schedule::get_string(const std::vector<Task> &tasks) {
 	std::string ret = kStringHeader;
-	for (const Task &task : tasks) {
-		str_append_uint32(&ret, task.id);
-		str_append_uint32(&ret, task.begin_time);
-		str_append_uint32(&ret, task.remind_time);
-		ret += (char)task.priority;
-		ret += (char)task.type;
-		ret += task.name;
-		ret += '\0';
-	}
+	for (const Task &task : tasks)
+		ret += StrFromTask(task);
 	return ret;
 }
-
-inline uint32_t uint32_from_str(std::string_view str) {
-	return uint8_t(str[0]) | (uint8_t(str[1]) << 8u) | (uint8_t(str[2]) << 16u) | (uint8_t(str[3]) << 24u);
-}
-std::tuple<std::vector<Schedule::Task>, Error> Schedule::parse_string(std::string_view str) {
+std::tuple<std::vector<Task>, Error> Schedule::parse_string(std::string_view str) {
 	if (str.length() < kStringHeaderLength || str.substr(0, kStringHeaderLength) != kStringHeader)
 		return {std::vector<Task>{}, Error::kUserWrongPassword};
 
 	std::vector<Task> ret;
 	str = str.substr(kStringHeaderLength);
 
-	while (str.length() > 4 + 4 + 4 + 1 + 1) {
-		Task task{};
-		task.id = uint32_from_str(str);
-		str = str.substr(4);
-		task.begin_time = uint32_from_str(str);
-		str = str.substr(4);
-		task.remind_time = uint32_from_str(str);
-		str = str.substr(4);
-		task.priority = (Priority)str[0];
-		task.type = (Type)str[1];
-		str = str.substr(2);
-		{
-			auto num = str.find_first_of('\0');
-			if (num == std::string::npos) {
-				task.name = str;
-				str = str.substr(str.length());
-			} else {
-				task.name = str.substr(0, num);
-				str = str.substr(num + 1); // also remove the zero
-			}
-		}
+	Task task;
+	uint32_t len;
+	while (true) {
+		std::tie(task, len) = TaskFromStr(str);
+		if (len == 0)
+			break;
 		ret.push_back(task);
+		str = str.substr(len);
 	}
 	return {std::move(ret), Error::kSuccess};
 }
@@ -269,9 +248,9 @@ void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
 	}
 }
 
-const std::vector<Schedule::Task> &Schedule::GetTasks() const {
+const std::vector<Task> &Schedule::GetTasks() const {
 	thread_local uint32_t local_tasks_version{0};
-	thread_local std::vector<Schedule::Task> local_tasks;
+	thread_local std::vector<Task> local_tasks;
 	{
 		std::shared_lock tasks_read_lock{m_sync_tasks_mutex};
 		if (m_sync_tasks_version > local_tasks_version) {
