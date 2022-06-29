@@ -11,5 +11,5 @@ add_subdirectory(filesystem)
 add_library(ScheduliteBackend_dep INTERFACE)
 add_library(schedulite::backend::dep ALIAS ScheduliteBackend_dep)
 
-target_include_directories(ScheduliteBackend_dep INTERFACE .)
+target_include_directories(ScheduliteBackend_dep INTERFACE readwritequeue picosha2 plusaes)
 target_link_libraries(ScheduliteBackend_dep INTERFACE sago::platform_folders date::date-tz ipc ghc_filesystem)

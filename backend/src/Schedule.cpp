@@ -28,7 +28,7 @@ std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_
 	std::shared_ptr<Schedule> ret = std::make_shared<Schedule>(user_ptr);
 	Error error;
 	if (create_file) {
-		if ((error = ret->create_file()) != Error::kOK)
+		if ((error = ret->create_file()) != Error::kSuccess)
 			return {nullptr, error};
 	}
 
@@ -36,11 +36,11 @@ std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_
 	std::tie(tasks, error) = ret->load_tasks(true);
 	ret->push_sync_tasks(std::move(tasks));
 
-	if (error != Error::kOK)
+	if (error != Error::kSuccess)
 		return {nullptr, error};
 	ret->m_operation_thread = std::thread{&Schedule::operation_thread_func, ret.get()};
 	ret->m_sync_thread = std::thread{&Schedule::sync_thread_func, ret.get()};
-	return {std::move(ret), Error::kOK};
+	return {std::move(ret), Error::kSuccess};
 }
 
 Schedule::~Schedule() {
@@ -57,8 +57,6 @@ Schedule::~Schedule() {
 Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &operation) {
 	if (operation.op == Operation::kInsert) {
 		// insert
-		printf("size=%ld\n", tasks->size());
-
 		uint32_t max_id = 0;
 		for (auto &task : *tasks)
 			max_id = std::max(task.id, max_id);
@@ -70,7 +68,6 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 		if (it != tasks->end() && task == *it)
 			return Error::kTaskAlreadyExist;
 		tasks->insert(it == tasks->end() ? it : it + 1, task);
-		printf("size=%ld\n", tasks->size());
 	} else {
 		// erase
 		uint32_t id = operation.task.id;
@@ -79,7 +76,7 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 			return Error::kTaskNotFound;
 		tasks->erase(it);
 	}
-	return Error::kOK;
+	return Error::kSuccess;
 }
 
 std::future<Error> Schedule::Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
@@ -116,7 +113,7 @@ Error Schedule::create_file() {
 		std::string encrypted = Encrypt(kStringHeader, m_user_ptr->GetKey());
 		out.write(encrypted.data(), (std::streamsize)encrypted.size());
 	}
-	return Error::kOK;
+	return Error::kSuccess;
 }
 
 std::tuple<std::vector<Schedule::Task>, Error> Schedule::load_tasks(bool lock) {
@@ -128,18 +125,18 @@ std::tuple<std::vector<Schedule::Task>, Error> Schedule::load_tasks(bool lock) {
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 		std::ifstream in{m_file_path};
 		if (!in.is_open())
-			return {std::vector<Task>{}, Error::kFileIOError};
+			return {std::vector<Task>{}, Error::kUserNotFound};
 		encrypted = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
 	} else {
 		std::ifstream in{m_file_path};
 		if (!in.is_open())
-			return {std::vector<Task>{}, Error::kFileIOError};
+			return {std::vector<Task>{}, Error::kUserNotFound};
 		encrypted = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
 	}
 
 	auto [ret, error] = parse_string(Decrypt(encrypted, m_user_ptr->GetKey()));
-	if (error == Error::kOK)
-		return {ret, Error::kOK};
+	if (error == Error::kSuccess)
+		return {ret, Error::kSuccess};
 	return {std::vector<Task>{}, error};
 }
 Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
@@ -160,7 +157,7 @@ Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
 			return Error::kFileIOError;
 		out.write(encrypted.data(), (std::streamsize)encrypted.size());
 	}
-	return Error::kOK;
+	return Error::kSuccess;
 }
 
 inline void str_append_uint32(std::string *str, uint32_t n) {
@@ -218,14 +215,7 @@ std::tuple<std::vector<Schedule::Task>, Error> Schedule::parse_string(std::strin
 		}
 		ret.push_back(task);
 	}
-	for (size_t begin = str.find_first_not_of('\0'), end = str.find('\0'); begin != std::string_view::npos;
-	     begin = str.find_first_not_of('\0', end), end = str.find('\0', begin)) {
-		std::string_view part = str.substr(begin, end - begin);
-
-		if (part.length() < 16 + 4 + 4 + 1 + 1)
-			continue;
-	}
-	return {std::move(ret), Error::kOK};
+	return {std::move(ret), Error::kSuccess};
 }
 
 void Schedule::operation_thread_func() {
@@ -240,14 +230,14 @@ void Schedule::operation_thread_func() {
 			std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 
 			std::tie(tasks, error) = load_tasks(false);
-			if (error != Error::kOK) {
+			if (error != Error::kSuccess) {
 				operation.error_promise.set_value(error);
 				continue;
 			}
 
 			printf("Operate\n"); // TODO: Debug
 			error = operate(&tasks, operation);
-			if (error != Error::kOK) {
+			if (error != Error::kSuccess) {
 				operation.error_promise.set_value(error);
 				continue;
 			}

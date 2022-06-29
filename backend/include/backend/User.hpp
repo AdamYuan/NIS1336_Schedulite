@@ -3,7 +3,6 @@
 
 #include <backend/Error.hpp>
 #include <backend/Instance.hpp>
-#include <backend/Semaphore.hpp>
 
 #include <atomic>
 #include <fstream>

@@ -19,6 +19,8 @@ std::string Decrypt(std::string_view encrypted, std::string_view key) {
 	unsigned long padded_size = 0;
 	plusaes::decrypt_cbc((unsigned char *)encrypted.data(), encrypted.size(), (unsigned char *)key.data(), key.size(),
 	                     &kAES_IV, (unsigned char *)raw.data(), raw.size(), &padded_size);
+	while (!raw.empty() && padded_size--)
+		raw.pop_back();
 	return raw;
 }
 } // namespace backend

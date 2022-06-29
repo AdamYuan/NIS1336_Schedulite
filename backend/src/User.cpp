@@ -32,9 +32,9 @@ User::Register(const std::shared_ptr<Instance> &instance_ptr, std::string_view u
 	std::shared_ptr<Schedule> schedule;
 	std::tie(schedule, error) = Schedule::Create(user, true);
 
-	if (error != Error::kOK)
+	if (error != Error::kSuccess)
 		return {nullptr, nullptr, error};
-	return {std::move(user), std::move(schedule), Error::kOK};
+	return {std::move(user), std::move(schedule), Error::kSuccess};
 }
 
 std::tuple<std::shared_ptr<User>, std::shared_ptr<Schedule>, Error>
@@ -47,9 +47,9 @@ User::Login(const std::shared_ptr<Instance> &instance_ptr, std::string_view user
 	std::shared_ptr<Schedule> schedule;
 	std::tie(schedule, error) = Schedule::Create(user, false);
 
-	if (error != Error::kOK)
+	if (error != Error::kSuccess)
 		return {nullptr, nullptr, error};
-	return {std::move(user), std::move(schedule), Error::kOK};
+	return {std::move(user), std::move(schedule), Error::kSuccess};
 }
 
 } // namespace backend

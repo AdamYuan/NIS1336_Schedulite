@@ -6,7 +6,7 @@
 namespace backend {
 
 enum class Error : uint8_t {
-	kOK = 0,
+	kSuccess = 0,
 
 	kFileIOError,
 
@@ -25,8 +25,8 @@ enum class Error : uint8_t {
 };
 inline constexpr const char *GetErrorMessage(Error error) {
 	switch (error) {
-	case Error::kOK:
-		return "No error";
+	case Error::kSuccess:
+		return "Success";
 
 	case Error::kFileIOError:
 		return "File IO error";

@@ -24,7 +24,33 @@ public:
 	inline static constexpr uint32_t kStringHeaderLength = std::string_view(kStringHeader).length();
 
 	enum class Priority : char { kLow, kMedium, kHigh };
+	inline static constexpr const char *GetPriorityStr(Priority priority) {
+		switch (priority) {
+		case Priority::kLow:
+			return "Low";
+		case Priority::kMedium:
+			return "Medium";
+		case Priority::kHigh:
+			return "High";
+		default:
+			return "Unknown";
+		}
+	}
 	enum class Type : char { kNone = 0, kStudy, kPlay, kLife };
+	inline static constexpr const char *GetTypeStr(Type type) {
+		switch (type) {
+		case Type::kNone:
+			return "None";
+		case Type::kStudy:
+			return "Study";
+		case Type::kPlay:
+			return "Play";
+		case Type::kLife:
+			return "Life";
+		default:
+			return "Unknown";
+		}
+	}
 
 	struct Task {
 		uint32_t id;
@@ -79,8 +105,9 @@ public:
 	~Schedule();
 
 	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }
-	inline const std::vector<Task> &GetTasks() const;
 	inline const std::string &GetFilePath() const { return m_file_path; }
+
+	const std::vector<Task> &GetTasks() const;
 
 	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
 	                          Priority priority = Priority::kMedium, Type type = Type::kNone);

@@ -5,6 +5,7 @@
 #include <backend/User.hpp>
 
 #include <cxxopts.hpp>
+#include <tabulate/table.hpp>
 
 // From https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
 #ifdef WIN32
@@ -63,6 +64,17 @@ std::string EnterPassword() {
 	return password;
 }
 
+void PrintTasks(const std::vector<backend::Schedule::Task> &tasks) {
+	tabulate::Table table;
+	table.add_row({"ID", "Name", "Begin time", "Remind time", "Priority", "Type"});
+	for (const auto &task : tasks) {
+		table.add_row({std::to_string(task.id), task.name, backend::ToTimeStr(task.begin_time),
+		               backend::ToTimeStr(task.remind_time), backend::Schedule::GetPriorityStr(task.priority),
+		               backend::Schedule::GetTypeStr(task.type)});
+	}
+	std::cout << table << std::endl;
+}
+
 int main(int argc, char **argv) {
 	cxxopts::Options options{backend::kAppName, "A simple schedule program"};
 	options.add_options()         //
@@ -80,10 +92,10 @@ int main(int argc, char **argv) {
 	    // ("new_password", "New password", cxxopts::value<std::string>()) //
 	    ;
 
-	options.add_options("Schedule")                 //
-	    ("l,list", "List")                          //
-	    ("i,insert", "Insert task")                 //
-	    ("e,erase", "Erase task (with task index)") //
+	options.add_options("Schedule")                                          //
+	    ("l,list", "List")                                                   //
+	    ("i,insert", "Insert task")                                          //
+	    ("e,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>()) //
 	    ;
 
 	std::string time_str_now = backend::GetTimeStrNow();
@@ -149,17 +161,30 @@ int main(int argc, char **argv) {
 			std::tie(user, schedule, error) = backend::User::Login(instance, username, password);
 		}
 
-		if (!user) {
+		if (!user || !schedule) {
 			printf("%s\n", backend::GetErrorMessage(error));
 			exit(EXIT_FAILURE);
 		}
 	}
 
+	if (result.count("list")) {
+		PrintTasks(schedule->GetTasks());
+		return 0;
+	}
+
+	if (result.count("erase")) {
+		auto id = result["erase"].as<uint32_t>();
+		auto error_future = schedule->Erase(id);
+		error = error_future.get();
+		printf("%s\n", backend::GetErrorMessage(error));
+		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+	}
+
 	printf("width=%u\n", GetTerminalWidth());
 
-	auto ins = schedule->Insert("Test", backend::GetTimeIntNow(), backend::GetTimeIntNow());
+	auto ins = schedule->Insert("Test", backend::GetTimeIntNow(), backend::GetTimeIntNow(),
+	                            backend::Schedule::Priority::kHigh, backend::Schedule::Type::kStudy);
 	ins.wait();
-
 	printf("%s\n", backend::GetErrorMessage(ins.get()));
 
 	return 0;
