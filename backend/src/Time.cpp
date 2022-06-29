@@ -43,8 +43,7 @@ std::string ToTimeStr(const TimeInfo &time_info) {
 }
 TimeInfo ToTimeInfo(const char *str) {
 	TimeInfo time_info{};
-	sscanf(str, "%04d/%02u/%02u%02u:%02u", &time_info.year, &time_info.month, &time_info.day, &time_info.hour,
-	       &time_info.minute);
+	sscanf(str, "%d/%u/%u%u:%u", &time_info.year, &time_info.month, &time_info.day, &time_info.hour, &time_info.minute);
 	return time_info;
 }
 

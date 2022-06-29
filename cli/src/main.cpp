@@ -7,6 +7,8 @@
 #include <cxxopts.hpp>
 #include <tabulate/table.hpp>
 
+#include <type_traits>
+
 // From https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
 #ifdef WIN32
 #include <windows.h>
@@ -64,13 +66,25 @@ std::string EnterPassword() {
 	return password;
 }
 
+template <typename Iter> std::string MakeOptionStr(Iter begin, Iter end) {
+	std::string ret{*(begin++)};
+	for (Iter i = begin; i != end; ++i) {
+		ret += '/';
+		ret += std::string{*i};
+	}
+	return ret;
+}
+template <typename Container> std::string MakeOptionStr(Container container) {
+	return MakeOptionStr(std::begin(container), std::end(container));
+}
+
 void PrintTasks(const std::vector<backend::Task> &tasks) {
 	tabulate::Table table;
 	table.add_row({"ID", "Name", "Begin time", "Remind time", "Priority", "Type", "Status"});
 	uint32_t row = 1;
 	backend::TimeInt time_int_now = backend::GetTimeIntNow();
 	for (const auto &task : tasks) {
-		auto status = backend::StatusFromTask(task, time_int_now);
+		auto status = backend::TaskStatusFromTask(task, time_int_now);
 		table.add_row({std::to_string(task.id), task.name, backend::ToTimeStr(task.begin_time),
 		               backend::ToTimeStr(task.remind_time), backend::StrFromTaskPriority(task.priority),
 		               backend::StrFromTaskType(task.type), backend::StrFromTaskStatus(status)});
@@ -113,9 +127,11 @@ int main(int argc, char **argv) {
 	    ("b,btime", "Begin time (local time, \"YYYY/MM/DD hh:mm\")",
 	     cxxopts::value<std::string>()->default_value(time_str_now)) //
 	    ("m,rtime", "Remind time (local time, \"YYYY/MM/DD hh:mm\")",
-	     cxxopts::value<std::string>()->default_value(time_str_now))                                       //
-	    ("priority", "Priority (low/medium/high)", cxxopts::value<std::string>()->default_value("medium")) //
-	    ("type", "Type (none/study/play/life)", cxxopts::value<std::string>()->default_value("none"))      //
+	     cxxopts::value<std::string>()->default_value(time_str_now)) //
+	    ("priority", "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")",
+	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskPriority(backend::kDefaultTaskPriority))) //
+	    ("type", "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")",
+	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskType(backend::kDefaultTaskType))) //
 	    ;
 
 	cxxopts::ParseResult result;
@@ -197,12 +213,22 @@ int main(int argc, char **argv) {
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
-	printf("width=%u\n", GetTerminalWidth());
+	if (result.count("insert")) {
+		if (!result.count("taskname")) {
+			printf("Task name not provided\n");
+			exit(EXIT_FAILURE);
+		}
+		std::string task_name = result["taskname"].as<std::string>();
+		backend::TimeInt task_begin_time = backend::ToTimeInt(result["btime"].as<std::string>());
+		backend::TimeInt task_remind_time = backend::ToTimeInt(result["rtime"].as<std::string>());
+		backend::TaskPriority task_priority = backend::TaskPriorityFromStr(result["priority"].as<std::string>());
+		backend::TaskType task_type = backend::TaskTypeFromStr(result["type"].as<std::string>());
 
-	auto ins = schedule->Insert("Test", backend::GetTimeIntNow(), backend::GetTimeIntNow(),
-	                            backend::TaskPriority::kHigh, backend::TaskType::kStudy);
-	ins.wait();
-	printf("%s\n", backend::GetErrorMessage(ins.get()));
+		auto error_future = schedule->Insert(task_name, task_begin_time, task_remind_time, task_priority, task_type);
+		error = error_future.get();
+		printf("%s\n", backend::GetErrorMessage(error));
+		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+	}
 
 	return 0;
 }

@@ -1,5 +1,7 @@
 #include <backend/Task.hpp>
 
+#include <cctype>
+
 namespace backend {
 
 inline void str_append_uint32(std::string *str, uint32_t n) {
@@ -53,6 +55,38 @@ std::string StrFromTask(const Task &task) {
 	ret += task.name;
 	ret += '\0';
 	return ret;
+}
+
+TaskType TaskTypeFromStr(std::string_view str) {
+	if (str.empty())
+		return kDefaultTaskType;
+	switch (tolower(str[0])) {
+	case 'n':
+		return TaskType::kNone;
+	case 's':
+		return TaskType::kStudy;
+	case 'p':
+		return TaskType::kPlay;
+	case 'l':
+		return TaskType::kLife;
+	default:
+		return kDefaultTaskType;
+	}
+}
+
+TaskPriority TaskPriorityFromStr(std::string_view str) {
+	if (str.empty())
+		return kDefaultTaskPriority;
+	switch (tolower(str[0])) {
+	case 'h':
+		return TaskPriority::kHigh;
+	case 'm':
+		return TaskPriority::kMedium;
+	case 'l':
+		return TaskPriority::kLow;
+	default:
+		return kDefaultTaskPriority;
+	}
 }
 
 } // namespace backend

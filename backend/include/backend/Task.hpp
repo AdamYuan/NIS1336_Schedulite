@@ -1,6 +1,7 @@
 #ifndef SCHEDULITE_TASK_HPP
 #define SCHEDULITE_TASK_HPP
 
+#include <array>
 #include <cinttypes>
 #include <string>
 #include <tuple>
@@ -11,6 +12,9 @@ namespace backend {
 
 enum class TaskPriority : char { kLow, kMedium, kHigh };
 enum class TaskType : char { kNone = 0, kStudy, kPlay, kLife };
+constexpr TaskPriority kDefaultTaskPriority = TaskPriority::kMedium;
+constexpr TaskType kDefaultTaskType = TaskType::kNone;
+
 enum class TaskStatus { kPending, kBegun, kDone };
 
 /**
@@ -52,7 +56,7 @@ std::string StrFromTask(const Task &task);
  * Get TaskStatus based on task data and current time.
  * @brief Get TaskStatus.
  */
-inline TaskStatus StatusFromTask(const Task &task, TimeInt time_int_now = GetTimeIntNow()) {
+inline TaskStatus TaskStatusFromTask(const Task &task, TimeInt time_int_now = GetTimeIntNow()) {
 	return task.done ? TaskStatus::kDone : (task.begin_time > time_int_now ? TaskStatus::kPending : TaskStatus::kBegun);
 }
 
@@ -60,7 +64,7 @@ inline TaskStatus StatusFromTask(const Task &task, TimeInt time_int_now = GetTim
  * Get String descriptor from TaskType enum.
  * @brief Get TaskType's string.
  */
-inline static constexpr const char *StrFromTaskType(TaskType type) {
+inline constexpr const char *StrFromTaskType(TaskType type) {
 	switch (type) {
 	case TaskType::kNone:
 		return "None";
@@ -71,15 +75,26 @@ inline static constexpr const char *StrFromTaskType(TaskType type) {
 	case TaskType::kLife:
 		return "Life";
 	default:
-		return "Unknown";
+		return StrFromTaskType(kDefaultTaskType);
 	}
 }
+
+/**
+ * Get all TaskType strings
+ */
+inline constexpr std::array<const char *, 4> GetTaskTypeStrings() { return {"None", "Study", "Play", "Life"}; }
+
+/**
+ * Get TaskType from a string, the letter case is ignored.
+ * @brief Get TaskType from string.
+ */
+TaskType TaskTypeFromStr(std::string_view str);
 
 /**
  * Get String descriptor from TaskPriority enum.
  * @brief Get TaskPriority's string.
  */
-inline static constexpr const char *StrFromTaskPriority(TaskPriority priority) {
+inline constexpr const char *StrFromTaskPriority(TaskPriority priority) {
 	switch (priority) {
 	case TaskPriority::kLow:
 		return "Low";
@@ -88,15 +103,26 @@ inline static constexpr const char *StrFromTaskPriority(TaskPriority priority) {
 	case TaskPriority::kHigh:
 		return "High";
 	default:
-		return "Unknown";
+		return StrFromTaskPriority(kDefaultTaskPriority);
 	}
 }
+
+/**
+ * Get all TaskPriority strings
+ */
+inline constexpr std::array<const char *, 3> GetTaskPriorityStrings() { return {"Low", "Medium", "High"}; }
+
+/**
+ * Get TaskPriority from a string, the letter case is ignored.
+ * @brief Get TaskPriority from string.
+ */
+TaskPriority TaskPriorityFromStr(std::string_view str);
 
 /**
  * Get String descriptor from TaskStatus enum.
  * @brief Get TaskStatus's string.
  */
-inline static constexpr const char *StrFromTaskStatus(TaskStatus status) {
+inline constexpr const char *StrFromTaskStatus(TaskStatus status) {
 	switch (status) {
 	case TaskStatus::kPending:
 		return "Pending";

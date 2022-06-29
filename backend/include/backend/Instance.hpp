@@ -6,6 +6,8 @@
 #include <string_view>
 
 namespace backend {
+
+/** @brief The App Instance. */
 class Instance {
 private:
 	std::string m_app_dir_path, m_user_dir_path;
