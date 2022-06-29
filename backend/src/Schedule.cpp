@@ -64,8 +64,8 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 		auto task = operation.task;
 		task.id = max_id + 1;
 
-		auto it = std::lower_bound(tasks->begin(), tasks->end(), task);
-		if (it != tasks->end() && task == *it)
+		auto it = std::lower_bound(tasks->begin(), tasks->end(), task, TaskKeyLess);
+		if (it != tasks->end() && TaskKeyEqual(task, *it))
 			return Error::kTaskAlreadyExist;
 		tasks->insert(it, task);
 	} else {

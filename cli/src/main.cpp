@@ -13,14 +13,14 @@
 static constexpr const char *kExampleUserRegister = " -u USER_NAME -r";
 static constexpr const char *kExampleListTasks = " -u USER_NAME -l";
 static constexpr const char *kExampleInsertTask =
-    " -u USER_NAME -i -t TASK_NAME -b BEGIN_TIME -m REMIND_TIME --priority PRIORITY --type TYPE";
+    " -u USER_NAME -i -t TASK_NAME -b BEGIN_TIME -m REMIND_TIME -p PRIORITY -y TYPE";
 static constexpr const char *kExampleEraseTasks = " -u USER_NAME -e TASK_ID";
 static constexpr const char *kExampleDoneTasks = " -u USER_NAME -d TASK_ID";
 
 int main(int argc, char **argv) {
 	cxxopts::Options options{backend::kAppName, "A simple schedule program"};
-	options.add_options()         //
-	    ("h,help", "Print usage") //
+	options.add_options()             //
+	    ("h,cmd_help", "Print usage") //
 	    ("path", "Path for schedule data directory",
 	     cxxopts::value<std::string>()->default_value(backend::GetDefaultAppDirPath())) //
 	    ("env", "Print program environment")                                            //
@@ -46,9 +46,9 @@ int main(int argc, char **argv) {
 	     cxxopts::value<std::string>()->default_value(time_str_now)) //
 	    ("m,rtime", "Remind time (local time, \"YYYY/MM/DD hh:mm\")",
 	     cxxopts::value<std::string>()->default_value(time_str_now)) //
-	    ("priority", "Priority (" + cli::MakeOptionStr(backend::GetTaskPriorityStrings()) + ")",
+	    ("p,priority", "Priority (" + cli::MakeOptionStr(backend::GetTaskPriorityStrings()) + ")",
 	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskPriority(backend::kDefaultTaskPriority))) //
-	    ("type", "Type (" + cli::MakeOptionStr(backend::GetTaskTypeStrings()) + ")",
+	    ("y,type", "Type (" + cli::MakeOptionStr(backend::GetTaskTypeStrings()) + ")",
 	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskType(backend::kDefaultTaskType))) //
 	    ;
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	if (result.count("help") || result.arguments().empty()) {
+	if (result.count("cmd_help") || result.arguments().empty()) {
 		printf("%s\n", options.help().c_str());
 		std::cout << (                                              //
 		    std::string{"Examples:"} +                              //
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 		    "\n      " + backend::kAppName + kExampleEraseTasks +   //
 		    "\n  Done Tasks: " +                                    //
 		    "\n      " + backend::kAppName + kExampleDoneTasks +    //
-		    "\n");
+		    "\n\n");
 		return 0;
 	}
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 		auto path = result["path"].as<std::string>();
 		instance = backend::Instance::Create(path);
 		if (!instance) {
-			printf("Invalid data directory path \"%s\"\n", path.c_str());
+			printf("ERROR: Invalid data directory path \"%s\"\n", path.c_str());
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -110,12 +110,11 @@ int main(int argc, char **argv) {
 	if (result.count("username")) {
 		std::string username = result["username"].as<std::string>();
 
-		std::string password = cli::EnterPassword();
+		std::string password = cli::Input("Password", false);
 
 		if (result.count("register")) {
-			std::string password2 = cli::EnterPassword("Repeat Password: ");
-			if (password != password2) {
-				printf("Not equal\n");
+			if (password != cli::Input("Repeat Password", false)) {
+				cli::PrintError("Not equal");
 				exit(EXIT_FAILURE);
 			}
 			std::tie(user, schedule, error) = backend::User::Register(instance, username, password);
@@ -124,7 +123,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (!user || !schedule) {
-			printf("%s\n", backend::GetErrorMessage(error));
+			cli::PrintError(error);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -138,7 +137,7 @@ int main(int argc, char **argv) {
 		auto id = result["erase"].as<uint32_t>();
 		auto error_future = schedule->Erase(id);
 		error = error_future.get();
-		printf("%s\n", backend::GetErrorMessage(error));
+		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
@@ -146,13 +145,13 @@ int main(int argc, char **argv) {
 		auto id = result["done"].as<uint32_t>();
 		auto error_future = schedule->ToggleDone(id);
 		error = error_future.get();
-		printf("%s\n", backend::GetErrorMessage(error));
+		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
 	if (result.count("insert")) {
 		if (!result.count("taskname")) {
-			printf("Task name not provided\n");
+			cli::PrintError("Task name not provided");
 			exit(EXIT_FAILURE);
 		}
 		std::string task_name = result["taskname"].as<std::string>();
@@ -163,7 +162,7 @@ int main(int argc, char **argv) {
 
 		auto error_future = schedule->Insert(task_name, task_begin_time, task_remind_time, task_priority, task_type);
 		error = error_future.get();
-		printf("%s\n", backend::GetErrorMessage(error));
+		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 

@@ -49,14 +49,18 @@ static uint32_t GetTerminalWidth() {
 }
 
 namespace cli {
-std::string EnterPassword(const char *prompt) {
-	printf("%s", prompt);
-	std::string password;
-	SetStdinEcho(false);
-	std::getline(std::cin, password);
-	SetStdinEcho(true);
-	putchar('\n');
-	return password;
+
+std::string Input(const char *prompt, bool echo) {
+	printf("%s: ", prompt);
+	std::string ret;
+	if (!echo)
+		SetStdinEcho(false);
+	std::getline(std::cin, ret);
+	if (!echo) {
+		SetStdinEcho(true);
+		putchar('\n');
+	}
+	return ret;
 }
 
 uint32_t GetTerminalWidth() { return ::GetTerminalWidth(); }

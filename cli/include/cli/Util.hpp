@@ -6,7 +6,7 @@
 
 namespace cli {
 
-std::string EnterPassword(const char *prompt = "Password: ");
+std::string Input(const char *prompt, bool echo = true);
 uint32_t GetTerminalWidth();
 
 } // namespace cli

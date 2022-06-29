@@ -22,4 +22,12 @@ void PrintTasks(const std::vector<backend::Task> &tasks) {
 	}
 	std::cout << table << std::endl;
 }
+void PrintError(backend::Error error) {
+	if (error != backend::Error::kSuccess)
+		printf("ERROR: %s\n", backend::GetErrorMessage(error));
+	else
+		printf("Success\n");
+}
+void PrintError(std::string_view error_str) { std::cout << "ERROR: " << error_str << std::endl; }
+
 } // namespace cli

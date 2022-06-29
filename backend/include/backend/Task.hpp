@@ -11,7 +11,7 @@
 namespace backend {
 
 enum class TaskPriority : char { kLow, kMedium, kHigh };
-enum class TaskType : char { kNone = 0, kStudy, kPlay, kLife };
+enum class TaskType : char { kNone = 0, kStudy, kPlay, kLife, kWork };
 constexpr TaskPriority kDefaultTaskPriority = TaskPriority::kMedium;
 constexpr TaskType kDefaultTaskType = TaskType::kNone;
 
@@ -36,9 +36,26 @@ struct Task {
 	/** @brief Whether the Task is done or not. */
 	bool done;
 
-	inline bool operator<(const Task &r) const { return std::tie(begin_time, name) < std::tie(r.begin_time, r.name); }
-	inline bool operator==(const Task &r) const { return begin_time == r.begin_time && name == r.name; }
+	inline bool operator==(const Task &r) const {
+		return begin_time == r.begin_time && name == r.name && begin_time == r.begin_time &&
+		       remind_time == r.remind_time && priority == r.priority && type == r.type && done == r.done;
+	}
 };
+
+/**
+ * Compare less Task keys (begin_time and name)
+ * @brief Compare less Task keys
+ */
+inline bool TaskKeyLess(const Task &l, const Task &r) {
+	return std::tie(l.begin_time, l.name) < std::tie(r.begin_time, r.name);
+}
+/**
+ * Compare equal Task keys (begin_time and name)
+ * @brief Compare equal Task keys
+ */
+inline bool TaskKeyEqual(const Task &l, const Task &r) {
+	return std::tie(l.begin_time, l.name) == std::tie(r.begin_time, r.name);
+}
 
 /**
  * Get Task data from an encoded string.
@@ -74,6 +91,8 @@ inline constexpr const char *StrFromTaskType(TaskType type) {
 		return "Play";
 	case TaskType::kLife:
 		return "Life";
+	case TaskType::kWork:
+		return "Work";
 	default:
 		return StrFromTaskType(kDefaultTaskType);
 	}
@@ -82,7 +101,7 @@ inline constexpr const char *StrFromTaskType(TaskType type) {
 /**
  * Get all TaskType strings
  */
-inline constexpr std::array<const char *, 4> GetTaskTypeStrings() { return {"None", "Study", "Play", "Life"}; }
+inline constexpr std::array<const char *, 5> GetTaskTypeStrings() { return {"None", "Study", "Play", "Life", "Work"}; }
 
 /**
  * Get TaskType from a string, the letter case is ignored.

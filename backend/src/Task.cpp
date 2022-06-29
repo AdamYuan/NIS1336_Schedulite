@@ -69,6 +69,8 @@ TaskType TaskTypeFromStr(std::string_view str) {
 		return TaskType::kPlay;
 	case 'l':
 		return TaskType::kLife;
+	case 'w':
+		return TaskType::kWork;
 	default:
 		return kDefaultTaskType;
 	}
