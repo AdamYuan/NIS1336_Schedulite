@@ -35,7 +35,7 @@ void Shell::Run() {
 	}
 }
 
-void Shell::print_prompt() { printf("%s > ", m_schedule_ptr ? m_schedule_ptr->GetUserSPTR()->GetName().c_str() : ""); }
+void Shell::print_prompt() { printf("%s > ", m_schedule_ptr ? m_schedule_ptr->GetUserPtr()->GetName().c_str() : ""); }
 
 std::string Shell::regularize_cmd(std::string_view raw) {
 	std::string cmd;
