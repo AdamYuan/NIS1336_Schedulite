@@ -2,6 +2,8 @@
 
 #include <backend/Encryption.hpp>
 
+#include <condition_variable>
+
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
 #include <readerwriterqueue.h>
@@ -42,6 +44,7 @@ std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_
 
 Schedule::~Schedule() {
 	m_thread_run.store(false, std::memory_order_release);
+	m_sync_thread_cv.notify_all();
 
 	m_sync_object->operation_queue.enqueue({Operation::kQuit});
 
@@ -205,14 +208,18 @@ void Schedule::operation_thread_func() {
 }
 
 void Schedule::sync_thread_func() {
+	std::mutex cv_mutex;
+	std::unique_lock cv_lock{cv_mutex};
+
 	std::vector<Task> tasks;
 	while (m_thread_run.load(std::memory_order_acquire)) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		m_sync_thread_cv.wait_for(cv_lock, std::chrono::milliseconds(100));
 		if (!m_thread_run.load(std::memory_order_acquire))
 			return;
 		Error error;
 		std::tie(tasks, error) = load_tasks(true);
-		push_sync_tasks(std::move(tasks));
+		if (error == Error::kSuccess)
+			push_sync_tasks(std::move(tasks));
 	}
 }
 

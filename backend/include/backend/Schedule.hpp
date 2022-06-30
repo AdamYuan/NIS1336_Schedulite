@@ -12,9 +12,9 @@
 #include <tuple>
 #include <vector>
 
+#include <condition_variable>
 #include <future>
 #include <mutex>
-#include <shared_mutex>
 #include <thread>
 #include <unordered_map>
 
@@ -60,6 +60,7 @@ private:
 	};
 
 	std::atomic_bool m_thread_run{true};
+	std::condition_variable m_sync_thread_cv;
 	std::thread m_operation_thread, m_sync_thread;
 
 	void operation_thread_func();
