@@ -1,5 +1,8 @@
 #include <cli/Util.hpp>
 
+#include <algorithm>
+#include <cctype>
+
 // From https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
 #ifdef WIN32
 #include <windows.h>
@@ -62,6 +65,8 @@ std::string Input(const char *prompt, bool echo) {
 	}
 	return ret;
 }
+
+bool EmptyInput(std::string_view input) { return std::all_of(input.begin(), input.end(), isspace); }
 
 uint32_t GetTerminalWidth() { return ::GetTerminalWidth(); }
 

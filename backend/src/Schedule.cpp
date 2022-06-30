@@ -54,23 +54,62 @@ Schedule::~Schedule() {
 		m_operation_thread.join();
 }
 
+std::future<Error> Schedule::Insert(const TaskProperty &property) {
+	std::promise<Error> promise;
+	auto ret = promise.get_future();
+	m_sync_object->operation_queue.enqueue({Operation::kInsert, 0, property, {}, std::move(promise)});
+	return ret;
+}
+
+std::future<Error> Schedule::Erase(uint32_t id) {
+	std::promise<Error> promise;
+	auto ret = promise.get_future();
+	m_sync_object->operation_queue.enqueue({Operation::kErase, id, {}, {}, std::move(promise)});
+	return ret;
+}
+
+std::future<Error> Schedule::ToggleDone(uint32_t id) {
+	std::promise<Error> promise;
+	auto ret = promise.get_future();
+	m_sync_object->operation_queue.enqueue({Operation::kToggleDone, id, {}, {}, std::move(promise)});
+	return ret;
+}
+
+std::future<Error> Schedule::Edit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask) {
+	std::promise<Error> promise;
+	auto ret = promise.get_future();
+	m_sync_object->operation_queue.enqueue({Operation::kEdit, id, property, property_edit_mask, std::move(promise)});
+	return ret;
+}
+
+const std::vector<Task> &Schedule::GetTasks() const {
+	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
+
+	auto &local_tasks = m_local_tasks[std::this_thread::get_id()];
+	if (m_sync_tasks_version > local_tasks.second) {
+		printf("Get new version\n");
+		local_tasks = {m_sync_tasks, m_sync_tasks_version};
+	}
+	return local_tasks.first;
+}
+
+Error Schedule::insert(std::vector<Task> *tasks, const Task &task) {
+	auto it = std::lower_bound(tasks->begin(), tasks->end(), task, TaskKeyLess);
+	if (it != tasks->end() && TaskKeyEqual(task, *it))
+		return Error::kTaskAlreadyExist;
+	tasks->insert(it, task);
+	return Error::kSuccess;
+}
 Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &operation) {
 	if (operation.op == Operation::kInsert) {
-		// insert
+		// fetch a unique id
 		uint32_t max_id = 0;
 		for (auto &task : *tasks)
 			max_id = std::max(task.id, max_id);
-
-		auto task = operation.task;
-		task.id = max_id + 1;
-
-		auto it = std::lower_bound(tasks->begin(), tasks->end(), task, TaskKeyLess);
-		if (it != tasks->end() && TaskKeyEqual(task, *it))
-			return Error::kTaskAlreadyExist;
-		tasks->insert(it, task);
+		return insert(tasks, {max_id + 1, operation.task_property});
 	} else {
 		// ID based operations
-		uint32_t id = operation.task.id;
+		uint32_t id = operation.id;
 		auto it = std::find_if(tasks->begin(), tasks->end(), [&id](const Task &c) { return c.id == id; });
 		if (it == tasks->end())
 			return Error::kTaskNotFound;
@@ -78,33 +117,17 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 		if (operation.op == Operation::kErase) {
 			tasks->erase(it);
 		} else if (operation.op == Operation::kToggleDone) {
-			it->done ^= 1;
+			it->property.done ^= 1;
+		} else if (operation.op == Operation::kEdit) {
+			Task task = TaskPatch(*it, operation.task_property, operation.task_property_mask);
+			if ((operation.task_property_mask & TaskPropertyMask::kKey) != TaskPropertyMask::kNone) {
+				tasks->erase(it);
+				return insert(tasks, task);
+			} else
+				*it = task;
 		}
 	}
 	return Error::kSuccess;
-}
-
-std::future<Error> Schedule::Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
-                                    TaskPriority priority, TaskType type) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue(
-	    {Operation::kInsert, {0, std::string{name}, begin_time, remind_time, priority, type}, std::move(promise)});
-	return ret;
-}
-
-std::future<Error> Schedule::Erase(uint32_t id) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue({Operation::kErase, {id}, std::move(promise)});
-	return ret;
-}
-
-std::future<Error> Schedule::ToggleDone(uint32_t id) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue({Operation::kToggleDone, {id}, std::move(promise)});
-	return ret;
 }
 
 std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
@@ -231,17 +254,6 @@ void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
 		m_sync_tasks = std::move(tasks);
 		++m_sync_tasks_version;
 	}
-}
-
-const std::vector<Task> &Schedule::GetTasks() const {
-	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
-
-	auto &local_tasks = m_local_tasks[std::this_thread::get_id()];
-	if (m_sync_tasks_version > local_tasks.second) {
-		printf("Get new version\n");
-		local_tasks = {m_sync_tasks, m_sync_tasks_version};
-	}
-	return local_tasks.first;
 }
 
 } // namespace backend

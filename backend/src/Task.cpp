@@ -24,21 +24,21 @@ std::tuple<Task, uint32_t> TaskFromStr(std::string_view str) {
 	uint32_t len = 4 + 4 + 4 + 1 + 1 + 1;
 	task.id = uint32_from_str(str);
 	str = str.substr(4);
-	task.begin_time = uint32_from_str(str);
+	task.property.begin_time = uint32_from_str(str);
 	str = str.substr(4);
-	task.remind_time = uint32_from_str(str);
+	task.property.remind_time = uint32_from_str(str);
 	str = str.substr(4);
-	task.priority = (TaskPriority)str[0];
-	task.type = (TaskType)str[1];
-	task.done = (bool)str[2];
+	task.property.priority = (TaskPriority)str[0];
+	task.property.type = (TaskType)str[1];
+	task.property.done = (bool)str[2];
 	str = str.substr(3);
 	{
 		auto num = str.find_first_of('\0');
 		if (num == std::string::npos) {
-			task.name = str;
+			task.property.name = str;
 			len += str.length();
 		} else {
-			task.name = str.substr(0, num);
+			task.property.name = str.substr(0, num);
 			len += num + 1;
 		}
 	}
@@ -47,12 +47,12 @@ std::tuple<Task, uint32_t> TaskFromStr(std::string_view str) {
 std::string StrFromTask(const Task &task) {
 	std::string ret;
 	str_append_uint32(&ret, task.id);
-	str_append_uint32(&ret, task.begin_time);
-	str_append_uint32(&ret, task.remind_time);
-	ret += (char)task.priority;
-	ret += (char)task.type;
-	ret += (char)task.done;
-	ret += task.name;
+	str_append_uint32(&ret, task.property.begin_time);
+	str_append_uint32(&ret, task.property.remind_time);
+	ret += (char)task.property.priority;
+	ret += (char)task.property.type;
+	ret += (char)task.property.done;
+	ret += task.property.name;
 	ret += '\0';
 	return ret;
 }

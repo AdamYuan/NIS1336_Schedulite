@@ -59,6 +59,8 @@ void Shell::run_cmd(std::string_view cmd) {
 		cmd_list();
 	} else if (cmd == "insert") {
 		cmd_insert();
+	} else if (cmd == "edit") {
+		cmd_edit();
 	} else if (cmd == "erase") {
 		cmd_erase();
 	} else if (cmd == "done") {
@@ -75,6 +77,7 @@ login       User login.
 register    User register.
 list, ls    List all tasks.
 insert      Insert a task.
+edit        Edit a task.
 erase       Erase a task.
 done        Done with a task (toggle).
 )");
@@ -149,21 +152,71 @@ void Shell::cmd_insert() {
 		return;
 	}
 
-	std::string name;
-	backend::TimeInt begin_time, remind_time;
-	backend::TaskPriority priority;
-	backend::TaskType type;
-
+	backend::TaskProperty property;
 	{
 		std::scoped_lock lock{m_io_mutex};
-		name = Input("Name");
-		begin_time = backend::ToTimeInt(Input("Begin time"));
-		remind_time = backend::ToTimeInt(Input("Remind time"));
-		priority = backend::TaskPriorityFromStr(Input("Priority"));
-		type = backend::TaskTypeFromStr(Input("Type"));
+		property.name = Input("Name");
+		property.begin_time = backend::ToTimeInt(Input("Begin time (YYYY/MM/DD hh:mm)"));
+		property.remind_time = backend::ToTimeInt(Input("Remind time (YYYY/MM/DD hh:mm)"));
+		property.priority = backend::TaskPriorityFromStr(
+		    Input((std::string) "Priority " + MakeOptionStr(backend::GetTaskPriorityStrings())));
+		property.type =
+		    backend::TaskTypeFromStr(Input((std::string) "Type " + MakeOptionStr(backend::GetTaskTypeStrings())));
+	}
+	PrintError(m_schedule_ptr->Insert(property).get());
+}
+void Shell::cmd_edit() {
+	if (!m_schedule_ptr) {
+		std::scoped_lock lock{m_io_mutex};
+		PrintError(backend::Error::kUserNotLoggedIn);
+		return;
 	}
 
-	PrintError(m_schedule_ptr->Insert(name, begin_time, remind_time, priority, type).get());
+	backend::TaskProperty property;
+	backend::TaskPropertyMask edit_mask{};
+	uint32_t id;
+	{
+		std::scoped_lock lock{m_io_mutex};
+		std::string id_str = Input("ID");
+		try {
+			id = std::stoul(id_str);
+		} catch (...) {
+			PrintError("Bad ID");
+			return;
+		}
+		printf("New properties (leave empty if not change)\n");
+
+		property.name = Input("New name");
+		if (!EmptyInput(property.name))
+			edit_mask |= backend::TaskPropertyMask::kName;
+
+		std::string input;
+
+		input = Input("New begin time (YYYY/MM/DD hh:mm)");
+		if (!EmptyInput(input)) {
+			property.begin_time = backend::ToTimeInt(input);
+			edit_mask |= backend::TaskPropertyMask::kBeginTime;
+		}
+
+		input = Input("New remind time (YYYY/MM/DD hh:mm)");
+		if (!EmptyInput(input)) {
+			property.remind_time = backend::ToTimeInt(input);
+			edit_mask |= backend::TaskPropertyMask::kRemindTime;
+		}
+
+		input = Input((std::string) "New priority " + MakeOptionStr(backend::GetTaskPriorityStrings()));
+		if (!EmptyInput(input)) {
+			property.priority = backend::TaskPriorityFromStr(input);
+			edit_mask |= backend::TaskPropertyMask::kPriority;
+		}
+
+		input = Input((std::string) "New type " + MakeOptionStr(backend::GetTaskTypeStrings()));
+		if (!EmptyInput(input)) {
+			property.type = backend::TaskTypeFromStr(input);
+			edit_mask |= backend::TaskPropertyMask::kType;
+		}
+	}
+	PrintError(m_schedule_ptr->Edit(id, property, edit_mask).get());
 }
 void Shell::cmd_erase() {
 	if (!m_schedule_ptr) {

@@ -19,6 +19,7 @@ enum class Error : uint8_t {
 	kTaskNotFound,
 	kTaskAlreadyExist,
 };
+
 inline constexpr const char *GetErrorMessage(Error error) {
 	switch (error) {
 	case Error::kSuccess:

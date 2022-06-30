@@ -25,6 +25,7 @@ private:
 	void cmd_login();
 	void cmd_list();
 	void cmd_insert();
+	void cmd_edit();
 	void cmd_erase();
 	void cmd_done();
 

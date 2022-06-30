@@ -160,13 +160,15 @@ int main(int argc, char **argv) {
 			cli::PrintError("Task name not provided");
 			exit(EXIT_FAILURE);
 		}
-		std::string task_name = result["taskname"].as<std::string>();
-		backend::TimeInt task_begin_time = backend::ToTimeInt(result["btime"].as<std::string>());
-		backend::TimeInt task_remind_time = backend::ToTimeInt(result["rtime"].as<std::string>());
-		backend::TaskPriority task_priority = backend::TaskPriorityFromStr(result["priority"].as<std::string>());
-		backend::TaskType task_type = backend::TaskTypeFromStr(result["type"].as<std::string>());
 
-		auto error_future = schedule->Insert(task_name, task_begin_time, task_remind_time, task_priority, task_type);
+		backend::TaskProperty property;
+		property.name = result["taskname"].as<std::string>();
+		property.begin_time = backend::ToTimeInt(result["btime"].as<std::string>());
+		property.remind_time = backend::ToTimeInt(result["rtime"].as<std::string>());
+		property.priority = backend::TaskPriorityFromStr(result["priority"].as<std::string>());
+		property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
+
+		auto error_future = schedule->Insert(property);
 		error = error_future.get();
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);

@@ -15,6 +15,7 @@
 #include <condition_variable>
 #include <future>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <unordered_map>
 
@@ -31,11 +32,10 @@ public:
 
 	const std::vector<Task> &GetTasks() const;
 
-	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
-	                          TaskPriority priority = TaskPriority::kMedium, TaskType type = TaskType::kNone);
+	std::future<Error> Insert(const TaskProperty &task_property);
 	std::future<Error> Erase(uint32_t id);
+	std::future<Error> Edit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask);
 	std::future<Error> ToggleDone(uint32_t id);
-	// TODO: Operation Edit
 
 private:
 	inline static constexpr const char *kStringHeader = "Schedule";
@@ -54,8 +54,10 @@ private:
 	mutable std::vector<Task> m_sync_tasks;
 
 	struct Operation {
-		enum Op { kInsert, kErase, kToggleDone, kQuit } op{};
-		Task task;
+		enum Op { kInsert, kErase, kToggleDone, kEdit, kQuit } op{};
+		uint32_t id;
+		TaskProperty task_property;
+		TaskPropertyMask task_property_mask;
 		std::promise<Error> error_promise;
 	};
 
@@ -74,6 +76,7 @@ private:
 	static std::string get_string(const std::vector<Task> &tasks);
 	static std::tuple<std::vector<Task>, Error> parse_string(std::string_view str);
 
+	static Error insert(std::vector<Task> *tasks, const Task &task);
 	static Error operate(std::vector<Task> *tasks, const Operation &operation);
 };
 

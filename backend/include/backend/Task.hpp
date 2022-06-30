@@ -18,11 +18,9 @@ constexpr TaskType kDefaultTaskType = TaskType::kNone;
 enum class TaskStatus { kPending, kBegun, kDone };
 
 /**
- * @brief Task structure.
+ * @brief Task property structure.
  */
-struct Task {
-	/** @brief The Task ID. */
-	uint32_t id;
+struct TaskProperty {
 	/** @brief The Task name. */
 	std::string name;
 	/** @brief The Task's begin time. */
@@ -30,32 +28,125 @@ struct Task {
 	/** @brief Time to remind. */
 	TimeInt remind_time;
 	/** @brief The Task priority. */
-	TaskPriority priority;
+	TaskPriority priority = kDefaultTaskPriority;
 	/** @brief The Task type. */
-	TaskType type;
+	TaskType type = kDefaultTaskType;
 	/** @brief Whether the Task is done or not. */
 	bool done;
 
-	inline bool operator==(const Task &r) const {
+	inline bool operator==(const TaskProperty &r) const {
 		return begin_time == r.begin_time && name == r.name && begin_time == r.begin_time &&
 		       remind_time == r.remind_time && priority == r.priority && type == r.type && done == r.done;
 	}
 };
 
 /**
+ * @brief Task property mask.
+ */
+enum class TaskPropertyMask {
+	kNone = 0,
+	kName = 1 << 0,
+	kBeginTime = 1 << 1,
+	kKey = kName | kBeginTime,
+	kRemindTime = 1 << 2,
+	kPriority = 1 << 3,
+	kType = 1 << 4,
+	kDone = 1 << 5,
+	kAll = (1 << 6) - 1
+};
+inline constexpr TaskPropertyMask operator|(TaskPropertyMask l, TaskPropertyMask r) {
+	return (TaskPropertyMask)(int(l) | int(r));
+}
+inline constexpr TaskPropertyMask operator&(TaskPropertyMask l, TaskPropertyMask r) {
+	return (TaskPropertyMask)(int(l) & int(r));
+}
+inline constexpr TaskPropertyMask operator^(TaskPropertyMask l, TaskPropertyMask r) {
+	return (TaskPropertyMask)(int(l) ^ int(r));
+}
+inline TaskPropertyMask &operator|=(TaskPropertyMask &a, TaskPropertyMask b) {
+	return (TaskPropertyMask &)((int &)a |= (int)b);
+}
+inline TaskPropertyMask &operator&=(TaskPropertyMask &a, TaskPropertyMask b) {
+	return (TaskPropertyMask &)((int &)a &= (int)b);
+}
+inline TaskPropertyMask &operator^=(TaskPropertyMask &a, TaskPropertyMask b) {
+	return (TaskPropertyMask &)((int &)a ^= (int)b);
+}
+
+/**
+ * Patch a TaskProperty object with another TaskProperty and a mask.
+ * @brief Patch a TaskProperty object.
+ * @param origin The TaskProperty object to be patched.
+ * @param patch The TaskProperty patch.
+ * @param patch_mask Indicate the element of TaskProperty to be patched.
+ * @return The patched TaskProperty.
+ */
+inline TaskProperty TaskPropertyPatch(const TaskProperty &origin, const TaskProperty &patch,
+                                      TaskPropertyMask patch_mask) {
+	TaskProperty patched = origin;
+	if ((patch_mask & TaskPropertyMask::kName) != TaskPropertyMask::kNone)
+		patched.name = patch.name;
+	if ((patch_mask & TaskPropertyMask::kBeginTime) != TaskPropertyMask::kNone)
+		patched.begin_time = patch.begin_time;
+	if ((patch_mask & TaskPropertyMask::kRemindTime) != TaskPropertyMask::kNone)
+		patched.remind_time = patch.remind_time;
+	if ((patch_mask & TaskPropertyMask::kPriority) != TaskPropertyMask::kNone)
+		patched.priority = patch.priority;
+	if ((patch_mask & TaskPropertyMask::kType) != TaskPropertyMask::kNone)
+		patched.type = patch.type;
+	if ((patch_mask & TaskPropertyMask::kDone) != TaskPropertyMask::kNone)
+		patched.done = patch.done;
+	return patched;
+}
+
+/**
+ * @brief Task structure.
+ */
+struct Task {
+	/** @brief The Task ID. */
+	uint32_t id;
+	/** @brief The Task property. */
+	TaskProperty property;
+
+	inline bool operator==(const Task &r) const { return id == r.id && property == r.property; }
+};
+
+/**
+ * Patch a Task object with a TaskProperty and a mask.
+ * @brief Patch a Task object.
+ * @param origin The Task object to be patched.
+ * @param patch The TaskProperty patch.
+ * @param patch_mask Indicate the element of TaskProperty to be patched.
+ * @return The patched Task.
+ */
+inline Task TaskPatch(const Task &origin, const TaskProperty &patch, TaskPropertyMask patch_mask) {
+	return {origin.id, TaskPropertyPatch(origin.property, patch, patch_mask)};
+}
+
+/**
+ * Compare less TaskProperty keys (begin_time and name)
+ * @brief Compare less TaskProperty keys
+ */
+inline bool TaskPropertyKeyLess(const TaskProperty &l, const TaskProperty &r) {
+	return std::tie(l.begin_time, l.name) < std::tie(r.begin_time, r.name);
+}
+/**
  * Compare less Task keys (begin_time and name)
  * @brief Compare less Task keys
  */
-inline bool TaskKeyLess(const Task &l, const Task &r) {
-	return std::tie(l.begin_time, l.name) < std::tie(r.begin_time, r.name);
+inline bool TaskKeyLess(const Task &l, const Task &r) { return TaskPropertyKeyLess(l.property, r.property); }
+/**
+ * Compare equal TaskProperty keys (begin_time and name)
+ * @brief Compare equal TaskProperty keys
+ */
+inline bool TaskPropertyKeyEqual(const TaskProperty &l, const TaskProperty &r) {
+	return std::tie(l.begin_time, l.name) == std::tie(r.begin_time, r.name);
 }
 /**
  * Compare equal Task keys (begin_time and name)
  * @brief Compare equal Task keys
  */
-inline bool TaskKeyEqual(const Task &l, const Task &r) {
-	return std::tie(l.begin_time, l.name) == std::tie(r.begin_time, r.name);
-}
+inline bool TaskKeyEqual(const Task &l, const Task &r) { return TaskPropertyKeyEqual(l.property, r.property); }
 
 /**
  * Get Task data from an encoded string.
@@ -70,11 +161,20 @@ std::tuple<Task, uint32_t> TaskFromStr(std::string_view str);
 std::string StrFromTask(const Task &task);
 
 /**
- * Get TaskStatus based on task data and current time.
- * @brief Get TaskStatus.
+ * Get TaskStatus based on TaskProperty data and current time.
+ * @brief Get TaskStatus from TaskProperty.
+ */
+inline TaskStatus TaskStatusFromTask(const TaskProperty &task_property, TimeInt time_int_now = GetTimeIntNow()) {
+	return task_property.done ? TaskStatus::kDone
+	                          : (task_property.begin_time > time_int_now ? TaskStatus::kPending : TaskStatus::kBegun);
+}
+
+/**
+ * Get TaskStatus based on Task data and current time.
+ * @brief Get TaskStatus from Task.
  */
 inline TaskStatus TaskStatusFromTask(const Task &task, TimeInt time_int_now = GetTimeIntNow()) {
-	return task.done ? TaskStatus::kDone : (task.begin_time > time_int_now ? TaskStatus::kPending : TaskStatus::kBegun);
+	return TaskStatusFromTask(task.property, time_int_now);
 }
 
 /**
