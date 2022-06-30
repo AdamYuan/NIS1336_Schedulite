@@ -13,7 +13,7 @@
 namespace cli {
 
 void Shell::Run() {
-	printf("%s CLI shell\nApp directory: %s\nUser directory: %s\nLocal time: %s\nEnter \"cmd_help\" for usage hints.\n",
+	printf("%s CLI shell\nApp directory: %s\nUser directory: %s\nLocal time: %s\nEnter \"help\" for usage hints.\n",
 	       backend::kAppName, m_instance_ptr->GetAppDirPath().c_str(), m_instance_ptr->GetUserDirPath().c_str(),
 	       backend::GetTimeStrNow().c_str());
 	std::string cmd;
