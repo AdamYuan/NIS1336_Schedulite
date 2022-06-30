@@ -218,6 +218,7 @@ void Schedule::sync_thread_func() {
 
 void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
 	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
+
 	if (tasks != m_sync_tasks) {
 		printf("Sync to new version\n"); // TODO: Debug
 		m_sync_tasks = std::move(tasks);
@@ -226,17 +227,14 @@ void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
 }
 
 const std::vector<Task> &Schedule::GetTasks() const {
-	thread_local uint32_t local_tasks_version{0};
-	thread_local std::vector<Task> local_tasks;
-	{
-		std::shared_lock tasks_read_lock{m_sync_tasks_mutex};
-		if (m_sync_tasks_version > local_tasks_version) {
-			printf("Get new version\n"); // TODO: Debug
-			local_tasks = m_sync_tasks;
-			local_tasks_version = m_sync_tasks_version;
-		}
+	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
+
+	auto &local_tasks = m_local_tasks[std::this_thread::get_id()];
+	if (m_sync_tasks_version > local_tasks.second) {
+		printf("Get new version\n");
+		local_tasks = {m_sync_tasks, m_sync_tasks_version};
 	}
-	return local_tasks;
+	return local_tasks.first;
 }
 
 } // namespace backend

@@ -16,6 +16,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
+#include <unordered_map>
 
 namespace backend {
 
@@ -30,7 +31,9 @@ private:
 	struct SyncObject;
 	std::shared_ptr<SyncObject> m_sync_object;
 
-	mutable std::shared_mutex m_sync_tasks_mutex;
+	// Objects to sync local tasks
+	mutable std::unordered_map<std::thread::id, std::pair<std::vector<Task>, uint32_t>> m_local_tasks;
+	mutable std::mutex m_sync_tasks_mutex;
 	mutable uint32_t m_sync_tasks_version{0};
 	mutable std::vector<Task> m_sync_tasks;
 
