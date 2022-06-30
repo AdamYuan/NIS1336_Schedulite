@@ -20,16 +20,19 @@ private:
 	std::shared_ptr<Instance> m_instance_ptr;
 	std::string m_name, m_key, m_file_path;
 
+	struct SyncObject;
+	std::shared_ptr<SyncObject> m_sync_object;
+
 public:
 	explicit User(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
 	inline ~User() = default;
 
 	static bool ValidateUsername(std::string_view username);
 
-	static std::tuple<std::shared_ptr<User>, Error>
-	Register(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
-	static std::tuple<std::shared_ptr<User>, Error>
-	Login(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
+	static std::tuple<std::shared_ptr<User>, Error> Register(const std::shared_ptr<Instance> &instance_ptr,
+	                                                         std::string_view username, std::string_view password);
+	static std::tuple<std::shared_ptr<User>, Error> Login(const std::shared_ptr<Instance> &instance_ptr,
+	                                                      std::string_view username, std::string_view password);
 
 	inline const std::shared_ptr<Instance> &GetInstanceSPtr() const { return m_instance_ptr; }
 	inline const std::string &GetName() const { return m_name; }
