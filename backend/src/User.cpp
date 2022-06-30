@@ -30,7 +30,7 @@ User::User(const std::shared_ptr<Instance> &instance_ptr, std::string_view usern
 }
 
 bool User::ValidateUsername(std::string_view username) {
-	return std::all_of(username.begin(), username.end(), isalnum);
+	return !username.empty() && std::all_of(username.begin(), username.end(), isalnum);
 }
 
 std::tuple<std::shared_ptr<User>, Error> User::Register(const std::shared_ptr<Instance> &instance_ptr,
