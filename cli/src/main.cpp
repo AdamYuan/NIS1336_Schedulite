@@ -13,8 +13,11 @@
 static constexpr const char *kExampleUserRegister = " -u USER_NAME -r";
 static constexpr const char *kExampleListTasks = " -u USER_NAME -l";
 static constexpr const char *kExampleInsertTask =
-    " -u USER_NAME -i -t TASK_NAME -b BEGIN_TIME -m REMIND_TIME -p PRIORITY -y TYPE";
-static constexpr const char *kExampleEraseTasks = " -u USER_NAME -e TASK_ID";
+    " -u USER_NAME -i -t TASK_NAME -b BEGIN_TIME\n      -m REMIND_TIME -p PRIORITY -y TYPE";
+static constexpr const char *kExampleEditTask =
+    " -u USER_NAME -e TASK_ID [-t NEW_TASK_NAME]\n      [-b NEW_BEGIN_TIME] [-m NEW_REMIND_TIME]\n      [-p "
+    "NEW_PRIORITY] [-y NEW_TYPE]";
+static constexpr const char *kExampleEraseTasks = " -u USER_NAME -s TASK_ID";
 static constexpr const char *kExampleDoneTasks = " -u USER_NAME -d TASK_ID";
 
 int main(int argc, char **argv) {
@@ -35,21 +38,23 @@ int main(int argc, char **argv) {
 	options.add_options("Schedule")                                                       //
 	    ("l,list", "List")                                                                //
 	    ("i,insert", "Insert task")                                                       //
-	    ("e,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>())              //
+	    ("e,edit", "Edit task (with task ID)", cxxopts::value<uint32_t>())                //
+	    ("s,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>())              //
 	    ("d,done", "Done with a task (toggle, with task ID)", cxxopts::value<uint32_t>()) //
 	    ;
 
-	std::string time_str_now = backend::GetTimeStrNow();
+	backend::TimeInt time_int_now = backend::GetTimeIntNow();
+	std::string time_str_now = backend::ToTimeStr(time_int_now);
 	options.add_options("Task")                                    //
 	    ("t,taskname", "Task name", cxxopts::value<std::string>()) //
 	    ("b,btime", "Begin time (local time, \"YYYY/MM/DD hh:mm\")",
-	     cxxopts::value<std::string>()->default_value(time_str_now)) //
+	     cxxopts::value<std::string>()) //
 	    ("m,rtime", "Remind time (local time, \"YYYY/MM/DD hh:mm\")",
-	     cxxopts::value<std::string>()->default_value(time_str_now)) //
+	     cxxopts::value<std::string>()) //
 	    ("p,priority", "Priority (" + cli::MakeOptionStr(backend::GetTaskPriorityStrings()) + ")",
-	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskPriority(backend::kDefaultTaskPriority))) //
+	     cxxopts::value<std::string>()) //
 	    ("y,type", "Type (" + cli::MakeOptionStr(backend::GetTaskTypeStrings()) + ")",
-	     cxxopts::value<std::string>()->default_value(backend::StrFromTaskType(backend::kDefaultTaskType))) //
+	     cxxopts::value<std::string>()) //
 	    ;
 
 	cxxopts::ParseResult result;
@@ -62,18 +67,20 @@ int main(int argc, char **argv) {
 
 	if (result.count("cmd_help") || result.arguments().empty()) {
 		printf("%s\n", options.help().c_str());
-		std::cout << (                                              //
-		    std::string{"Examples:"} +                              //
-		    "\n  Register: " +                                      //
-		    "\n      " + backend::kAppName + kExampleUserRegister + //
-		    "\n  List Tasks: " +                                    //
-		    "\n      " + backend::kAppName + kExampleListTasks +    //
-		    "\n  Insert Tasks: " +                                  //
-		    "\n      " + backend::kAppName + kExampleInsertTask +   //
-		    "\n  Erase Tasks: " +                                   //
-		    "\n      " + backend::kAppName + kExampleEraseTasks +   //
-		    "\n  Done Tasks: " +                                    //
-		    "\n      " + backend::kAppName + kExampleDoneTasks +    //
+		std::cout << (                                                      //
+		    std::string{"Examples:"} +                                      //
+		    "\n  Register: " +                                              //
+		    "\n      " + backend::kAppName + kExampleUserRegister +         //
+		    "\n\n  List Tasks: " +                                          //
+		    "\n      " + backend::kAppName + kExampleListTasks +            //
+		    "\n\n  Insert Tasks: " +                                        //
+		    "\n      " + backend::kAppName + kExampleInsertTask +           //
+		    "\n\n  Edit Tasks (ignore args in [] if no need to change): " + //
+		    "\n      " + backend::kAppName + kExampleEditTask +             //
+		    "\n\n  Erase Tasks: " +                                         //
+		    "\n      " + backend::kAppName + kExampleEraseTasks +           //
+		    "\n\n  Done Tasks: " +                                          //
+		    "\n      " + backend::kAppName + kExampleDoneTasks +            //
 		    "\n\n");
 		return 0;
 	}
@@ -163,12 +170,50 @@ int main(int argc, char **argv) {
 
 		backend::TaskProperty property;
 		property.name = result["taskname"].as<std::string>();
-		property.begin_time = backend::ToTimeInt(result["btime"].as<std::string>());
-		property.remind_time = backend::ToTimeInt(result["rtime"].as<std::string>());
-		property.priority = backend::TaskPriorityFromStr(result["priority"].as<std::string>());
-		property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
+		property.begin_time = property.remind_time = time_int_now;
+		if (result.count("btime"))
+			property.begin_time = backend::ToTimeInt(result["btime"].as<std::string>());
+		if (result.count("rtime"))
+			property.remind_time = backend::ToTimeInt(result["rtime"].as<std::string>());
+		if (result.count("priority"))
+			property.priority = backend::TaskPriorityFromStr(result["priority"].as<std::string>());
+		if (result.count("type"))
+			property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
 
 		auto error_future = schedule->Insert(property);
+		error = error_future.get();
+		cli::PrintError(error);
+		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+	}
+
+	if (result.count("edit")) {
+		auto id = result["edit"].as<uint32_t>();
+
+		backend::TaskProperty property;
+		backend::TaskPropertyMask edit_mask;
+
+		if (result["taskname"].count()) {
+			property.name = result["taskname"].as<std::string>();
+			edit_mask |= backend::TaskPropertyMask::kName;
+		}
+		if (result.count("btime")) {
+			property.begin_time = backend::ToTimeInt(result["btime"].as<std::string>());
+			edit_mask |= backend::TaskPropertyMask::kBeginTime;
+		}
+		if (result.count("rtime")) {
+			property.remind_time = backend::ToTimeInt(result["rtime"].as<std::string>());
+			edit_mask |= backend::TaskPropertyMask::kRemindTime;
+		}
+		if (result.count("priority")) {
+			property.priority = backend::TaskPriorityFromStr(result["priority"].as<std::string>());
+			edit_mask |= backend::TaskPropertyMask::kPriority;
+		}
+		if (result.count("type")) {
+			property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
+			edit_mask |= backend::TaskPropertyMask::kType;
+		}
+
+		auto error_future = schedule->Edit(id, property, edit_mask);
 		error = error_future.get();
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);

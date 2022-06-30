@@ -78,6 +78,10 @@ std::future<Error> Schedule::ToggleDone(uint32_t id) {
 std::future<Error> Schedule::Edit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
+	if (property_edit_mask == TaskPropertyMask::kNone) {
+		promise.set_value(Error::kSuccess);
+		return ret;
+	}
 	m_sync_object->operation_queue.enqueue({Operation::kEdit, id, property, property_edit_mask, std::move(promise)});
 	return ret;
 }
