@@ -91,7 +91,7 @@ const std::vector<Task> &Schedule::GetTasks() const {
 
 	auto &local_tasks = m_local_tasks[std::this_thread::get_id()];
 	if (m_sync_tasks_version > local_tasks.second) {
-		printf("Get new version\n");
+		// printf("Get new version\n");
 		local_tasks = {m_sync_tasks, m_sync_tasks_version};
 	}
 	return local_tasks.first;
@@ -221,7 +221,7 @@ void Schedule::operation_thread_func() {
 				continue;
 			}
 
-			printf("Operate\n"); // TODO: Debug
+			// printf("Operate\n"); // TODO: Debug
 			error = operate(&tasks, operation);
 			if (error != Error::kSuccess) {
 				operation.error_promise.set_value(error);
@@ -254,7 +254,7 @@ void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
 	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
 
 	if (tasks != m_sync_tasks) {
-		printf("Sync to new version\n"); // TODO: Debug
+		// printf("Sync to new version\n"); // TODO: Debug
 		m_sync_tasks = std::move(tasks);
 		++m_sync_tasks_version;
 	}
