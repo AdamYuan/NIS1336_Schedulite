@@ -76,9 +76,9 @@ void Shell::cmd_help() {
 login       User login.
 register    User register.
 list, ls    List all tasks.
-insert      Insert a task.
-edit        Edit a task.
-erase       Erase a task.
+insert      TaskInsert a task.
+edit        TaskEdit a task.
+erase       TaskErase a task.
 done        Done with a task (toggle).
 )");
 }
@@ -163,7 +163,7 @@ void Shell::cmd_insert() {
 		property.type =
 		    backend::TaskTypeFromStr(Input((std::string) "Type " + MakeOptionStr(backend::GetTaskTypeStrings())));
 	}
-	PrintError(m_schedule_ptr->Insert(property).get());
+	PrintError(m_schedule_ptr->TaskInsert(property).get());
 }
 void Shell::cmd_edit() {
 	if (!m_schedule_ptr) {
@@ -216,7 +216,7 @@ void Shell::cmd_edit() {
 			edit_mask |= backend::TaskPropertyMask::kType;
 		}
 	}
-	PrintError(m_schedule_ptr->Edit(id, property, edit_mask).get());
+	PrintError(m_schedule_ptr->TaskEdit(id, property, edit_mask).get());
 }
 void Shell::cmd_erase() {
 	if (!m_schedule_ptr) {
@@ -237,7 +237,7 @@ void Shell::cmd_erase() {
 		return;
 	}
 
-	PrintError(m_schedule_ptr->Erase(id).get());
+	PrintError(m_schedule_ptr->TaskErase(id).get());
 }
 void Shell::cmd_done() {
 	if (!m_schedule_ptr) {
@@ -258,7 +258,7 @@ void Shell::cmd_done() {
 		return;
 	}
 
-	PrintError(m_schedule_ptr->ToggleDone(id).get());
+	PrintError(m_schedule_ptr->TaskToggleDone(id).get());
 }
 
 } // namespace cli

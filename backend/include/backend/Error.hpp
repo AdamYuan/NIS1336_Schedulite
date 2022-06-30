@@ -5,6 +5,7 @@
 
 namespace backend {
 
+/** @brief Error codes. */
 enum class Error : uint8_t {
 	kSuccess = 0,
 
@@ -20,6 +21,10 @@ enum class Error : uint8_t {
 	kTaskAlreadyExist,
 };
 
+/**
+ * Get the corresponding error message from an Error.
+ * @brief Get Error message.
+ */
 inline constexpr const char *GetErrorMessage(Error error) {
 	switch (error) {
 	case Error::kSuccess:

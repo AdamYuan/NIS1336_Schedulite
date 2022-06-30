@@ -21,7 +21,7 @@ struct Schedule::SyncObject {
 
 Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 	m_user_ptr = user_ptr;
-	m_file_path = ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetScheduleDirPath()}
+	m_file_path = ghc::filesystem::path{m_user_ptr->GetInstancePtr()->GetScheduleDirPath()}
 	                  .append(m_user_ptr->GetName())
 	                  .string();
 	m_sync_object = std::make_shared<SyncObject>(m_user_ptr->GetName());
@@ -54,28 +54,28 @@ Schedule::~Schedule() {
 		m_operation_thread.join();
 }
 
-std::future<Error> Schedule::Insert(const TaskProperty &property) {
+std::future<Error> Schedule::TaskInsert(const TaskProperty &task_property) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue({Operation::kInsert, 0, property, {}, std::move(promise)});
+	m_sync_object->operation_queue.enqueue({Operation::kInsert, 0, task_property, {}, std::move(promise)});
 	return ret;
 }
 
-std::future<Error> Schedule::Erase(uint32_t id) {
+std::future<Error> Schedule::TaskErase(uint32_t id) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	m_sync_object->operation_queue.enqueue({Operation::kErase, id, {}, {}, std::move(promise)});
 	return ret;
 }
 
-std::future<Error> Schedule::ToggleDone(uint32_t id) {
+std::future<Error> Schedule::TaskToggleDone(uint32_t id) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	m_sync_object->operation_queue.enqueue({Operation::kToggleDone, id, {}, {}, std::move(promise)});
 	return ret;
 }
 
-std::future<Error> Schedule::Edit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask) {
+std::future<Error> Schedule::TaskEdit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask) {
 	std::promise<Error> promise;
 	auto ret = promise.get_future();
 	if (property_edit_mask == TaskPropertyMask::kNone) {
@@ -135,7 +135,7 @@ Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &ope
 }
 
 std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
-	if (!m_user_ptr->GetInstanceSPtr()->MaintainDirs())
+	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 		return {std::vector<Task>{}, Error::kFileIOError};
 
 	std::string encrypted;
@@ -159,7 +159,7 @@ std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
 }
 
 Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
-	if (!m_user_ptr->GetInstanceSPtr()->MaintainDirs())
+	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 		return Error::kFileIOError;
 
 	std::string encrypted = Encrypt(get_string(tasks), m_user_ptr->GetKey());

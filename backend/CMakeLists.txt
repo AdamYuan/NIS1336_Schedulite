@@ -36,7 +36,7 @@ if (DOXYGEN_FOUND)
             ALL
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             DEPENDS ${DOXYGEN_IN}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM)
 endif ()

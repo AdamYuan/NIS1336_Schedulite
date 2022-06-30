@@ -21,21 +21,63 @@
 
 namespace backend {
 
+/** @brief A Schedule token from a User. */
 class Schedule {
 public:
 	explicit Schedule(const std::shared_ptr<User> &user_ptr);
-	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr);
 	~Schedule();
 
-	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }
-	inline const std::string &GetFilePath() const { return m_file_path; }
+	/**
+	 * Create Schedule token from a User.
+	 * @param user_ptr The Schedule's parent User.
+	 * @return Schedule token and Error code.
+	 */
+	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr);
 
+	/**
+	 * Get the pointer to the Schedule's parent User.
+	 * @brief Get User pointer.
+	 */
+	inline const std::shared_ptr<User> &GetUserPtr() const { return m_user_ptr; }
+
+	/**
+	 * Get all the Tasks in the Schedule.
+	 */
 	const std::vector<Task> &GetTasks() const;
 
-	std::future<Error> Insert(const TaskProperty &task_property);
-	std::future<Error> Erase(uint32_t id);
-	std::future<Error> Edit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask);
-	std::future<Error> ToggleDone(uint32_t id);
+	/**
+	 * Insert a Task asynchronously to the Schedule.
+	 * @brief Async insert a Task.
+	 * @param task_property The TaskProperty data to be inserted.
+	 * @return Async Error code.
+	 */
+	std::future<Error> TaskInsert(const TaskProperty &task_property);
+
+	/**
+	 * Erase a Task asynchronously from the Schedule.
+	 * @brief Async erase a Task.
+	 * @param id The ID of the Task to be erased.
+	 * @return Async Error code.
+	 */
+	std::future<Error> TaskErase(uint32_t id);
+
+	/**
+	 * Edit a Task asynchronously in the Schedule.
+	 * @brief Async edit a Task.
+	 * @param id The ID of the Task to be edited.
+	 * @param property The updated TaskProperty.
+	 * @param property_edit_mask Specifying the parts to modify.
+	 * @return Async Error code.
+	 */
+	std::future<Error> TaskEdit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask);
+
+	/**
+	 * Toggle the Done state of a Task asynchronously in the Schedule.
+	 * @brief Async done or undone a Task.
+	 * @param id The ID of the Task.
+	 * @return Async Error code.
+	 */
+	std::future<Error> TaskToggleDone(uint32_t id);
 
 private:
 	inline static constexpr const char *kStringHeader = "Schedule";

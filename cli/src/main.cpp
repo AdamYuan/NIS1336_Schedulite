@@ -37,9 +37,9 @@ int main(int argc, char **argv) {
 
 	options.add_options("Schedule")                                                       //
 	    ("l,list", "List")                                                                //
-	    ("i,insert", "Insert task")                                                       //
-	    ("e,edit", "Edit task (with task ID)", cxxopts::value<uint32_t>())                //
-	    ("s,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>())              //
+	    ("i,insert", "TaskInsert task")                                                       //
+	    ("e,edit", "TaskEdit task (with task ID)", cxxopts::value<uint32_t>())                //
+	    ("s,erase", "TaskErase task (with task ID)", cxxopts::value<uint32_t>())              //
 	    ("d,done", "Done with a task (toggle, with task ID)", cxxopts::value<uint32_t>()) //
 	    ;
 
@@ -73,11 +73,11 @@ int main(int argc, char **argv) {
 		    "\n      " + backend::kAppName + kExampleUserRegister +         //
 		    "\n\n  List Tasks: " +                                          //
 		    "\n      " + backend::kAppName + kExampleListTasks +            //
-		    "\n\n  Insert Tasks: " +                                        //
+		    "\n\n  TaskInsert Tasks: " +                                        //
 		    "\n      " + backend::kAppName + kExampleInsertTask +           //
-		    "\n\n  Edit Tasks (ignore args in [] if no need to change): " + //
+		    "\n\n  TaskEdit Tasks (ignore args in [] if no need to change): " + //
 		    "\n      " + backend::kAppName + kExampleEditTask +             //
-		    "\n\n  Erase Tasks: " +                                         //
+		    "\n\n  TaskErase Tasks: " +                                         //
 		    "\n      " + backend::kAppName + kExampleEraseTasks +           //
 		    "\n\n  Done Tasks: " +                                          //
 		    "\n      " + backend::kAppName + kExampleDoneTasks +            //
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
 
 	if (result.count("erase")) {
 		auto id = result["erase"].as<uint32_t>();
-		auto error_future = schedule->Erase(id);
+		auto error_future = schedule->TaskErase(id);
 		error = error_future.get();
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
 
 	if (result.count("done")) {
 		auto id = result["done"].as<uint32_t>();
-		auto error_future = schedule->ToggleDone(id);
+		auto error_future = schedule->TaskToggleDone(id);
 		error = error_future.get();
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 		if (result.count("type"))
 			property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
 
-		auto error_future = schedule->Insert(property);
+		auto error_future = schedule->TaskInsert(property);
 		error = error_future.get();
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
 			edit_mask |= backend::TaskPropertyMask::kType;
 		}
 
-		auto error_future = schedule->Edit(id, property, edit_mask);
+		auto error_future = schedule->TaskEdit(id, property, edit_mask);
 		error = error_future.get();
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
