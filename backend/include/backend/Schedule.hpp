@@ -21,6 +21,22 @@
 namespace backend {
 
 class Schedule {
+public:
+	explicit Schedule(const std::shared_ptr<User> &user_ptr);
+	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr);
+	~Schedule();
+
+	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }
+	inline const std::string &GetFilePath() const { return m_file_path; }
+
+	const std::vector<Task> &GetTasks() const;
+
+	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
+	                          TaskPriority priority = TaskPriority::kMedium, TaskType type = TaskType::kNone);
+	std::future<Error> Erase(uint32_t id);
+	std::future<Error> ToggleDone(uint32_t id);
+	// TODO: Operation Edit
+
 private:
 	inline static constexpr const char *kStringHeader = "Schedule";
 	inline static constexpr uint32_t kStringHeaderLength = std::string_view(kStringHeader).length();
@@ -58,21 +74,6 @@ private:
 	static std::tuple<std::vector<Task>, Error> parse_string(std::string_view str);
 
 	static Error operate(std::vector<Task> *tasks, const Operation &operation);
-
-public:
-	explicit Schedule(const std::shared_ptr<User> &user_ptr);
-	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr);
-	~Schedule();
-
-	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }
-	inline const std::string &GetFilePath() const { return m_file_path; }
-
-	const std::vector<Task> &GetTasks() const;
-
-	std::future<Error> Insert(std::string_view name, TimeInt begin_time, TimeInt remind_time,
-	                          TaskPriority priority = TaskPriority::kMedium, TaskType type = TaskType::kNone);
-	std::future<Error> Erase(uint32_t id);
-	std::future<Error> ToggleDone(uint32_t id);
 };
 
 } // namespace backend

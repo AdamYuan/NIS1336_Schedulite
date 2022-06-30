@@ -16,13 +16,6 @@ namespace backend {
 
 class Schedule;
 class User {
-private:
-	std::shared_ptr<Instance> m_instance_ptr;
-	std::string m_name, m_key, m_file_path;
-
-	struct SyncObject;
-	std::shared_ptr<SyncObject> m_sync_object;
-
 public:
 	explicit User(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
 	inline ~User() = default;
@@ -35,8 +28,16 @@ public:
 	                                                      std::string_view username, std::string_view password);
 
 	inline const std::shared_ptr<Instance> &GetInstanceSPtr() const { return m_instance_ptr; }
+	inline const std::string &GetFilePath() const { return m_file_path; }
 	inline const std::string &GetName() const { return m_name; }
 	inline const std::string &GetKey() const { return m_key; }
+
+private:
+	std::shared_ptr<Instance> m_instance_ptr;
+	std::string m_name, m_key, m_file_path;
+
+	struct SyncObject;
+	std::shared_ptr<SyncObject> m_sync_object;
 };
 
 } // namespace backend

@@ -7,6 +7,10 @@
 namespace cli {
 
 class Shell {
+public:
+	explicit Shell(std::shared_ptr<backend::Instance> instance_ptr) : m_instance_ptr{std::move(instance_ptr)} {}
+	void Run();
+
 private:
 	std::shared_ptr<backend::Instance> m_instance_ptr;
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
@@ -25,10 +29,6 @@ private:
 	void cmd_done();
 
 	void print_prompt();
-
-public:
-	explicit Shell(std::shared_ptr<backend::Instance> instance_ptr) : m_instance_ptr{std::move(instance_ptr)} {}
-	void Run();
 };
 
 } // namespace cli
