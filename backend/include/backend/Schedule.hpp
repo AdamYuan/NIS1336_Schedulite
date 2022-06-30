@@ -46,8 +46,6 @@ private:
 	void operation_thread_func();
 	void sync_thread_func();
 
-	Error create_file();
-
 	Error store_tasks(const std::vector<Task> &tasks, bool lock);
 	std::tuple<std::vector<Task>, Error> load_tasks(bool lock);
 
@@ -60,7 +58,7 @@ private:
 
 public:
 	explicit Schedule(const std::shared_ptr<User> &user_ptr);
-	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr, bool create_file);
+	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr);
 	~Schedule();
 
 	inline const std::shared_ptr<User> &GetUserSPTR() const { return m_user_ptr; }

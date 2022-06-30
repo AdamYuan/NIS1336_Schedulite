@@ -55,7 +55,7 @@ void Shell::run_cmd(std::string_view cmd) {
 		cmd_login();
 	} else if (cmd == "register") {
 		cmd_register();
-	} else if (cmd == "list") {
+	} else if (cmd == "list" || cmd == "ls") {
 		cmd_list();
 	} else if (cmd == "insert") {
 		cmd_insert();
@@ -73,7 +73,7 @@ void Shell::cmd_help() {
 	printf(R"(help        Show cmd_help text.
 login       User login.
 register    User register.
-list        List all tasks.
+list, ls    List all tasks.
 insert      Insert a task.
 erase       Erase a task.
 done        Done with a task (toggle).
@@ -90,7 +90,12 @@ void Shell::cmd_login() {
 		username = Input("Username");
 		password = Input("Password", false);
 	}
-	std::tie(user, schedule, error) = backend::User::Login(m_instance_ptr, username, password);
+	std::tie(user, error) = backend::User::Login(m_instance_ptr, username, password);
+	if (error != backend::Error::kSuccess) {
+		PrintError(error);
+		return;
+	}
+	std::tie(schedule, error) = backend::Schedule::Create(user);
 	if (error != backend::Error::kSuccess) {
 		PrintError(error);
 		return;
@@ -114,7 +119,12 @@ void Shell::cmd_register() {
 			return;
 		}
 	}
-	std::tie(user, schedule, error) = backend::User::Register(m_instance_ptr, username, password);
+	std::tie(user, error) = backend::User::Register(m_instance_ptr, username, password);
+	if (error != backend::Error::kSuccess) {
+		PrintError(error);
+		return;
+	}
+	std::tie(schedule, error) = backend::Schedule::Create(user);
 	if (error != backend::Error::kSuccess) {
 		PrintError(error);
 		return;

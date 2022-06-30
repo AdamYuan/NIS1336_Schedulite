@@ -117,15 +117,21 @@ int main(int argc, char **argv) {
 				cli::PrintError("Not equal");
 				exit(EXIT_FAILURE);
 			}
-			std::tie(user, schedule, error) = backend::User::Register(instance, username, password);
+			std::tie(user, error) = backend::User::Register(instance, username, password);
 		} else {
-			std::tie(user, schedule, error) = backend::User::Login(instance, username, password);
+			std::tie(user, error) = backend::User::Login(instance, username, password);
 		}
 
-		if (!user || !schedule) {
+		if (!user) {
 			cli::PrintError(error);
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	std::tie(schedule, error) = backend::Schedule::Create(user);
+	if (!schedule) {
+		cli::PrintError(error);
+		exit(EXIT_FAILURE);
 	}
 
 	if (result.count("list")) {

@@ -19,18 +19,15 @@ struct Schedule::SyncObject {
 
 Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 	m_user_ptr = user_ptr;
-	m_file_path =
-	    ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetUserDirPath()}.append(m_user_ptr->GetName()).string();
+	m_file_path = ghc::filesystem::path{m_user_ptr->GetInstanceSPtr()->GetScheduleDirPath()}
+	                  .append(m_user_ptr->GetName())
+	                  .string();
 	m_sync_object = std::make_shared<SyncObject>(m_user_ptr->GetName());
 }
 
-std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_ptr<User> &user_ptr, bool create_file) {
+std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_ptr<User> &user_ptr) {
 	std::shared_ptr<Schedule> ret = std::make_shared<Schedule>(user_ptr);
 	Error error;
-	if (create_file) {
-		if ((error = ret->create_file()) != Error::kSuccess)
-			return {nullptr, error};
-	}
 
 	std::vector<Task> tasks;
 	std::tie(tasks, error) = ret->load_tasks(true);
@@ -107,27 +104,6 @@ std::future<Error> Schedule::ToggleDone(uint32_t id) {
 	return ret;
 }
 
-Error Schedule::create_file() {
-	if (!m_user_ptr->GetInstanceSPtr()->MaintainDirs())
-		return Error::kFileIOError;
-
-	{
-		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
-
-		{
-			std::ifstream in{m_file_path};
-			if (in.is_open())
-				return Error::kUserAlreadyExist;
-		}
-		std::ofstream out{m_file_path};
-		if (!out.is_open())
-			return Error::kFileIOError;
-		std::string encrypted = Encrypt(kStringHeader, m_user_ptr->GetKey());
-		out.write(encrypted.data(), (std::streamsize)encrypted.size());
-	}
-	return Error::kSuccess;
-}
-
 std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
 	if (!m_user_ptr->GetInstanceSPtr()->MaintainDirs())
 		return {std::vector<Task>{}, Error::kFileIOError};
@@ -137,12 +113,12 @@ std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 		std::ifstream in{m_file_path};
 		if (!in.is_open())
-			return {std::vector<Task>{}, Error::kUserNotFound};
+			return {std::vector<Task>{}, Error::kSuccess};
 		encrypted = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
 	} else {
 		std::ifstream in{m_file_path};
 		if (!in.is_open())
-			return {std::vector<Task>{}, Error::kUserNotFound};
+			return {std::vector<Task>{}, Error::kSuccess};
 		encrypted = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
 	}
 
@@ -151,6 +127,7 @@ std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
 		return {ret, Error::kSuccess};
 	return {std::vector<Task>{}, error};
 }
+
 Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
 	if (!m_user_ptr->GetInstanceSPtr()->MaintainDirs())
 		return Error::kFileIOError;
@@ -180,7 +157,7 @@ std::string Schedule::get_string(const std::vector<Task> &tasks) {
 }
 std::tuple<std::vector<Task>, Error> Schedule::parse_string(std::string_view str) {
 	if (str.length() < kStringHeaderLength || str.substr(0, kStringHeaderLength) != kStringHeader)
-		return {std::vector<Task>{}, Error::kUserWrongPassword};
+		return {std::vector<Task>{}, Error::kSuccess}; // Return empty if header not match (do not drop error)
 
 	std::vector<Task> ret;
 	str = str.substr(kStringHeaderLength);

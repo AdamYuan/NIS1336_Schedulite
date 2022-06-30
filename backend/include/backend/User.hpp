@@ -18,7 +18,7 @@ class Schedule;
 class User {
 private:
 	std::shared_ptr<Instance> m_instance_ptr;
-	std::string m_name, m_key;
+	std::string m_name, m_key, m_file_path;
 
 public:
 	explicit User(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
@@ -26,9 +26,9 @@ public:
 
 	static bool ValidateUsername(std::string_view username);
 
-	static std::tuple<std::shared_ptr<User>, std::shared_ptr<Schedule>, Error>
+	static std::tuple<std::shared_ptr<User>, Error>
 	Register(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
-	static std::tuple<std::shared_ptr<User>, std::shared_ptr<Schedule>, Error>
+	static std::tuple<std::shared_ptr<User>, Error>
 	Login(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
 
 	inline const std::shared_ptr<Instance> &GetInstanceSPtr() const { return m_instance_ptr; }

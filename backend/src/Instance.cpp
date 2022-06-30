@@ -9,6 +9,7 @@ namespace backend {
 Instance::Instance(std::string_view app_dir_path) {
 	m_app_dir_path = ghc::filesystem::path{app_dir_path}.string();
 	m_user_dir_path = ghc::filesystem::path{app_dir_path}.append(kUserDirName).string();
+	m_schedule_dir_path = ghc::filesystem::path{app_dir_path}.append(kScheduleDirName).string();
 }
 
 std::shared_ptr<Instance> Instance::Create() {
@@ -41,6 +42,15 @@ bool Instance::MaintainDirs() {
 				return false;
 		} else {
 			if (!ghc::filesystem::create_directory(m_user_dir_path))
+				return false;
+		}
+
+		// Maintain schedule dir
+		if (ghc::filesystem::exists(m_schedule_dir_path)) {
+			if (!ghc::filesystem::is_directory(m_schedule_dir_path))
+				return false;
+		} else {
+			if (!ghc::filesystem::create_directory(m_schedule_dir_path))
 				return false;
 		}
 	} catch (...) {

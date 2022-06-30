@@ -15,10 +15,6 @@ enum class Error : uint8_t {
 	kUserWrongPassword,
 	kUserNotFound,
 	kUserInvalidName,
-	// kUserLocked,
-
-	kScheduleWrongHeader,
-	kScheduleWrongFormat,
 
 	kTaskNotFound,
 	kTaskAlreadyExist,
@@ -41,11 +37,6 @@ inline constexpr const char *GetErrorMessage(Error error) {
 		return "User not found";
 	case Error::kUserInvalidName:
 		return "Invalid username";
-
-	case Error::kScheduleWrongHeader:
-		return "Invalid schedule file header";
-	case Error::kScheduleWrongFormat:
-		return "Invalid schedule file format";
 
 	case Error::kTaskNotFound:
 		return "Task not found";

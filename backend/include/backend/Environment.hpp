@@ -9,6 +9,7 @@ namespace backend {
 constexpr const char *kAppName = "Schedulite";
 constexpr const char *kAppDirName = "schedulite";
 constexpr const char *kUserDirName = "user.d";
+constexpr const char *kScheduleDirName = "sched.d";
 
 /**
  * Get the default dir path for storing App data, depending on the operating system settings.
