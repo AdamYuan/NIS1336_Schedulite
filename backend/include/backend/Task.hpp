@@ -32,7 +32,7 @@ struct TaskProperty {
 	/** @brief The Task type. */
 	TaskType type = kDefaultTaskType;
 	/** @brief Whether the Task is done or not. */
-	bool done;
+	bool done = false;
 
 	inline bool operator==(const TaskProperty &r) const {
 		return begin_time == r.begin_time && name == r.name && begin_time == r.begin_time &&

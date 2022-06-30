@@ -152,7 +152,7 @@ void Shell::cmd_insert() {
 		return;
 	}
 
-	backend::TaskProperty property;
+	backend::TaskProperty property{};
 	{
 		std::scoped_lock lock{m_io_mutex};
 		property.name = Input("Name");
@@ -172,7 +172,7 @@ void Shell::cmd_edit() {
 		return;
 	}
 
-	backend::TaskProperty property;
+	backend::TaskProperty property{};
 	backend::TaskPropertyMask edit_mask{};
 	uint32_t id;
 	{

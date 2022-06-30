@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 			exit(EXIT_FAILURE);
 		}
 
-		backend::TaskProperty property;
+		backend::TaskProperty property{};
 		property.name = result["taskname"].as<std::string>();
 		property.begin_time = property.remind_time = time_int_now;
 		if (result.count("btime"))
@@ -189,8 +189,8 @@ int main(int argc, char **argv) {
 	if (result.count("edit")) {
 		auto id = result["edit"].as<uint32_t>();
 
-		backend::TaskProperty property;
-		backend::TaskPropertyMask edit_mask;
+		backend::TaskProperty property{};
+		backend::TaskPropertyMask edit_mask{};
 
 		if (result["taskname"].count()) {
 			property.name = result["taskname"].as<std::string>();
