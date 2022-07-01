@@ -260,7 +260,7 @@ void Shell::reminder_thread_func() {
 	while (m_thread_run.load(std::memory_order_acquire)) {
 		std::string message;
 		for (const auto &task : schedule->GetTasks()) {
-			if (task.property.remind_time == time_int) {
+			if (task.property.remind_time == time_int && !task.property.done) {
 				message += backend::ToTimeStr(task.property.begin_time) + " ▶ " + task.property.name;
 				if (task.property.type != backend::TaskType::kNone)
 					message += (std::string) " (" + backend::StrFromTaskType(task.property.type) + ")";
