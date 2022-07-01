@@ -159,9 +159,9 @@ void Shell::cmd_insert() {
 		property.begin_time = backend::ToTimeInt(Input("Begin time (YYYY/MM/DD hh:mm)"));
 		property.remind_time = backend::ToTimeInt(Input("Remind time (YYYY/MM/DD hh:mm)"));
 		property.priority = backend::TaskPriorityFromStr(
-		    Input((std::string) "Priority " + MakeOptionStr(backend::GetTaskPriorityStrings())));
-		property.type =
-		    backend::TaskTypeFromStr(Input((std::string) "Type " + MakeOptionStr(backend::GetTaskTypeStrings())));
+		    Input((std::string) "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")"));
+		property.type = backend::TaskTypeFromStr(
+		    Input((std::string) "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")"));
 	}
 	PrintError(m_schedule_ptr->TaskInsert(property).get());
 }
@@ -204,13 +204,13 @@ void Shell::cmd_edit() {
 			edit_mask |= backend::TaskPropertyMask::kRemindTime;
 		}
 
-		input = Input((std::string) "New priority " + MakeOptionStr(backend::GetTaskPriorityStrings()));
+		input = Input((std::string) "New priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")");
 		if (!EmptyInput(input)) {
 			property.priority = backend::TaskPriorityFromStr(input);
 			edit_mask |= backend::TaskPropertyMask::kPriority;
 		}
 
-		input = Input((std::string) "New type " + MakeOptionStr(backend::GetTaskTypeStrings()));
+		input = Input((std::string) "New type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")");
 		if (!EmptyInput(input)) {
 			property.type = backend::TaskTypeFromStr(input);
 			edit_mask |= backend::TaskPropertyMask::kType;
