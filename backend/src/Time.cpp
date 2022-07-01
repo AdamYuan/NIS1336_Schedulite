@@ -2,8 +2,7 @@
 
 #include <chrono>
 #include <cstdio>
-#include <date/date.h>
-#include <date/tz.h>
+#include <ctime>
 
 namespace backend {
 
@@ -13,20 +12,21 @@ using TimePoint = std::chrono::time_point<Clock, TimeDuration>;
 
 inline static TimeInt ToTimeInt(const TimePoint &time_point) { return (time_point - TimePoint{}).count(); }
 inline static TimeInfo ToTimeInfo(const TimePoint &time_point) {
-	auto zoned_time_point = date::zoned_time{date::current_zone(), time_point}.get_local_time();
-	auto date_point = date::floor<date::days>(zoned_time_point);
-	date::year_month_day ymd{date_point};
-	date::hh_mm_ss hms{zoned_time_point - date_point};
-	return {(int)ymd.year(), (unsigned)ymd.month(), (unsigned)ymd.day(), (unsigned)hms.hours().count(),
-	        (unsigned)hms.minutes().count()};
+	std::time_t t = Clock::to_time_t(time_point);
+	std::tm tm = *std::localtime(&t);
+	return {tm.tm_year + 1900, (unsigned)tm.tm_mon + 1, (unsigned)tm.tm_mday, (unsigned)tm.tm_hour,
+	        (unsigned)tm.tm_min};
 }
 inline static TimePoint ToTimePoint(TimeInt time_int) { return TimePoint{} + TimeDuration(time_int); }
 inline static TimePoint ToTimePoint(const TimeInfo &time_info) {
-	auto zoned_time_point =
-	    date::local_days{date::day(time_info.day) / date::month(time_info.month) / date::year(time_info.year)} +
-	    std::chrono::hours(time_info.hour) + std::chrono::minutes(time_info.minute);
-	return std::chrono::time_point_cast<TimeDuration>(
-	    date::zoned_time{date::current_zone(), zoned_time_point}.get_sys_time());
+	std::tm tm{};
+	tm.tm_year = time_info.year - 1900;
+	tm.tm_mon = (int)time_info.month - 1;
+	tm.tm_mday = (int)time_info.day;
+	tm.tm_hour = (int)time_info.hour;
+	tm.tm_min = (int)time_info.minute;
+	tm.tm_isdst = 0;
+	return std::chrono::time_point_cast<TimeDuration>(Clock::from_time_t(std::mktime(&tm)));
 }
 
 inline static TimePoint GetTimePointNow() { return std::chrono::time_point_cast<TimeDuration>(Clock::now()); }
