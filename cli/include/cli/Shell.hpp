@@ -2,7 +2,9 @@
 #define SCHEDULITE_CLI_SHELL_HPP
 
 #include <backend/User.hpp>
+
 #include <mutex>
+#include <thread>
 
 namespace cli {
 

@@ -13,9 +13,10 @@
 namespace cli {
 
 void Shell::Run() {
-	printf("%s CLI shell\nApp directory: %s\nUser directory: %s\nLocal time: %s\nEnter \"help\" for usage hints.\n",
+	printf("%s CLI shell\nApp directory: %s\nUser directory: %s\nSchedule directory: %s\nLocal time: %s\nEnter "
+	       "\"help\" for usage hints.\n",
 	       backend::kAppName, m_instance_ptr->GetAppDirPath().c_str(), m_instance_ptr->GetUserDirPath().c_str(),
-	       backend::GetTimeStrNow().c_str());
+	       m_instance_ptr->GetScheduleDirPath().c_str(), backend::GetTimeStrNow().c_str());
 	std::string cmd;
 	print_prompt();
 	for (char c = (char)getchar(); c != EOF; c = (char)getchar()) {
@@ -76,9 +77,9 @@ void Shell::cmd_help() {
 login       User login.
 register    User register.
 list, ls    List all tasks.
-insert      TaskInsert a task.
-edit        TaskEdit a task.
-erase       TaskErase a task.
+insert      Insert a task.
+edit        Edit a task.
+erase       Erase a task.
 done        Done with a task (toggle).
 )");
 }

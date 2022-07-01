@@ -10,6 +10,7 @@
 
 #include <cxxopts.hpp>
 
+static constexpr const char *kExampleShell = " --shell";
 static constexpr const char *kExampleUserRegister = " -u USER_NAME -r";
 static constexpr const char *kExampleListTasks = " -u USER_NAME -l";
 static constexpr const char *kExampleInsertTask =
@@ -37,9 +38,9 @@ int main(int argc, char **argv) {
 
 	options.add_options("Schedule")                                                       //
 	    ("l,list", "List")                                                                //
-	    ("i,insert", "TaskInsert task")                                                       //
-	    ("e,edit", "TaskEdit task (with task ID)", cxxopts::value<uint32_t>())                //
-	    ("s,erase", "TaskErase task (with task ID)", cxxopts::value<uint32_t>())              //
+	    ("i,insert", "Insert task")                                                       //
+	    ("e,edit", "Edit task (with task ID)", cxxopts::value<uint32_t>())                //
+	    ("s,erase", "Erase task (with task ID)", cxxopts::value<uint32_t>())              //
 	    ("d,done", "Done with a task (toggle, with task ID)", cxxopts::value<uint32_t>()) //
 	    ;
 
@@ -69,15 +70,17 @@ int main(int argc, char **argv) {
 		printf("%s\n", options.help().c_str());
 		std::cout << (                                                      //
 		    std::string{"Examples:"} +                                      //
-		    "\n  Register: " +                                              //
+		    "\n  Open Shell: " +                                            //
+		    "\n      " + backend::kAppName + kExampleShell +                //
+		    "\n\n  Register: " +                                            //
 		    "\n      " + backend::kAppName + kExampleUserRegister +         //
 		    "\n\n  List Tasks: " +                                          //
 		    "\n      " + backend::kAppName + kExampleListTasks +            //
-		    "\n\n  TaskInsert Tasks: " +                                        //
+		    "\n\n  Insert Tasks: " +                                        //
 		    "\n      " + backend::kAppName + kExampleInsertTask +           //
-		    "\n\n  TaskEdit Tasks (ignore args in [] if no need to change): " + //
+		    "\n\n  Edit Tasks (ignore args in [] if no need to change): " + //
 		    "\n      " + backend::kAppName + kExampleEditTask +             //
-		    "\n\n  TaskErase Tasks: " +                                         //
+		    "\n\n  Erase Tasks: " +                                         //
 		    "\n      " + backend::kAppName + kExampleEraseTasks +           //
 		    "\n\n  Done Tasks: " +                                          //
 		    "\n      " + backend::kAppName + kExampleDoneTasks +            //
@@ -99,8 +102,9 @@ int main(int argc, char **argv) {
 		}
 	}
 	if (result.count("env")) {
-		printf("App directory: %s\nUser directory: %s\nLocal time: %s\n", instance->GetAppDirPath().c_str(),
-		       instance->GetUserDirPath().c_str(), time_str_now.c_str());
+		printf("App directory: %s\nUser directory: %s\nSchedule directory: %s\nLocal time: %s\n",
+		       instance->GetAppDirPath().c_str(), instance->GetUserDirPath().c_str(),
+		       instance->GetScheduleDirPath().c_str(), time_str_now.c_str());
 		return 0;
 	}
 

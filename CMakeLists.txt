@@ -26,7 +26,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL Windows)
     add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif ()
 
-
 add_subdirectory(backend)
 add_subdirectory(cli)
 #add_subdirectory(gui)
