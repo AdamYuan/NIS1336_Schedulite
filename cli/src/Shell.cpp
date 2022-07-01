@@ -10,6 +10,8 @@
 #include <cctype>
 #include <iostream>
 
+#include <tinyfiledialogs.h>
+
 namespace cli {
 
 void Shell::Run() {
@@ -35,6 +37,8 @@ void Shell::Run() {
 		}
 	}
 }
+
+Shell::~Shell() { join_reminder_thread(); }
 
 void Shell::print_prompt() { printf("%s > ", m_schedule_ptr ? m_schedule_ptr->GetUserPtr()->GetName().c_str() : ""); }
 
@@ -72,7 +76,6 @@ void Shell::run_cmd(std::string_view cmd) {
 }
 
 void Shell::cmd_help() {
-	std::scoped_lock lock{m_io_mutex};
 	printf(R"(help        Show cmd_help text.
 login       User login.
 register    User register.
@@ -88,12 +91,8 @@ void Shell::cmd_login() {
 	std::shared_ptr<backend::Schedule> schedule;
 	backend::Error error;
 
-	std::string username, password;
-	{
-		std::scoped_lock lock{m_io_mutex};
-		username = Input("Username");
-		password = Input("Password", false);
-	}
+	std::string username = Input("Username");
+	std::string password = Input("Password", false);
 	std::tie(user, error) = backend::User::Login(m_instance_ptr, username, password);
 	if (error != backend::Error::kSuccess) {
 		PrintError(error);
@@ -104,24 +103,20 @@ void Shell::cmd_login() {
 		PrintError(error);
 		return;
 	}
-	// lock schedule
-	std::scoped_lock lock{m_schedule_mutex};
+	join_reminder_thread();
 	m_schedule_ptr = std::move(schedule);
+	launch_reminder_thread();
 }
 void Shell::cmd_register() {
 	std::shared_ptr<backend::User> user;
 	std::shared_ptr<backend::Schedule> schedule;
 	backend::Error error;
 
-	std::string username, password;
-	{
-		std::scoped_lock lock{m_io_mutex};
-		username = Input("Username");
-		password = Input("Password", false);
-		if (Input("Repeat Password", false) != password) {
-			PrintError("Not equal");
-			return;
-		}
+	std::string username = Input("Username");
+	std::string password = Input("Password", false);
+	if (Input("Repeat Password", false) != password) {
+		PrintError("Not equal");
+		return;
 	}
 	std::tie(user, error) = backend::User::Register(m_instance_ptr, username, password);
 	if (error != backend::Error::kSuccess) {
@@ -133,42 +128,35 @@ void Shell::cmd_register() {
 		PrintError(error);
 		return;
 	}
-	// lock schedule
-	std::scoped_lock lock{m_schedule_mutex};
+	join_reminder_thread();
 	m_schedule_ptr = std::move(schedule);
+	launch_reminder_thread();
 }
 void Shell::cmd_list() {
 	if (!m_schedule_ptr) {
-		std::scoped_lock lock{m_io_mutex};
 		PrintError(backend::Error::kUserNotLoggedIn);
 		return;
 	}
-	std::scoped_lock lock{m_io_mutex};
 	PrintTasks(m_schedule_ptr->GetTasks());
 }
 void Shell::cmd_insert() {
 	if (!m_schedule_ptr) {
-		std::scoped_lock lock{m_io_mutex};
 		PrintError(backend::Error::kUserNotLoggedIn);
 		return;
 	}
 
 	backend::TaskProperty property{};
-	{
-		std::scoped_lock lock{m_io_mutex};
-		property.name = Input("Name");
-		property.begin_time = backend::ToTimeInt(Input("Begin time (YYYY/MM/DD hh:mm)"));
-		property.remind_time = backend::ToTimeInt(Input("Remind time (YYYY/MM/DD hh:mm)"));
-		property.priority = backend::TaskPriorityFromStr(
-		    Input((std::string) "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")"));
-		property.type = backend::TaskTypeFromStr(
-		    Input((std::string) "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")"));
-	}
+	property.name = Input("Name");
+	property.begin_time = backend::ToTimeInt(Input("Begin time (YYYY/MM/DD hh:mm)"));
+	property.remind_time = backend::ToTimeInt(Input("Remind time (YYYY/MM/DD hh:mm)"));
+	property.priority = backend::TaskPriorityFromStr(
+	    Input((std::string) "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")"));
+	property.type =
+	    backend::TaskTypeFromStr(Input((std::string) "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")"));
 	PrintError(m_schedule_ptr->TaskInsert(property).get());
 }
 void Shell::cmd_edit() {
 	if (!m_schedule_ptr) {
-		std::scoped_lock lock{m_io_mutex};
 		PrintError(backend::Error::kUserNotLoggedIn);
 		return;
 	}
@@ -177,10 +165,8 @@ void Shell::cmd_edit() {
 	backend::TaskPropertyMask edit_mask{};
 	uint32_t id;
 	{
-		std::scoped_lock lock{m_io_mutex};
-		std::string id_str = Input("ID");
 		try {
-			id = std::stoul(id_str);
+			id = std::stoul(Input("ID"));
 		} catch (...) {
 			PrintError("Bad ID");
 			return;
@@ -221,18 +207,12 @@ void Shell::cmd_edit() {
 }
 void Shell::cmd_erase() {
 	if (!m_schedule_ptr) {
-		std::scoped_lock lock{m_io_mutex};
 		PrintError(backend::Error::kUserNotLoggedIn);
 		return;
 	}
 	uint32_t id;
-	std::string id_str;
-	{
-		std::scoped_lock lock{m_io_mutex};
-		id_str = Input("ID");
-	}
 	try {
-		id = std::stoul(id_str);
+		id = std::stoul(Input("ID"));
 	} catch (...) {
 		PrintError("Bad ID");
 		return;
@@ -242,24 +222,58 @@ void Shell::cmd_erase() {
 }
 void Shell::cmd_done() {
 	if (!m_schedule_ptr) {
-		std::scoped_lock lock{m_io_mutex};
 		PrintError(backend::Error::kUserNotLoggedIn);
 		return;
 	}
 	uint32_t id;
-	std::string id_str;
-	{
-		std::scoped_lock lock{m_io_mutex};
-		id_str = Input("ID");
-	}
 	try {
-		id = std::stoul(id_str);
+		id = std::stoul(Input("ID"));
 	} catch (...) {
 		PrintError("Bad ID");
 		return;
 	}
 
 	PrintError(m_schedule_ptr->TaskToggleDone(id).get());
+}
+
+void Shell::launch_reminder_thread() {
+	if (m_reminder_thread.joinable())
+		return;
+	m_thread_run.store(true, std::memory_order_release);
+	m_reminder_thread = std::thread(&Shell::reminder_thread_func, this);
+}
+void Shell::join_reminder_thread() {
+	if (m_reminder_thread.joinable()) {
+		m_thread_run.store(false, std::memory_order_release);
+		m_reminder_cv.notify_all();
+		m_reminder_thread.join();
+	}
+}
+
+void Shell::reminder_thread_func() {
+	auto schedule = m_schedule_ptr;
+	std::mutex cv_mutex;
+	std::unique_lock cv_lock{cv_mutex};
+
+	backend::TimeInt time_int = backend::GetTimeIntNow();
+
+	while (m_thread_run.load(std::memory_order_acquire)) {
+		std::string message;
+		for (const auto &task : schedule->GetTasks()) {
+			if (task.property.remind_time == time_int) {
+				message += backend::ToTimeStr(task.property.begin_time) + " ▶ " + task.property.name;
+				if (task.property.type != backend::TaskType::kNone)
+					message += (std::string) " (" + backend::StrFromTaskType(task.property.type) + ")";
+				message += (std::string) " [" + backend::StrFromTaskPriority(task.property.priority) + " priority]";
+				message += '\n';
+			}
+		}
+		if (!message.empty())
+			tinyfd_messageBox("Task remind", message.c_str(), "ok", "info", 1);
+
+		m_reminder_cv.wait_until(cv_lock, backend::ToTimePoint(++time_int),
+		                         [this]() { return !m_thread_run.load(std::memory_order_acquire); });
+	}
 }
 
 } // namespace cli

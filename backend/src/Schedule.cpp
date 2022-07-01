@@ -240,7 +240,8 @@ void Schedule::sync_thread_func() {
 
 	std::vector<Task> tasks;
 	while (m_thread_run.load(std::memory_order_acquire)) {
-		m_sync_thread_cv.wait_for(cv_lock, std::chrono::milliseconds(100));
+		m_sync_thread_cv.wait_for(cv_lock, std::chrono::milliseconds(100),
+		                          [this]() { return !m_thread_run.load(std::memory_order_acquire); });
 		if (!m_thread_run.load(std::memory_order_acquire))
 			return;
 		Error error;

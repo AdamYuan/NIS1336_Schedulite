@@ -3,7 +3,8 @@
 
 #include <backend/User.hpp>
 
-#include <mutex>
+#include <atomic>
+#include <condition_variable>
 #include <thread>
 
 namespace cli {
@@ -11,13 +12,20 @@ namespace cli {
 class Shell {
 public:
 	explicit Shell(std::shared_ptr<backend::Instance> instance_ptr) : m_instance_ptr{std::move(instance_ptr)} {}
+	~Shell();
 	void Run();
 
 private:
 	std::shared_ptr<backend::Instance> m_instance_ptr;
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
 
-	std::mutex m_io_mutex, m_schedule_mutex;
+	std::atomic_bool m_thread_run{false};
+	std::condition_variable m_reminder_cv;
+	std::thread m_reminder_thread;
+
+	void launch_reminder_thread();
+	void join_reminder_thread();
+	void reminder_thread_func();
 
 	static std::string regularize_cmd(std::string_view raw);
 	void run_cmd(std::string_view cmd);

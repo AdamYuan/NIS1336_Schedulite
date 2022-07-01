@@ -6,6 +6,7 @@
 
 namespace cli {
 
+void SetStdinEcho(bool enable);
 std::string Input(const char *prompt, bool echo = true);
 inline std::string Input(const std::string &prompt, bool echo = true) { return Input(prompt.c_str(), echo); }
 uint32_t GetTerminalWidth();
