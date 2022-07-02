@@ -23,6 +23,9 @@ if (MINGW)
         UNRESOLVED_DEPENDENCIES_VAR UNRES
         CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING_DEPENDENCIES
         EXECUTABLES ScheduliteGTK
+        DIRECTORIES ${CMAKE_SYSTEM_LIBRARY_PATH} ${CMAKE_MINGW_SYSTEM_LIBRARY_PATH}
+        PRE_EXCLUDE_REGEXES "api-ms-*" "ext-ms-*"
+        POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     )
     message("\n\nFound dependencies :")
     foreach(DEP ${RES})

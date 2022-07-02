@@ -47,7 +47,7 @@ jobs:
         with:
           msystem: ${{matrix.config.sys}}
           update: false
-          install: cmake ninja mingw-w64-${{matrix.config.env}}-gcc mingw-w64-${{matrix.config.env}}-gtkmm3
+          install: mingw-w64-${{matrix.config.env}}-cmake mingw-w64-${{matrix.config.env}}-ninja mingw-w64-${{matrix.config.env}}-gcc mingw-w64-${{matrix.config.env}}-gtkmm3
 
       - name: Configure
         shell: msys2 {0}
