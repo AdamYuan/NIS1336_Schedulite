@@ -15,3 +15,19 @@ target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::bac
 target_include_directories(ScheduliteGTK PRIVATE include)
 
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION)
+install(CODE [[
+    file(GET_RUNTIME_DEPENDENCIES
+        RESOLVED_DEPENDENCIES_VAR RES
+        UNRESOLVED_DEPENDENCIES_VAR UNRES
+        CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING_DEPENDENCIES
+        EXECUTABLES ScheduliteGTK
+    )
+    message("\n\nFound dependencies :")
+    foreach(DEP ${RES})
+        message("${DEP}")
+    endforeach()
+    message("\n\nNot found dependencies :")
+    foreach(DEP ${UNRES})
+        message("${DEP}")
+    endforeach()
+]])
