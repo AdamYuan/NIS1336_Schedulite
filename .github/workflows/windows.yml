@@ -20,8 +20,9 @@ jobs:
             os: windows-latest,
             artifact: "windows_mingw_32.7z",
             build_type: "Release",
-            cc: "i686-w64-mingw32-gcc",
-            cxx: "i686-w64-mingw32-g++",
+            msys_packages: "mingw-w64-i686-gcc mingw-w64-i686-gtkmm3",
+            cc: "/mingw32/bin/i686-w64-mingw32-gcc",
+            cxx: "/mingw32/bin/i686-w64-mingw32-g++",
             archiver: "7z a",
             generators: "Ninja"
           }
@@ -30,8 +31,9 @@ jobs:
             os: windows-latest,
             artifact: "windows_mingw_64.7z",
             build_type: "Release",
-            cc: "x86_64-w64-mingw32-gcc",
-            cxx: "x86_64-w64-mingw32-g++",
+            msys_packages: "mingw-w64-x86_64-gcc mingw-w64-x86_64-gtkmm3",
+            cc: "/mingw64/bin/x86_64-w64-mingw32-gcc",
+            cxx: "/mingw64/bin/x86_64-w64-mingw32-g++",
             archiver: "7z a",
             generators: "Ninja"
           }
@@ -42,7 +44,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           update: false
-          install: cmake ninja mingw-w64-i686-gcc mingw-w64-x86_64-gcc mingw-w64-i686-gtkmm3 mingw-w64-x86_64-gtkmm3
+          install: cmake ninja ${{ matrix.config.msys_packages }}
 
       - name: Configure
         shell: msys2 {0}
@@ -69,7 +71,6 @@ jobs:
           ls
           ls gui-gtk
           objdump -p gui-gtk/ScheduliteGTK.exe 
-
 
       - name: Install Strip
         shell: msys2 {0}
