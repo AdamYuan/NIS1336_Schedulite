@@ -14,18 +14,17 @@ add_executable(ScheduliteGTK
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)
 
-message("lib path: ${CMAKE_SYSTEM_LIBRARY_PATH}")
-
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION gtk-gui)
 if (MINGW)
-    install(CODE "set(CMAKE_SYSTEM_LIBRARY_PATH \"${CMAKE_SYSTEM_LIBRARY_PATH}\")")
+    set(CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")
     install(CODE [[
+    install(FILES ${MINGW_BIN}/gdbus.exe DESTINATION gtk-gui)
     file(GET_RUNTIME_DEPENDENCIES
         RESOLVED_DEPENDENCIES_VAR RES_DEPS
         UNRESOLVED_DEPENDENCIES_VAR UNRES_DEPS
         CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING_DEPENDENCIES
         EXECUTABLES $<TARGET_FILE:ScheduliteGTK>
-        DIRECTORIES ${CMAKE_SYSTEM_LIBRARY_PATH}
+        DIRECTORIES ${CMAKE_MINGW_BIN}
         PRE_EXCLUDE_REGEXES "api-ms-*" "ext-ms-*"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     )
