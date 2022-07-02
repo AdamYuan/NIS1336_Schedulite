@@ -46,7 +46,7 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '84e1600ba1bf6a1c61f28632723e469107c955fe'
+          vcpkgGitCommitId: '580da706ed3502f1b1fcd9ab70212cda548d3520'
           appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
           vcpkgTriplet: ${{ matrix.triplet }}
           additionalCachedPaths: ${{ env.buildDir }}
