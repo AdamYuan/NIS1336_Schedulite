@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.22)
 project(Schedulite)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -14,23 +14,13 @@ add_executable(ScheduliteGTK
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)
 
-install(TARGETS ScheduliteGTK RUNTIME DESTINATION)
+install(TARGETS ScheduliteGTK
+        RUNTIME_DEPENDENCY_SET ScheduliteGTKRuntimeDep
+        RUNTIME DESTINATION)
 if (MINGW)
-    set(CMAKE_GET_RUNTIME_DEPENDENCIES_TOOL objdump)
-    install(CODE [[
-    file(GET_RUNTIME_DEPENDENCIES
-        RESOLVED_DEPENDENCIES_VAR RES
-        UNRESOLVED_DEPENDENCIES_VAR UNRES
-        CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING_DEPENDENCIES
-        EXECUTABLES ScheduliteGTK
-    )
-    message("\n\nFound dependencies :")
-    foreach(DEP ${RES})
-        message("${DEP}")
-    endforeach()
-    message("\n\nNot found dependencies :")
-    foreach(DEP ${UNRES})
-        message("${DEP}")
-    endforeach()
-    ]])
+    install(RUNTIME_DEPENDENCY_SET ScheduliteGTKRuntimeDep
+            PRE_EXCLUDE_REGEXES "^api-ms-.*\\.dll$|^ext-ms-.*\\.dll$|^emclient\\.dll$|^hvsifiletrust\\.dll$"
+            POST_EXCLUDE_REGEXES "^.*[\\\\/]system32/.*\\.dll$"
+            DIRECTORIES C:/msys64/mingw64/bin
+            )
 endif ()
