@@ -16,7 +16,7 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 
 message("lib path: ${CMAKE_SYSTEM_LIBRARY_PATH}")
 
-install(TARGETS ScheduliteGTK RUNTIME DESTINATION)
+install(TARGETS ScheduliteGTK RUNTIME DESTINATION gtk-gui)
 if (MINGW)
     install(CODE "set(CMAKE_SYSTEM_LIBRARY_PATH \"${CMAKE_SYSTEM_LIBRARY_PATH}\")")
     install(CODE [[
@@ -33,7 +33,7 @@ if (MINGW)
     foreach(DEP ${RES_DEPS})
         message("${DEP}")
         file(INSTALL
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/gtk-gui"
             TYPE SHARED_LIBRARY
             FOLLOW_SYMLINK_CHAIN
             FILES "${DEP}"
