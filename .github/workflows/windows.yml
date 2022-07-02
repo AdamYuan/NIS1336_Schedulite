@@ -16,66 +16,63 @@ jobs:
       matrix:
         config:
           - {
-            name: "Windows MSVC 64",
-            os: windows-2019,
-            artifact: "windows_msvc_64.7z",
+            name: "Windows MinGW 32",
+            os: windows-latest,
+            artifact: "windows_mingw_32.7z",
             build_type: "Release",
-            cc: "cl",
-            cxx: "cl",
-            arch: "x64",
+            cc: "i686-w64-mingw32-gcc",
+            cxx: "i686-w64-mingw32-g++",
             archiver: "7z a",
-            generators: "Visual Studio 16 2019"
+            generators: "Ninja"
           }
           - {
-            name: "Windows MSVC 32",
-            os: windows-2019,
-            artifact: "windows_msvc_32.7z",
+            name: "Windows MinGW 64",
+            os: windows-latest,
+            artifact: "windows_mingw_64.7z",
             build_type: "Release",
-            cc: "cl",
-            cxx: "cl",
-            arch: "Win32",
+            cc: "x86_64-w64-mingw32-gcc",
+            cxx: "x86_64-w64-mingw32-g++",
             archiver: "7z a",
-            generators: "Visual Studio 16 2019"
+            generators: "Ninja"
           }
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Restore artifacts, or setup vcpkg (do not install any package)
-        uses: lukka/run-vcpkg@v10
+      - uses: msys2/setup-msys2@v2
         with:
-          doNotCache: true
-          setupOnly: true
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: 'cef0b3ec767df6e83806899fe9525f6cf8d7bc91'
-          appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
-          vcpkgTriplet: ${{ matrix.triplet }}
-          additionalCachedPaths: ${{ env.buildDir }}
-
-      - name: Install dependencies
-        run: |
-          choco install pkgconfiglite
-          vcpkg install gtkmm
+          update: false
+          install: cmake ninja mingw-w64-i686-gcc mingw-w64-x86_64-gcc mingw-w64-i686-gtkmm3 mingw-w64-x86_64-gtkmm3
 
       - name: Configure
-        shell: bash
+        shell: msys2 {0}
         run: |
           mkdir build
           mkdir instdir
           cmake \
             -S . \
             -B . \
-            -A ${{ matrix.config.arch }} \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER="${{ matrix.config.cc }}" \
+            -DCMAKE_CXX_COMPILER="${{ matrix.config.cxx }}" \
             -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
             -G "${{ matrix.config.generators }}" \
             -DCMAKE_INSTALL_PREFIX:PATH=instdir
 
       - name: Build
-        shell: bash
+        shell: msys2 {0}
         run: cmake --build . --config ${{ matrix.config.build_type }}
 
+      - name: Objdump
+        shell: msys2 {0}
+        run: |
+          ls
+          ls gui-gtk
+          objdump -p gui-gtk/ScheduliteGTK.exe 
+
+
       - name: Install Strip
-        shell: bash
+        shell: msys2 {0}
         run: cmake --install . --strip
 
       - name: Pack
