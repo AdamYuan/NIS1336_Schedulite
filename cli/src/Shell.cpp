@@ -98,7 +98,7 @@ void Shell::cmd_login() {
 		PrintError(error);
 		return;
 	}
-	std::tie(schedule, error) = backend::Schedule::Create(user);
+	std::tie(schedule, error) = backend::Schedule::Acquire(user);
 	if (error != backend::Error::kSuccess) {
 		PrintError(error);
 		return;
@@ -123,7 +123,7 @@ void Shell::cmd_register() {
 		PrintError(error);
 		return;
 	}
-	std::tie(schedule, error) = backend::Schedule::Create(user);
+	std::tie(schedule, error) = backend::Schedule::Acquire(user);
 	if (error != backend::Error::kSuccess) {
 		PrintError(error);
 		return;
