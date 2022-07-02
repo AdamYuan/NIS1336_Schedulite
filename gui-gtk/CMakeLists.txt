@@ -14,6 +14,8 @@ add_executable(ScheduliteGTK
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)
 
+message("lib path: ${CMAKE_SYSTEM_LIBRARY_PATH}")
+
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION)
 if (MINGW)
     install(CODE [[
@@ -22,6 +24,7 @@ if (MINGW)
         UNRESOLVED_DEPENDENCIES_VAR UNRES
         CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING_DEPENDENCIES
         EXECUTABLES $<TARGET_FILE:ScheduliteGTK>
+        DIRECTORIES ${CMAKE_SYSTEM_LIBRARY_PATH} ${CMAKE_MINGW_LIBRARY_PATH}
         PRE_EXCLUDE_REGEXES "api-ms-*" "ext-ms-*"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     )
