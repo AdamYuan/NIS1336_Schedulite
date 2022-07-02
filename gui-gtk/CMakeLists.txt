@@ -16,7 +16,6 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION)
 if (MINGW)
-    set(CMAKE_GET_RUNTIME_DEPENDENCIES_TOOL objdump)
     install(CODE [[
     file(GET_RUNTIME_DEPENDENCIES
         RESOLVED_DEPENDENCIES_VAR RES
