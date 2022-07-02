@@ -11,7 +11,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 
     if (MINGW)
         message("Use MinGW")
-        set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
+        set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
     endif ()
 
     if (MSVC)
