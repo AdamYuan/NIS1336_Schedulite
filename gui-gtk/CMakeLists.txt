@@ -18,24 +18,32 @@ message("lib path: ${CMAKE_SYSTEM_LIBRARY_PATH}")
 
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION)
 if (MINGW)
-    install(CODE "set(CMAKE_MINGW_LIBRARY_PATH \"${CMAKE_MINGW_LIBRARY_PATH}\")")
+    install(CODE "set(CMAKE_SYSTEM_LIBRARY_PATH \"${CMAKE_SYSTEM_LIBRARY_PATH}\")")
     install(CODE [[
     file(GET_RUNTIME_DEPENDENCIES
-        RESOLVED_DEPENDENCIES_VAR RES
-        UNRESOLVED_DEPENDENCIES_VAR UNRES
+        RESOLVED_DEPENDENCIES_VAR RES_DEPS
+        UNRESOLVED_DEPENDENCIES_VAR UNRES_DEPS
         CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING_DEPENDENCIES
         EXECUTABLES $<TARGET_FILE:ScheduliteGTK>
-        DIRECTORIES ${CMAKE_MINGW_LIBRARY_PATH}
+        DIRECTORIES ${CMAKE_SYSTEM_LIBRARY_PATH}
         PRE_EXCLUDE_REGEXES "api-ms-*" "ext-ms-*"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     )
-    message("\n\nFound dependencies :")
-    foreach(DEP ${RES})
+    message("\n\nFound dependencies:")
+    foreach(DEP ${RES_DEPS})
+        message("${DEP}")
+        file(INSTALL
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+            TYPE SHARED_LIBRARY
+            FOLLOW_SYMLINK_CHAIN
+            FILES "${DEP}"
+        )
+    endforeach()
+
+    message("\n\nNot found dependencies:")
+    foreach(DEP ${UNRES_DEPS})
         message("${DEP}")
     endforeach()
-    message("\n\nNot found dependencies :")
-    foreach(DEP ${UNRES})
-        message("${DEP}")
-    endforeach()
+
     ]])
 endif ()
