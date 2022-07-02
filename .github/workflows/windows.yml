@@ -43,6 +43,13 @@ jobs:
 
       - name: Restore artifacts, or setup vcpkg (do not install any package)
         uses: lukka/run-vcpkg@v10
+        with:
+          setupOnly: true
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: '84e1600ba1bf6a1c61f28632723e469107c955fe'
+          appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
+          vcpkgTriplet: ${{ matrix.triplet }}
+          additionalCachedPaths: ${{ env.buildDir }}
 
       - name: Install dependencies
         run: |
