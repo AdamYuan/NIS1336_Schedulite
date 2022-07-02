@@ -16,55 +16,69 @@ jobs:
       matrix:
         config:
           - {
-            name: "Windows MinGW 32",
+            name: "Windows MSVC 64",
             os: windows-latest,
-            artifact: "windows_mingw_32.7z",
+            artifact: "windows_msvc_64.7z",
             build_type: "Release",
-            cc: "i686-w64-mingw32-gcc",
-            cxx: "i686-w64-mingw32-g++",
+            cc: "cl",
+            cxx: "cl",
+            arch: "x64",
             archiver: "7z a",
-            generators: "Ninja"
+            generators: "Visual Studio 17 2022"
           }
           - {
-            name: "Windows MinGW 64",
+            name: "Windows MSVC 32",
             os: windows-latest,
-            artifact: "windows_mingw_64.7z",
+            artifact: "windows_msvc_32.7z",
             build_type: "Release",
-            cc: "x86_64-w64-mingw32-gcc",
-            cxx: "x86_64-w64-mingw32-g++",
+            cc: "cl",
+            cxx: "cl",
+            arch: "Win32",
             archiver: "7z a",
-            generators: "Ninja"
+            generators: "Visual Studio 17 2022"
           }
 
     steps:
       - uses: actions/checkout@v2
 
-      - uses: msys2/setup-msys2@v2
+      - name: Restore artifacts, or setup vcpkg (do not install any package)
+        uses: lukka/run-vcpkg@v10
         with:
-          update: false
-          install: cmake ninja mingw-w64-i686-gcc mingw-w64-x86_64-gcc mingw-w64-i686-gtkmm3 mingw-w64-x86_64-gtkmm3
+          setupOnly: true
+          # Location of the vcpkg as submodule of the repository.
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: '84e1600ba1bf6a1c61f28632723e469107c955fe'
+          # Since the cache must be invalidated when content of the vcpkg.json file changes, let's
+          # compute its hash and append this to the computed cache's key.
+          appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
+          vcpkgTriplet: ${{ matrix.triplet }}
+          # Ensure the vcpkg artifacts are cached, they are generated in the 'CMAKE_BINARY_DIR/vcpkg_installed'.
+          additionalCachedPaths: ${{ env.buildDir }}
+
+      - name: Install dependencies
+        run: |
+          choco install pkgconfiglite
+          vcpkg install gtkmm
 
       - name: Configure
-        shell: msys2 {0}
+        shell: bash
         run: |
           mkdir build
           mkdir instdir
           cmake \
             -S . \
             -B . \
-            -DCMAKE_SYSTEM_NAME=Windows \
-            -DCMAKE_C_COMPILER="${{ matrix.config.cc }}" \
-            -DCMAKE_CXX_COMPILER="${{ matrix.config.cxx }}" \
+            -A ${{ matrix.config.arch }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
             -G "${{ matrix.config.generators }}" \
             -DCMAKE_INSTALL_PREFIX:PATH=instdir
 
       - name: Build
-        shell: msys2 {0}
+        shell: bash
         run: cmake --build . --config ${{ matrix.config.build_type }}
 
       - name: Install Strip
-        shell: msys2 {0}
+        shell: bash
         run: cmake --install . --strip
 
       - name: Pack
