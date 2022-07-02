@@ -17,8 +17,8 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION gtk-gui)
 if (MINGW)
     set(CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")
+    install(FILES ${CMAKE_MINGW_BIN}/gdbus.exe DESTINATION gtk-gui)
     install(CODE [[
-    install(FILES ${MINGW_BIN}/gdbus.exe DESTINATION gtk-gui)
     file(GET_RUNTIME_DEPENDENCIES
         RESOLVED_DEPENDENCIES_VAR RES_DEPS
         UNRESOLVED_DEPENDENCIES_VAR UNRES_DEPS
