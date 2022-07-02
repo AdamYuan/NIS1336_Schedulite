@@ -18,7 +18,7 @@ jobs:
           - {
             name: "Windows MinGW 32",
             os: windows-latest,
-            artifact: "windows_mingw_64.7z",
+            artifact: "windows_mingw_32.7z",
             build_type: "Release",
             cc: "i686-w64-mingw32-gcc",
             cxx: "i686-w64-mingw32-g++",
