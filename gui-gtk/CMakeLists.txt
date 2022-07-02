@@ -18,7 +18,7 @@ install(TARGETS ScheduliteGTK RUNTIME DESTINATION gtk-gui)
 if (MINGW)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" DESTINATION gtk-gui) # install gdbus.exe
     # install other dll dependencies
-    install(CODE set(CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\"))
+    install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
     install(CODE [[
     file(GET_RUNTIME_DEPENDENCIES
         RESOLVED_DEPENDENCIES_VAR RES_DEPS
@@ -29,6 +29,7 @@ if (MINGW)
         PRE_EXCLUDE_REGEXES "api-ms-*" "ext-ms-*"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     )
+
     message("\n\nFound dependencies:")
     foreach(DEP ${RES_DEPS})
         message("${DEP}")
@@ -44,6 +45,5 @@ if (MINGW)
     foreach(DEP ${UNRES_DEPS})
         message("${DEP}")
     endforeach()
-
     ]])
 endif ()
