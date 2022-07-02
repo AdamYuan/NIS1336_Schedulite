@@ -27,7 +27,7 @@ Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 	m_sync_object = std::make_shared<SyncObject>(m_user_ptr->GetName());
 }
 
-std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Create(const std::shared_ptr<User> &user_ptr) {
+std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Acquire(const std::shared_ptr<User> &user_ptr) {
 	std::shared_ptr<Schedule> ret = std::make_shared<Schedule>(user_ptr);
 	Error error;
 
