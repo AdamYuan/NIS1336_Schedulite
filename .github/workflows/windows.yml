@@ -44,17 +44,17 @@ jobs:
       - name: Restore artifacts, or setup vcpkg (do not install any package)
         uses: lukka/run-vcpkg@v10
         with:
-          #setupOnly: true
-          #vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '580da706ed3502f1b1fcd9ab70212cda548d3520'
-          #appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
-          #vcpkgTriplet: ${{ matrix.triplet }}
-          #additionalCachedPaths: ${{ env.buildDir }}
+          doNotCache: true
+          setupOnly: true
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: 'cef0b3ec767df6e83806899fe9525f6cf8d7bc91'
+          appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
+          vcpkgTriplet: ${{ matrix.triplet }}
+          additionalCachedPaths: ${{ env.buildDir }}
 
       - name: Install dependencies
         run: |
           choco install pkgconfiglite
-          vcpkg update
           vcpkg install gtkmm
 
       - name: Configure
