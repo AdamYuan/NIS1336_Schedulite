@@ -28,11 +28,11 @@ public:
 	~Schedule();
 
 	/**
-	 * Create Schedule token from a User.
+	 * Acquire Schedule token from a User.
 	 * @param user_ptr The Schedule's parent User.
 	 * @return Schedule token and Error code.
 	 */
-	static std::tuple<std::shared_ptr<Schedule>, Error> Create(const std::shared_ptr<User> &user_ptr);
+	static std::tuple<std::shared_ptr<Schedule>, Error> Acquire(const std::shared_ptr<User> &user_ptr);
 
 	/**
 	 * Get the pointer to the Schedule's parent User.

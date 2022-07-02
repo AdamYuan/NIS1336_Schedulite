@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	std::tie(schedule, error) = backend::Schedule::Create(user);
+	std::tie(schedule, error) = backend::Schedule::Acquire(user);
 	if (!schedule) {
 		cli::PrintError(error);
 		exit(EXIT_FAILURE);
