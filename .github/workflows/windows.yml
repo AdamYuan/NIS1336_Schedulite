@@ -42,7 +42,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           update: false
-          install: mingw-w64-gcc cmake ninja mingw-w64-gtkmm3
+          install: cmake ninja mingw-w64-i686-gcc mingw-w64-x86_64-gcc mingw-w64-i686-gtkmm3 mingw-w64-x86_64-gtkmm3
 
       - name: Configure
         shell: msys2 {0}
