@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 project(Schedulite)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    include(CheckIPOSupported)
-    check_ipo_supported(RESULT IPO_SUPPORTED)
-    if (IPO_SUPPORTED)
-        message("Enable IPO")
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    endif ()
-
     if (MINGW)
         message("Use MinGW")
         set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
