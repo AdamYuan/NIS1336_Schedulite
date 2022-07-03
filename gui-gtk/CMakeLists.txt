@@ -16,9 +16,14 @@ add_executable(ScheduliteGTK
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)
 
-install(TARGETS ScheduliteGTK RUNTIME DESTINATION gtk-gui)
+install(TARGETS ScheduliteGTK RUNTIME)
 if (MINGW)
-    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" DESTINATION gtk-gui) # install gdbus.exe
+    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe") # install gdbus.exe
+    install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
+            DESTINATION lib
+            FILES_MATCHING
+            PATTERN "*.dll"
+            PATTERN "*.cache")
     # install other dll dependencies
     install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
     install(CODE [[
@@ -36,7 +41,7 @@ if (MINGW)
     foreach(DEP ${RES_DEPS})
         message("${DEP}")
         file(INSTALL
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/gtk-gui"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}"
             TYPE SHARED_LIBRARY
             FOLLOW_SYMLINK_CHAIN
             FILES "${DEP}"

@@ -18,4 +18,4 @@ add_executable(ScheduliteCLI
 target_link_libraries(ScheduliteCLI PRIVATE schedulite::cli::dep schedulite::backend)
 target_include_directories(ScheduliteCLI PRIVATE include)
 
-install(TARGETS ScheduliteCLI RUNTIME DESTINATION)
+# install(TARGETS ScheduliteCLI RUNTIME DESTINATION)
