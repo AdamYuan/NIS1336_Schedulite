@@ -11,6 +11,8 @@ add_subdirectory(dep)
 add_executable(ScheduliteGTK
         src/main.cpp
         src/Window.cpp
+        src/TaskListBox.cpp
+        src/TaskListBoxRow.cpp
         )
 
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
