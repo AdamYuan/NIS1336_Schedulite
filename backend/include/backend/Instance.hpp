@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace backend {
 
@@ -30,7 +31,14 @@ public:
 	 * @brief Maintain the working directory.
 	 * @return Successful or not.
 	 */
-	bool MaintainDirs();
+	bool MaintainDirs() const;
+
+	/**
+	 * Fetch the available usernames in the current instance.
+	 * @brief Fetch available usernames.
+	 * @return An array of usernames.
+	 */
+	std::vector<std::string> FetchUsernames() const;
 
 	/**
 	 * Get the APP data directory of the instance.
