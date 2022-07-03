@@ -932,7 +932,7 @@ inline Error decrypt_ecb(
  *  If the pads is false, data size must be multiple of 16.
  * @param [in]  key key bytes. The key length must be 16 (128-bit), 24 (192-bit) or 32 (256-bit).
  * @param [in]  key_size key size.
- * @param [in]  iv initialize vector.
+ * @param [in]  iv Initialize vector.
  * @param [out] encrypted Encrypted data buffer.
  * @param [in]  encrypted_size Encrypted data buffer size.
  * @param [in]  pads If this value is true, encrypted data is padded by PKCS.
@@ -1008,7 +1008,7 @@ inline Error encrypt_cbc(
  * @param [in]  data_size Data size.
  * @param [in]  key Key bytes.
  * @param [in]  key_size Key size.
- * @param [in]  iv initialize vector.
+ * @param [in]  iv Initialize vector.
  * @param [out] decrypted Decrypted data buffer.
  * @param [in]  decrypted_size Decrypted data buffer size.
  * @param [out] padded_size If this value is NULL, this function does not remove padding.
