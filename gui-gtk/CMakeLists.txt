@@ -9,7 +9,9 @@ endif ()
 add_subdirectory(dep)
 
 add_executable(ScheduliteGTK
-        src/main.cpp)
+        src/main.cpp
+        src/Window.cpp
+        )
 
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)

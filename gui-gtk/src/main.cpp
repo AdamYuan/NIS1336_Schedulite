@@ -1,8 +1,10 @@
 #include <gtkmm.h>
 
-int main(int argc, char *argv[]) {
-	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.gtkmm.examples.base");
+#include "Window.hpp"
 
-	Gtk::ApplicationWindow window;
+int main(int argc, char *argv[]) {
+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.adamyuan.schedulite");
+
+	gui::Window window;
 	return app->run(window);
 }
