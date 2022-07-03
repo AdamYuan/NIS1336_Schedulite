@@ -25,7 +25,20 @@ std::shared_ptr<Instance> Instance::Create(std::string_view app_dir_path) {
 	return ret;
 }
 
-bool Instance::MaintainDirs() {
+std::vector<std::string> Instance::FetchUsernames() const {
+	std::vector<std::string> usernames;
+	try {
+		for (auto const &entry : ghc::filesystem::directory_iterator(m_user_dir_path)) {
+			if (entry.is_regular_file())
+				usernames.push_back(entry.path().filename().string());
+		}
+	} catch (...) {
+		return {};
+	}
+	return usernames;
+}
+
+bool Instance::MaintainDirs() const {
 	// Maintain app dir
 	try {
 		if (ghc::filesystem::exists(m_app_dir_path)) {
