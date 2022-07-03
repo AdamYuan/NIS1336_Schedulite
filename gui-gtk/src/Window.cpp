@@ -2,7 +2,9 @@
 
 namespace gui {
 
-Window::Window() {
+Window::Window() { initialize(); }
+
+void Window::initialize() {
 	set_title("Basic application");
 	set_default_size(400, 400);
 
