@@ -30,7 +30,7 @@ std::vector<std::string> Instance::FetchUsernames() const {
 	try {
 		for (auto const &entry : ghc::filesystem::directory_iterator(m_user_dir_path)) {
 			if (entry.is_regular_file())
-				usernames.push_back(entry.path().filename());
+				usernames.push_back(entry.path().filename().string());
 		}
 	} catch (...) {
 		return {};
