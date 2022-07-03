@@ -11,6 +11,7 @@ public:
 	~Window() override = default;
 
 protected:
+	void initialize();
 	Gtk::Box m_layout_box;
 	Gtk::HeaderBar m_header_bar;
 	Gtk::ListBox m_tasks_list_box;

@@ -6,7 +6,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     check_ipo_supported(RESULT IPO_SUPPORTED)
     if (IPO_SUPPORTED)
         message("Enable IPO")
-        # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif ()
 
     if (MINGW)
