@@ -18,12 +18,13 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 
 install(TARGETS ScheduliteGTK RUNTIME)
 if (MINGW)
-    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe") # install gdbus.exe
+    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" RUNTIME DESTINATION) # install gdbus.exe
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
             FILES_MATCHING
             PATTERN "*.dll"
-            PATTERN "*.cache")
+            PATTERN "*.cache"
+            RUNTIME DESTINATION)
     # install other dll dependencies
     install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
     install(CODE [[
