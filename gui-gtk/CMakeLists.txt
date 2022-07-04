@@ -12,8 +12,8 @@ add_subdirectory(ui)
 add_executable(ScheduliteGTK
         src/main.cpp
         src/Window.cpp
-        src/TaskListBox.cpp
-        src/TaskListBoxRow.cpp
+        src/TaskFlowBox.cpp
+        src/TaskFlowBoxChild.cpp
         )
 
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gtk::dep schedulite::gtk::ui schedulite::backend)
@@ -22,11 +22,6 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION bin)
 if (MINGW)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" DESTINATION bin) # install gdbus.exe
-    install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
-            DESTINATION bin/lib
-            FILES_MATCHING
-            PATTERN "*.dll"
-            PATTERN "*.cache")
     # install other dll dependencies
     install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
     install(CODE [[
@@ -56,4 +51,9 @@ if (MINGW)
         message("${DEP}")
     endforeach()
     ]])
+    install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
+            DESTINATION lib
+            FILES_MATCHING
+            PATTERN "*.dll"
+            PATTERN "*.cache")
 endif ()

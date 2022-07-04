@@ -3,7 +3,7 @@
 
 #include <gtkmm.h>
 
-#include "TaskListBox.hpp"
+#include "TaskFlowBox.hpp"
 
 #include <backend/Schedule.hpp>
 
@@ -27,7 +27,7 @@ protected:
 
 	Gtk::HeaderBar m_header_bar;
 	Gtk::ScrolledWindow m_scrolled_window;
-	TaskListBox m_task_list_box;
+	TaskFlowBox m_task_list_box;
 };
 
 } // namespace gui

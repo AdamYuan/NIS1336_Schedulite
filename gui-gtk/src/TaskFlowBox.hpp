@@ -3,17 +3,17 @@
 
 #include <gtkmm.h>
 
+#include "TaskFlowBoxChild.hpp"
 #include <backend/Schedule.hpp>
-
-#include "TaskListBoxRow.hpp"
+#include <unordered_map>
 
 namespace gui {
 
-class TaskListBox : public Gtk::ListBox {
+class TaskFlowBox : public Gtk::FlowBox {
 public:
-	TaskListBox();
-	explicit TaskListBox(const std::shared_ptr<backend::Schedule> &schedule_ptr);
-	~TaskListBox() override = default;
+	TaskFlowBox();
+	explicit TaskFlowBox(const std::shared_ptr<backend::Schedule> &schedule_ptr);
+	~TaskFlowBox() override = default;
 
 	void UpdateSchedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 
@@ -21,7 +21,7 @@ public:
 
 private:
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
-	std::vector<TaskListBoxRow> m_rows;
+	std::unordered_map<uint32_t, TaskFlowBoxChild *> m_rows;
 
 	void initialize();
 };
