@@ -47,7 +47,7 @@ void TaskFlowBoxChild::initialize() {
 	builder->get_widget("begin_time_label", m_p_begin_time_label);
 	builder->get_widget("remind_time_label", m_p_remind_time_label);
 
-	Gtk::Box *p_task_box;
+	Gtk::Widget *p_task_box;
 	builder->get_widget("task_box", p_task_box);
 	add(*p_task_box);
 	show_all();

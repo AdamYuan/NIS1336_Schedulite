@@ -9,12 +9,15 @@ TaskFlowBox::TaskFlowBox(const std::shared_ptr<backend::Schedule> &schedule_ptr)
 }
 
 void TaskFlowBox::initialize() {
-	/* signal_row_selected().connect([this](Gtk::ListBoxRow *row) {
-	    auto task_row = (TaskFlowBoxChild *)row;
-	    if (task_row) {
-	        printf("select: %s\n", task_row->m_task.property.name.c_str());
-	    }
-	}); */
+	set_selection_mode(Gtk::SELECTION_NONE);
+	set_column_spacing(16);
+	set_row_spacing(16);
+	signal_child_activated().connect([this](Gtk::FlowBoxChild *child) {
+		auto task_child = (TaskFlowBoxChild *)child;
+		if (task_child) {
+			printf("select: %s\n", task_child->m_task.property.name.c_str());
+		}
+	});
 }
 
 void TaskFlowBox::UpdateSchedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
