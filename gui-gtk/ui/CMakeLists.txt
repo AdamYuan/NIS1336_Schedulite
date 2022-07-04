@@ -7,9 +7,9 @@ set(UI_SRC
 
 function(add_ui_header UI_FILE HEADER_FILE)
     add_custom_command(OUTPUT ${HEADER_FILE}
-            COMMAND ${CMAKE_COMMAND} -E echo constexpr const char *k${UI_NAME}UIString = R\\\"\\\( > ${HEADER_FILE}
+            COMMAND ${CMAKE_COMMAND} -E echo 'constexpr const char *k${UI_NAME}UIString = R\"\(' > ${HEADER_FILE}
             COMMAND ${CMAKE_COMMAND} -E cat ${UI_FILE} >> ${HEADER_FILE}
-            COMMAND ${CMAKE_COMMAND} -E echo \\\)\\\"\\\; >> ${HEADER_FILE}
+            COMMAND ${CMAKE_COMMAND} -E echo '\)\"\;' >> ${HEADER_FILE}
             DEPENDS ${UI_FILE})
 endfunction()
 

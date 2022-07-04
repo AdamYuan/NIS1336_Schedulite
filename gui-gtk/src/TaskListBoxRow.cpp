@@ -50,7 +50,7 @@ void TaskListBoxRow::initialize() {
 	m_type_box.set_size_request(64, -1);
 	m_type_box.set_tooltip_text("Task Type");
 
-	//m_begin_time_box.pack_end(m_begin_time_icon, Gtk::PACK_SHRINK);
+	// m_begin_time_box.pack_end(m_begin_time_icon, Gtk::PACK_SHRINK);
 	m_begin_time_box.pack_end(m_begin_time_label, Gtk::PACK_SHRINK, 4);
 	m_begin_time_box.set_tooltip_text("Begin Time");
 

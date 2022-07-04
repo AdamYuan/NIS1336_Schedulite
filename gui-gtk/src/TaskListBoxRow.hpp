@@ -22,6 +22,8 @@ private:
 
 	void initialize();
 	void update();
+
+	friend class TaskListBox;
 };
 } // namespace gui
 

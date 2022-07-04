@@ -11,8 +11,8 @@ namespace gui {
 
 class TaskListBox : public Gtk::ListBox {
 public:
-	TaskListBox() = default;
-	explicit TaskListBox(const std::shared_ptr<backend::Schedule>& schedule_ptr);
+	TaskListBox();
+	explicit TaskListBox(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 	~TaskListBox() override = default;
 
 	void UpdateSchedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
@@ -22,6 +22,8 @@ public:
 private:
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
 	std::vector<TaskListBoxRow> m_rows;
+
+	void initialize();
 };
 
 } // namespace gui
