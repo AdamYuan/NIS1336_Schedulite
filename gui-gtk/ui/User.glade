@@ -100,7 +100,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry">
+                  <object class="GtkEntry" id="login_username">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="input-purpose">name</property>
@@ -178,7 +178,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry">
+                  <object class="GtkEntry" id="register_username">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="input-purpose">name</property>
@@ -189,7 +189,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry">
+                  <object class="GtkEntry" id="register_password1">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="visibility">False</property>
@@ -226,7 +226,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry">
+                  <object class="GtkEntry" id="register_password2">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="visibility">False</property>
