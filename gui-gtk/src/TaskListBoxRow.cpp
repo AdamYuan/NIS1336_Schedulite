@@ -41,7 +41,7 @@ void TaskListBoxRow::initialize() {
 	add(m_main_box);
 
 	m_priority_box.pack_start(m_priority_icon, Gtk::PACK_EXPAND_WIDGET);
-	m_priority_box.set_size_request(64, -1);
+	// m_priority_box.set_size_request(64, -1);
 	m_priority_box.set_tooltip_text("Task Priority");
 
 	m_type_box.set_orientation(Gtk::ORIENTATION_VERTICAL);
@@ -50,21 +50,21 @@ void TaskListBoxRow::initialize() {
 	m_type_box.set_size_request(64, -1);
 	m_type_box.set_tooltip_text("Task Type");
 
-	m_begin_time_box.pack_end(m_begin_time_icon, Gtk::PACK_SHRINK);
-	m_begin_time_box.pack_end(m_begin_time_label, Gtk::PACK_SHRINK);
+	//m_begin_time_box.pack_end(m_begin_time_icon, Gtk::PACK_SHRINK);
+	m_begin_time_box.pack_end(m_begin_time_label, Gtk::PACK_SHRINK, 4);
 	m_begin_time_box.set_tooltip_text("Begin Time");
 
 	m_remind_time_box.pack_end(m_remind_time_icon, Gtk::PACK_SHRINK);
-	m_remind_time_box.pack_end(m_remind_time_label, Gtk::PACK_SHRINK);
+	m_remind_time_box.pack_end(m_remind_time_label, Gtk::PACK_SHRINK, 4);
 	m_remind_time_box.set_tooltip_text("Remind Time");
 	m_remind_time_label.set_state(Gtk::STATE_INSENSITIVE);
 	m_remind_time_icon.set_state(Gtk::STATE_INSENSITIVE);
 
 	m_main_box.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-	m_main_box.pack_start(m_priority_box, Gtk::PACK_SHRINK);
+	m_main_box.pack_start(m_priority_box, Gtk::PACK_SHRINK, 16);
 	m_main_box.pack_start(m_type_box, Gtk::PACK_SHRINK);
 	m_main_box.pack_start(m_box_0, Gtk::PACK_EXPAND_PADDING);
-	m_main_box.pack_end(m_box_1, Gtk::PACK_SHRINK);
+	m_main_box.pack_end(m_box_1, Gtk::PACK_SHRINK, 16);
 
 	m_box_0.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
 	m_box_0.pack_start(m_name_label, Gtk::PACK_SHRINK);
@@ -81,6 +81,9 @@ void TaskListBoxRow::initialize() {
 	m_edit_button.set_label("Edit");
 	m_done_button.set_label("Done");
 
+	m_begin_time_icon.set_from_icon_name("emblem-urgent", Gtk::ICON_SIZE_BUTTON);
+	m_remind_time_icon.set_from_icon_name("dialog-information", Gtk::ICON_SIZE_BUTTON);
+
 	show_all();
 }
 void TaskListBoxRow::update() {
@@ -93,11 +96,9 @@ void TaskListBoxRow::update() {
 		m_type_label.hide();
 	}
 
-	m_begin_time_label.set_markup("<big>" + backend::ToTimeStr(m_task.property.begin_time) + "</big> ");
-	m_begin_time_icon.set_from_icon_name("emblem-urgent", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+	m_begin_time_label.set_markup("<big>" + backend::ToTimeStr(m_task.property.begin_time) + "</big>");
 
-	m_remind_time_label.set_label(backend::ToTimeStr(m_task.property.remind_time) + " ");
-	m_remind_time_icon.set_from_icon_name("dialog-information", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+	m_remind_time_label.set_label(backend::ToTimeStr(m_task.property.remind_time));
 
 	m_name_label.set_markup("<big>" + m_task.property.name + "</big>");
 }

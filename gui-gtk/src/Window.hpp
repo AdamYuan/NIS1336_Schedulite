@@ -19,7 +19,9 @@ protected:
 
 	void initialize();
 
-	Gtk::Popover m_user_popover;
+	Gtk::Popover *m_p_user_popover{nullptr};
+	Gtk::Label *m_p_user_popover_label{nullptr};
+
 	Gtk::MenuButton m_user_button;
 	Gtk::Button m_insert_button;
 

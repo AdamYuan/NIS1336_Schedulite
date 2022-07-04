@@ -7,6 +7,7 @@ if (NOT TARGET schedulite::backend)
     add_subdirectory(../backend)
 endif ()
 add_subdirectory(dep)
+add_subdirectory(ui)
 
 add_executable(ScheduliteGTK
         src/main.cpp
@@ -15,7 +16,7 @@ add_executable(ScheduliteGTK
         src/TaskListBoxRow.cpp
         )
 
-target_link_libraries(ScheduliteGTK PRIVATE schedulite::gui::dep schedulite::backend)
+target_link_libraries(ScheduliteGTK PRIVATE schedulite::gtk::dep schedulite::gtk::ui schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)
 
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION bin)
