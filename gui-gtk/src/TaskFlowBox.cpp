@@ -12,6 +12,8 @@ void TaskFlowBox::initialize() {
 	set_selection_mode(Gtk::SELECTION_NONE);
 	set_column_spacing(16);
 	set_row_spacing(16);
+	set_border_width(16);
+	set_homogeneous(true);
 	signal_child_activated().connect([this](Gtk::FlowBoxChild *child) {
 		auto task_child = (TaskFlowBoxChild *)child;
 		if (task_child) {
@@ -24,6 +26,7 @@ void TaskFlowBox::UpdateSchedule(const std::shared_ptr<backend::Schedule> &sched
 	m_schedule_ptr = schedule_ptr;
 	for (auto *widget : get_children())
 		remove(*widget);
+	m_rows.clear();
 	for (const auto &task : m_schedule_ptr->GetTasks()) {
 		auto row = Gtk::make_managed<TaskFlowBoxChild>(task);
 		m_rows[task.id] = row;

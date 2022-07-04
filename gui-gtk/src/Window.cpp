@@ -27,25 +27,30 @@ void Window::initialize() {
 	set_title(backend::kAppName);
 	set_default_size(640, 480);
 
-	set_titlebar(m_header_bar);
+	set_titlebar(m_header.bar);
 	{
-		m_header_bar.set_show_close_button(TRUE);
-		m_header_bar.set_title(backend::kAppName);
-		m_header_bar.show();
+		m_header.bar.set_show_close_button(TRUE);
+		m_header.bar.set_title(backend::kAppName);
+		m_header.bar.show();
 
-		m_header_bar.pack_start(m_user_button);
-		m_header_bar.pack_end(m_insert_button);
+		m_header.bar.pack_start(m_header.user_button);
+		m_header.bar.pack_end(m_header.insert_button);
 
-		m_user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
-		m_user_button.set_popover(*m_p_user_popover);
-		m_user_button.show();
+		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
+		m_header.user_button.set_popover(*m_p_user_popover);
+		m_header.user_button.show();
 
-		m_insert_button.set_image_from_icon_name("document-new-symbolic");
-		m_insert_button.set_label("Insert");
-		m_insert_button.show();
+		m_header.insert_button.set_image_from_icon_name("document-new-symbolic");
+		m_header.insert_button.set_label("Insert");
+		m_header.insert_button.show();
+
+		m_header.pending_button.set_label("Pending");
+		m_header.ongoing_button.set_label("Ongoing");
+		m_header.done_button.set_label("Done");
 	}
 
 	m_scrolled_window.add(m_task_list_box);
+	m_scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
 	m_task_list_box.show();
 
 	add(m_scrolled_window);
@@ -57,7 +62,7 @@ void Window::initialize() {
 		auto [schedule, error2] = backend::Schedule::Acquire(user);
 		m_schedule_ptr = schedule;
 	}
-	m_user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
+	m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
 	m_p_user_popover_label->set_markup("<big>" + m_schedule_ptr->GetUserPtr()->GetName() + "</big>");
 	m_task_list_box.UpdateSchedule(m_schedule_ptr);
 }

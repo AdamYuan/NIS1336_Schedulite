@@ -22,10 +22,14 @@ protected:
 	Gtk::Popover *m_p_user_popover{nullptr};
 	Gtk::Label *m_p_user_popover_label{nullptr};
 
-	Gtk::MenuButton m_user_button;
-	Gtk::Button m_insert_button;
+	struct {
+		Gtk::MenuButton user_button;
+		Gtk::Button insert_button;
+		Gtk::HeaderBar bar;
+		Gtk::ButtonBox button_box;
+		Gtk::ToggleButton pending_button, ongoing_button, done_button;
+	} m_header;
 
-	Gtk::HeaderBar m_header_bar;
 	Gtk::ScrolledWindow m_scrolled_window;
 	TaskFlowBox m_task_list_box;
 };

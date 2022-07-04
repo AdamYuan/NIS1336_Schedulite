@@ -2,24 +2,24 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkFrame" id="task_box">
+  <object class="GtkButton" id="task">
     <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <property name="label-xalign">0</property>
-    <property name="shadow-type">out</property>
+    <property name="can-focus">True</property>
+    <property name="receives-default">True</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="valign">center</property>
         <property name="vexpand">True</property>
+        <property name="border-width">16</property>
         <child>
           <object class="GtkImage" id="priority_icon">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="tooltip-text" translatable="yes">Task Priority</property>
-            <property name="xpad">16</property>
-            <property name="ypad">0</property>
+            <property name="margin-right">16</property>
+            <property name="margin-end">16</property>
             <property name="pixel-size">48</property>
             <property name="icon-name">starred</property>
             <property name="icon_size">6</property>
@@ -157,15 +157,11 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="padding">16</property>
             <property name="pack-type">end</property>
             <property name="position">3</property>
           </packing>
         </child>
       </object>
-    </child>
-    <child type="label_item">
-      <placeholder/>
     </child>
   </object>
 </interface>

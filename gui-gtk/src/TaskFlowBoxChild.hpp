@@ -15,6 +15,7 @@ public:
 private:
 	backend::Task m_task;
 
+	Gtk::Button *m_p_task_button{nullptr};
 	Gtk::Label *m_p_name_label{nullptr}, *m_p_begin_time_label{nullptr}, *m_p_remind_time_label{nullptr},
 	    *m_p_type_label{nullptr};
 	Gtk::Image *m_p_priority_icon{nullptr}, *m_p_type_icon{nullptr};

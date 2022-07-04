@@ -77,10 +77,12 @@
                 <property name="vexpand">True</property>
                 <property name="row-spacing">16</property>
                 <property name="column-spacing">8</property>
+                <property name="row-homogeneous">True</property>
                 <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Username</property>
                   </object>
                   <packing>
@@ -92,6 +94,7 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Password</property>
                   </object>
                   <packing>
@@ -116,7 +119,6 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="visibility">False</property>
-                    <property name="invisible-char">*</property>
                     <property name="input-purpose">password</property>
                   </object>
                   <packing>
@@ -158,25 +160,43 @@
                 <property name="vexpand">True</property>
                 <property name="row-spacing">16</property>
                 <property name="column-spacing">8</property>
+                <property name="row-homogeneous">True</property>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkModelButton" id="register_button">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Username</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="text" translatable="yes">OK</property>
+                    <property name="use-markup">True</property>
+                    <property name="centered">True</property>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
-                    <property name="top-attach">0</property>
+                    <property name="top-attach">3</property>
+                    <property name="width">2</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkEntry" id="register_password2">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Password</property>
+                    <property name="can-focus">True</property>
+                    <property name="visibility">False</property>
+                    <property name="input-purpose">password</property>
                   </object>
                   <packing>
-                    <property name="left-attach">0</property>
+                    <property name="left-attach">1</property>
+                    <property name="top-attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="register_password1">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="visibility">False</property>
+                    <property name="input-purpose">password</property>
+                  </object>
+                  <packing>
+                    <property name="left-attach">1</property>
                     <property name="top-attach">1</property>
                   </packing>
                 </child>
@@ -193,15 +213,28 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="register_password1">
+                  <object class="GtkLabel">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="visibility">False</property>
-                    <property name="invisible-char">*</property>
-                    <property name="input-purpose">password</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="label" translatable="yes">Repeat Password</property>
+                    <property name="single-line-mode">True</property>
                   </object>
                   <packing>
-                    <property name="left-attach">1</property>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="label" translatable="yes">Password</property>
+                    <property name="single-line-mode">True</property>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
                     <property name="top-attach">1</property>
                   </packing>
                 </child>
@@ -209,39 +242,13 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Repeat Password</property>
+                    <property name="halign">end</property>
+                    <property name="label" translatable="yes">Username</property>
+                    <property name="single-line-mode">True</property>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
-                    <property name="top-attach">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="register_password2">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="visibility">False</property>
-                    <property name="invisible-char">*</property>
-                    <property name="input-purpose">password</property>
-                  </object>
-                  <packing>
-                    <property name="left-attach">1</property>
-                    <property name="top-attach">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkModelButton" id="register_button">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="text" translatable="yes">OK</property>
-                    <property name="use-markup">True</property>
-                    <property name="centered">True</property>
-                  </object>
-                  <packing>
-                    <property name="left-attach">0</property>
-                    <property name="top-attach">3</property>
-                    <property name="width">2</property>
+                    <property name="top-attach">0</property>
                   </packing>
                 </child>
               </object>
