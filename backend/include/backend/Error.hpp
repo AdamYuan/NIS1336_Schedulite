@@ -19,6 +19,9 @@ enum class Error : uint8_t {
 
 	kTaskNotFound,
 	kTaskAlreadyExist,
+
+	kSHMInitializationError,
+	kSHMSizeExceed
 };
 
 /**
@@ -48,6 +51,12 @@ inline constexpr const char *GetErrorMessage(Error error) {
 		return "Task not found";
 	case Error::kTaskAlreadyExist:
 		return "Task with the same name and begin time already exists";
+
+	case Error::kSHMInitializationError:
+		return "Failed to initialize shared memory";
+	case Error::kSHMSizeExceed:
+		return "Shared memory size exceed";
+
 	default:
 		return "(unrecognized error)";
 	}

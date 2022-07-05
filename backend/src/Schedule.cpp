@@ -1,22 +1,35 @@
 #include <backend/Schedule.hpp>
 
 #include <backend/Encryption.hpp>
+#include <backend/Environment.hpp>
 
 #include <condition_variable>
 
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
-#include <readerwriterqueue.h>
+#include <libipc/shm.h>
 
 namespace backend {
 
 struct Schedule::SyncObject {
 	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_SCHEDULE_MUTEX__";
+	static constexpr const char *kIPCSHMHeader = "__SCHEDULITE_SCHEDULE_SHM__";
+
+	// Named IPC mutex
 	ipc::sync::mutex ipc_mutex;
-	moodycamel::BlockingReaderWriterQueue<Operation> operation_queue;
+
+	// Shared memory
+	ipc::shm::id_t shm_id{};
+	uint32_t *shared_size{}, *shared_version{};
+	unsigned char *shared_data{};
+
 	explicit SyncObject(std::string_view username)
 	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(username)}.c_str()) {}
-	~SyncObject() = default;
+	~SyncObject() {
+		if (shm_id) {
+			ipc::shm::release(shm_id);
+		}
+	}
 };
 
 Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
@@ -29,71 +42,94 @@ Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 
 std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Acquire(const std::shared_ptr<User> &user_ptr) {
 	std::shared_ptr<Schedule> ret = std::make_shared<Schedule>(user_ptr);
-	Error error;
-
-	std::vector<Task> tasks;
-	std::tie(tasks, error) = ret->load_tasks(true);
-	ret->push_sync_tasks(std::move(tasks));
-
+	Error error = ret->initialize_shm_locked();
 	if (error != Error::kSuccess)
 		return {nullptr, error};
-	ret->m_operation_thread = std::thread{&Schedule::operation_thread_func, ret.get()};
-	ret->m_sync_thread = std::thread{&Schedule::sync_thread_func, ret.get()};
 	return {std::move(ret), Error::kSuccess};
 }
 
-Schedule::~Schedule() {
-	m_thread_run.store(false, std::memory_order_release);
-	m_sync_thread_cv.notify_all();
-
-	m_sync_object->operation_queue.enqueue({Operation::kQuit});
-
-	if (m_sync_thread.joinable())
-		m_sync_thread.join();
-	if (m_operation_thread.joinable())
-		m_operation_thread.join();
-}
-
-std::future<Error> Schedule::TaskInsert(const TaskProperty &task_property) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue({Operation::kInsert, 0, task_property, {}, std::move(promise)});
-	return ret;
-}
-
-std::future<Error> Schedule::TaskErase(uint32_t id) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue({Operation::kErase, id, {}, {}, std::move(promise)});
-	return ret;
-}
-
-std::future<Error> Schedule::TaskToggleDone(uint32_t id) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	m_sync_object->operation_queue.enqueue({Operation::kToggleDone, id, {}, {}, std::move(promise)});
-	return ret;
-}
-
-std::future<Error> Schedule::TaskEdit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask) {
-	std::promise<Error> promise;
-	auto ret = promise.get_future();
-	if (property_edit_mask == TaskPropertyMask::kNone) {
-		promise.set_value(Error::kSuccess);
-		return ret;
+Error Schedule::TaskInsert(const TaskProperty &task_property) {
+	std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
+	// Load shared tasks
+	std::vector<Task> tasks = load_tasks_from_shm();
+	{
+		// fetch a unique id
+		uint32_t max_id = 0;
+		for (auto &t : tasks)
+			max_id = std::max(t.id, max_id);
+		Error error = insert(&tasks, {max_id + 1, task_property});
+		if (error != Error::kSuccess)
+			return error;
 	}
-	m_sync_object->operation_queue.enqueue({Operation::kEdit, id, property, property_edit_mask, std::move(promise)});
-	return ret;
+	return store_tasks(tasks);
+}
+
+Error Schedule::TaskErase(uint32_t id) {
+	std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
+	// Load shared tasks
+	std::vector<Task> tasks = load_tasks_from_shm();
+	{
+		// find task
+		auto it = std::find_if(tasks.begin(), tasks.end(), [&id](const Task &c) { return c.id == id; });
+		if (it == tasks.end())
+			return Error::kTaskNotFound;
+		tasks.erase(it);
+	}
+	return store_tasks(tasks);
+}
+
+Error Schedule::TaskToggleDone(uint32_t id) {
+	std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
+	// Load shared tasks
+	std::vector<Task> tasks = load_tasks_from_shm();
+	{
+		// find task
+		auto it = std::find_if(tasks.begin(), tasks.end(), [&id](const Task &c) { return c.id == id; });
+		if (it == tasks.end())
+			return Error::kTaskNotFound;
+		it->property.done ^= 1;
+	}
+	return store_tasks(tasks);
+}
+
+Error Schedule::TaskEdit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask) {
+	if (property_edit_mask == TaskPropertyMask::kNone)
+		return Error::kSuccess;
+
+	std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
+	// Load shared tasks
+	std::vector<Task> tasks = load_tasks_from_shm();
+	{
+		// find task
+		auto it = std::find_if(tasks.begin(), tasks.end(), [&id](const Task &c) { return c.id == id; });
+		if (it == tasks.end())
+			return Error::kTaskNotFound;
+		it->property.done ^= 1;
+
+		Task task = TaskPatch(*it, property, property_edit_mask);
+		if ((property_edit_mask & TaskPropertyMask::kKey) != TaskPropertyMask::kNone) {
+			tasks.erase(it);
+			Error error = insert(&tasks, task);
+			if (error != Error::kSuccess)
+				return error;
+		} else
+			*it = task;
+	}
+	return store_tasks(tasks);
 }
 
 const std::vector<Task> &Schedule::GetTasks() const {
-	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
-
+	// Acquire a local tasks cache
+	std::unique_lock cache_lock{m_local_tasks_mutex};
 	auto &local_tasks = m_local_tasks[std::this_thread::get_id()];
-	if (m_sync_tasks_version > local_tasks.second) {
-		// printf("Get new version\n");
-		local_tasks = {m_sync_tasks, m_sync_tasks_version};
+	cache_lock.unlock();
+
+	{ // Examine the shared version
+		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
+		if (*m_sync_object->shared_version > local_tasks.second)
+			local_tasks = {load_tasks_from_shm(), *m_sync_object->shared_version};
 	}
+
 	return local_tasks.first;
 }
 
@@ -104,74 +140,89 @@ Error Schedule::insert(std::vector<Task> *tasks, const Task &task) {
 	tasks->insert(it, task);
 	return Error::kSuccess;
 }
-Error Schedule::operate(std::vector<Task> *tasks, const Schedule::Operation &operation) {
-	if (operation.op == Operation::kInsert) {
-		// fetch a unique id
-		uint32_t max_id = 0;
-		for (auto &task : *tasks)
-			max_id = std::max(task.id, max_id);
-		return insert(tasks, {max_id + 1, operation.task_property});
-	} else {
-		// ID based operations
-		uint32_t id = operation.id;
-		auto it = std::find_if(tasks->begin(), tasks->end(), [&id](const Task &c) { return c.id == id; });
-		if (it == tasks->end())
-			return Error::kTaskNotFound;
 
-		if (operation.op == Operation::kErase) {
-			tasks->erase(it);
-		} else if (operation.op == Operation::kToggleDone) {
-			it->property.done ^= 1;
-		} else if (operation.op == Operation::kEdit) {
-			Task task = TaskPatch(*it, operation.task_property, operation.task_property_mask);
-			if ((operation.task_property_mask & TaskPropertyMask::kKey) != TaskPropertyMask::kNone) {
-				tasks->erase(it);
-				return insert(tasks, task);
-			} else
-				*it = task;
+Error Schedule::initialize_shm_locked() {
+	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
+		return Error::kFileIOError;
+
+	std::string shm_name = SyncObject::kIPCSHMHeader + m_user_ptr->GetName();
+	{
+		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
+		m_sync_object->shm_id = ipc::shm::acquire(shm_name.c_str(), kMaxSharedScheduleMemory + 8, ipc::shm::open);
+		if (m_sync_object->shm_id) {
+			// If SHM already exists, open it
+			std::size_t size;
+			auto mem = (unsigned char *)ipc::shm::get_mem(m_sync_object->shm_id, &size);
+			if (size < kMaxSharedScheduleMemory + 8)
+				return Error::kSHMInitializationError;
+			m_sync_object->shared_size = (uint32_t *)mem;
+			m_sync_object->shared_version = (uint32_t *)(mem + 4);
+			m_sync_object->shared_data = mem + 8;
+			return Error::kSuccess;
+		} else {
+			// Otherwise, create SHM and copy file data to it
+			m_sync_object->shm_id = ipc::shm::acquire(shm_name.c_str(), kMaxSharedScheduleMemory + 8, ipc::shm::create);
+			if (!m_sync_object->shm_id)
+				return Error::kSHMInitializationError;
+			std::size_t size;
+			auto mem = (unsigned char *)ipc::shm::get_mem(m_sync_object->shm_id, &size);
+			if (size < kMaxSharedScheduleMemory + 8)
+				return Error::kSHMInitializationError;
+			m_sync_object->shared_size = (uint32_t *)mem;
+			m_sync_object->shared_version = (uint32_t *)(mem + 4);
+			m_sync_object->shared_data = mem + 8;
+
+			*m_sync_object->shared_size = 0;
+			*m_sync_object->shared_version = 1;
+
+			std::string encrypted;
+			{
+				std::ifstream in{m_file_path, std::ios::binary};
+				if (!in.is_open()) {
+					return Error::kSuccess;
+				}
+				// get length of file
+				in.seekg(0, std::ifstream::end);
+				std::streamsize length = in.tellg();
+				in.seekg(0, std::ifstream::beg);
+				// read file
+				if (length > 0) {
+					encrypted.resize(length);
+					in.read((char *)encrypted.data(), length);
+				} else
+					return Error::kSuccess;
+			}
+			std::string raw = Decrypt(encrypted, m_user_ptr->GetKey());
+			if (raw.size() > kMaxSharedScheduleMemory)
+				raw.resize(kMaxSharedScheduleMemory);
+			*m_sync_object->shared_size = raw.size();
+			*m_sync_object->shared_version = 1;
+			std::copy(raw.begin(), raw.end(), m_sync_object->shared_data);
 		}
 	}
 	return Error::kSuccess;
 }
 
-std::tuple<std::vector<Task>, Error> Schedule::load_tasks(bool lock) {
-	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
-		return {std::vector<Task>{}, Error::kFileIOError};
-
-	std::string encrypted;
-	if (lock) {
-		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
-		std::ifstream in{m_file_path};
-		if (!in.is_open())
-			return {std::vector<Task>{}, Error::kSuccess};
-		encrypted = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
-	} else {
-		std::ifstream in{m_file_path};
-		if (!in.is_open())
-			return {std::vector<Task>{}, Error::kSuccess};
-		encrypted = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
-	}
-
-	auto [ret, error] = parse_string(Decrypt(encrypted, m_user_ptr->GetKey()));
-	if (error == Error::kSuccess)
-		return {ret, Error::kSuccess};
-	return {std::vector<Task>{}, error};
+std::vector<Task> Schedule::load_tasks_from_shm() const {
+	return parse_string({(char *)m_sync_object->shared_data, *m_sync_object->shared_size});
 }
 
-Error Schedule::store_tasks(const std::vector<Task> &tasks, bool lock) {
-	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
-		return Error::kFileIOError;
+Error Schedule::store_tasks(const std::vector<Task> &tasks) {
+	std::string raw = get_string(tasks);
+	{ // Store to SHM
+		if (raw.size() > kMaxSharedScheduleMemory) {
+			return Error::kSHMSizeExceed;
+		}
+		*m_sync_object->shared_size = raw.size();
+		++(*m_sync_object->shared_version);
+		std::copy(raw.begin(), raw.end(), m_sync_object->shared_data);
+	}
 
-	std::string encrypted = Encrypt(get_string(tasks), m_user_ptr->GetKey());
-	if (lock) {
-		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
-
-		std::ofstream out{m_file_path};
-		if (!out.is_open())
+	{ // Then store to file
+		if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 			return Error::kFileIOError;
-		out.write(encrypted.data(), (std::streamsize)encrypted.size());
-	} else {
-		std::ofstream out{m_file_path};
+		std::string encrypted = Encrypt(raw, m_user_ptr->GetKey());
+		std::ofstream out{m_file_path, std::ios::binary};
 		if (!out.is_open())
 			return Error::kFileIOError;
 		out.write(encrypted.data(), (std::streamsize)encrypted.size());
@@ -185,9 +236,9 @@ std::string Schedule::get_string(const std::vector<Task> &tasks) {
 		ret += StrFromTask(task);
 	return ret;
 }
-std::tuple<std::vector<Task>, Error> Schedule::parse_string(std::string_view str) {
+std::vector<Task> Schedule::parse_string(std::string_view str) {
 	if (str.length() < kStringHeaderLength || str.substr(0, kStringHeaderLength) != kStringHeader)
-		return {std::vector<Task>{}, Error::kSuccess}; // Return empty if header not match (do not drop error)
+		return std::vector<Task>{}; // Return empty if header not match (do not drop error)
 
 	std::vector<Task> ret;
 	str = str.substr(kStringHeaderLength);
@@ -201,64 +252,7 @@ std::tuple<std::vector<Task>, Error> Schedule::parse_string(std::string_view str
 		ret.push_back(task);
 		str = str.substr(len);
 	}
-	return {std::move(ret), Error::kSuccess};
-}
-
-void Schedule::operation_thread_func() {
-	Operation operation;
-	Error error;
-	std::vector<Task> tasks;
-	while (m_thread_run.load(std::memory_order_acquire)) {
-		m_sync_object->operation_queue.wait_dequeue(operation);
-		if (operation.op == Operation::kQuit)
-			return;
-		{
-			std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
-
-			std::tie(tasks, error) = load_tasks(false);
-			if (error != Error::kSuccess) {
-				operation.error_promise.set_value(error);
-				continue;
-			}
-
-			// printf("Operate\n"); // TODO: Debug
-			error = operate(&tasks, operation);
-			if (error != Error::kSuccess) {
-				operation.error_promise.set_value(error);
-				continue;
-			}
-
-			error = store_tasks(tasks, false);
-			operation.error_promise.set_value(error);
-		}
-	}
-}
-
-void Schedule::sync_thread_func() {
-	std::mutex cv_mutex;
-	std::unique_lock cv_lock{cv_mutex};
-
-	std::vector<Task> tasks;
-	while (m_thread_run.load(std::memory_order_acquire)) {
-		m_sync_thread_cv.wait_for(cv_lock, std::chrono::milliseconds(100),
-		                          [this]() { return !m_thread_run.load(std::memory_order_acquire); });
-		if (!m_thread_run.load(std::memory_order_acquire))
-			return;
-		Error error;
-		std::tie(tasks, error) = load_tasks(true);
-		if (error == Error::kSuccess)
-			push_sync_tasks(std::move(tasks));
-	}
-}
-
-void Schedule::push_sync_tasks(std::vector<Task> &&tasks) const {
-	std::scoped_lock tasks_lock{m_sync_tasks_mutex};
-
-	if (tasks != m_sync_tasks) {
-		// printf("Sync to new version\n"); // TODO: Debug
-		m_sync_tasks = std::move(tasks);
-		++m_sync_tasks_version;
-	}
+	return ret;
 }
 
 } // namespace backend

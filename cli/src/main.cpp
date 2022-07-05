@@ -152,16 +152,14 @@ int main(int argc, char **argv) {
 
 	if (result.count("erase")) {
 		auto id = result["erase"].as<uint32_t>();
-		auto error_future = schedule->TaskErase(id);
-		error = error_future.get();
+		error = schedule->TaskErase(id);
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
 	if (result.count("done")) {
 		auto id = result["done"].as<uint32_t>();
-		auto error_future = schedule->TaskToggleDone(id);
-		error = error_future.get();
+		error = schedule->TaskToggleDone(id);
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
@@ -184,8 +182,7 @@ int main(int argc, char **argv) {
 		if (result.count("type"))
 			property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
 
-		auto error_future = schedule->TaskInsert(property);
-		error = error_future.get();
+		error = schedule->TaskInsert(property);
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
@@ -217,8 +214,7 @@ int main(int argc, char **argv) {
 			edit_mask |= backend::TaskPropertyMask::kType;
 		}
 
-		auto error_future = schedule->TaskEdit(id, property, edit_mask);
-		error = error_future.get();
+		error = schedule->TaskEdit(id, property, edit_mask);
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}

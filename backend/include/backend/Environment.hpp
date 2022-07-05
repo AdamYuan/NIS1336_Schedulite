@@ -13,6 +13,8 @@ constexpr const char *kAppDirName = "schedulite";
 constexpr const char *kUserDirName = "user.d";
 /** @brief The application's schedule data directory name. */
 constexpr const char *kScheduleDirName = "sched.d";
+/** @brief The max size in bytes of schedule data. */
+constexpr uint32_t kMaxSharedScheduleMemory = 1024 * 1024;
 
 /**
  * Get the default dir path for storing App data, depending on the operating system settings.
