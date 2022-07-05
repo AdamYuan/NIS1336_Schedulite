@@ -126,10 +126,8 @@ const std::vector<Task> &Schedule::GetTasks() const {
 
 	{ // Examine the shared version
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
-		if (*m_sync_object->shared_version > local_tasks.second) {
+		if (*m_sync_object->shared_version > local_tasks.second)
 			local_tasks = {load_tasks_from_shm(), *m_sync_object->shared_version};
-			printf("Sync to version %d\n", *m_sync_object->shared_version);
-		}
 	}
 
 	return local_tasks.first;
@@ -152,7 +150,6 @@ Error Schedule::initialize_shm_locked() {
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 		m_sync_object->shm_id = ipc::shm::acquire(shm_name.c_str(), kMaxSharedScheduleMemory + 8, ipc::shm::open);
 		if (m_sync_object->shm_id) {
-			printf("Open SHM\n");
 			// If SHM already exists, open it
 			std::size_t size;
 			auto mem = (unsigned char *)ipc::shm::get_mem(m_sync_object->shm_id, &size);
@@ -163,7 +160,6 @@ Error Schedule::initialize_shm_locked() {
 			m_sync_object->shared_data = mem + 8;
 			return Error::kSuccess;
 		} else {
-			printf("Create SHM\n");
 			// Otherwise, create SHM and copy file data to it
 			m_sync_object->shm_id = ipc::shm::acquire(shm_name.c_str(), kMaxSharedScheduleMemory + 8, ipc::shm::create);
 			if (!m_sync_object->shm_id)

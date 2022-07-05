@@ -70,23 +70,6 @@ void Shell::run_cmd(std::string_view cmd) {
 		cmd_erase();
 	} else if (cmd == "done") {
 		cmd_done();
-		// benchmark
-		/* } else if (cmd == "test") {
-		    if (!m_schedule_ptr) {
-		        PrintError(backend::Error::kUserNotLoggedIn);
-		        return;
-		    }
-
-		    std::chrono::time_point<std::chrono::steady_clock> last = std::chrono::steady_clock::now();
-		    backend::TaskProperty property{};
-		    property.name = "Test";
-		    property.begin_time = std::random_device{}();
-		    for (uint32_t i = 0; i < 1000; ++i) {
-		        property.begin_time++;
-		        PrintError(m_schedule_ptr->TaskInsert(property));
-		    }
-		    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-		    printf("%ld ms elapsed\n", std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count()); */
 	} else {
 		std::cout << "Unknown command \"" << cmd << "\"" << std::endl;
 	}
