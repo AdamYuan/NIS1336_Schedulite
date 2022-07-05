@@ -110,7 +110,7 @@ void Window::initialize_header_bar() {
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
 
 		m_header.insert_button.set_image_from_icon_name("document-new-symbolic", Gtk::ICON_SIZE_DND);
-		m_header.insert_button.set_label("Insert");
+		// m_header.insert_button.set_label("Insert");
 		m_header.insert_button.set_sensitive(false);
 
 		m_header.status_filter_button.set_label("Status");
@@ -122,9 +122,8 @@ void Window::initialize_header_bar() {
 		m_header.type_filter_button.set_label("Type");
 		m_header.type_filter_button.set_image_from_icon_name(GetTaskTypeIconName(backend::kDefaultTaskType),
 		                                                     Gtk::ICON_SIZE_DND);
-
 		m_header.button_box.set_homogeneous(true);
-		m_header.button_box.set_layout(Gtk::BUTTONBOX_EDGE);
+		m_header.button_box.set_layout(Gtk::BUTTONBOX_EXPAND);
 		m_header.button_box.add(m_header.priority_filter_button);
 		m_header.button_box.add(m_header.type_filter_button);
 		m_header.button_box.add(m_header.status_filter_button);
