@@ -23,7 +23,7 @@
             <property name="hexpand">True</property>
             <property name="vexpand">True</property>
             <child>
-              <object class="GtkBox">
+              <object class="GtkBox" id="current_user_box">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">center</property>
@@ -52,6 +52,10 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="label" translatable="yes">label</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"/>
+                      <attribute name="scale" value="1.2"/>
+                    </attributes>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -62,7 +66,6 @@
                 </child>
               </object>
               <packing>
-                <property name="name">current_user_page</property>
                 <property name="title" translatable="yes">Current</property>
               </packing>
             </child>
@@ -103,18 +106,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="login_username">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="caps-lock-warning">False</property>
-                    <property name="input-purpose">name</property>
-                  </object>
-                  <packing>
-                    <property name="left-attach">1</property>
-                    <property name="top-attach">0</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkEntry" id="login_password">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
@@ -129,6 +120,7 @@
                 <child>
                   <object class="GtkModelButton" id="login_button">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
                     <property name="text" translatable="yes">OK</property>
@@ -139,6 +131,23 @@
                     <property name="left-attach">0</property>
                     <property name="top-attach">2</property>
                     <property name="width">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkComboBoxText" id="login_username_combo">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="has-entry">True</property>
+                    <child internal-child="entry">
+                      <object class="GtkEntry" id="login_username">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left-attach">1</property>
+                    <property name="top-attach">0</property>
                   </packing>
                 </child>
               </object>
@@ -164,6 +173,7 @@
                 <child>
                   <object class="GtkModelButton" id="register_button">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
                     <property name="text" translatable="yes">OK</property>

@@ -15,23 +15,45 @@ public:
 	~Window() override = default;
 
 protected:
+	std::shared_ptr<backend::Instance> m_instance_ptr;
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
 
-	void initialize();
+	void message(Gtk::MessageType type, const char *str);
+	void message_error(backend::Error error);
+	void message_error(const char *str);
+	void message_info(const char *str);
 
-	Gtk::Popover *m_p_user_popover{nullptr};
-	Gtk::Label *m_p_user_popover_label{nullptr};
+	void initialize();
+	void initialize_header_bar();
+	void initialize_user_panel();
+	void initialize_body();
+	void login_button_click();
+	void register_button_click();
+
+	void set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 
 	struct {
-		Gtk::MenuButton user_button;
+		Gtk::Popover *p_popover{};
+		Gtk::Box *p_current_user_box{};
+		Gtk::ComboBoxText *p_login_username_combo{};
+		Gtk::Label *p_username_label{};
+		Gtk::Entry *p_login_username{}, *p_login_password{}, *p_register_username{}, *p_register_password1{},
+		    *p_register_password2{};
+		Gtk::Button *p_login_button{}, *p_register_button{};
+	} m_user;
+
+	struct {
+		Gtk::MenuButton user_button, status_filter_button, priority_filter_button, type_filter_button;
 		Gtk::Button insert_button;
 		Gtk::HeaderBar bar;
 		Gtk::ButtonBox button_box;
-		Gtk::ToggleButton pending_button, ongoing_button, done_button;
 	} m_header;
 
-	Gtk::ScrolledWindow m_scrolled_window;
-	TaskFlowBox m_task_list_box;
+	struct {
+		Gtk::Box box;
+		Gtk::ScrolledWindow scrolled_window;
+		TaskFlowBox task_list_box;
+	} m_body;
 };
 
 } // namespace gui

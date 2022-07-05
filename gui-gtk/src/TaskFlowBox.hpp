@@ -15,9 +15,11 @@ public:
 	explicit TaskFlowBox(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 	~TaskFlowBox() override = default;
 
-	void UpdateSchedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
+	void set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
+	sigc::signal<void(const backend::Task &)> signal_task_selected() { return m_signal_task_selected; }
 
-	const std::shared_ptr<backend::Schedule> &GetSchedulePtr() const { return m_schedule_ptr; }
+protected:
+	sigc::signal<void(const backend::Task &)> m_signal_task_selected;
 
 private:
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
