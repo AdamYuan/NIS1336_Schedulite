@@ -25,7 +25,6 @@ namespace backend {
 class Schedule {
 public:
 	explicit Schedule(const std::shared_ptr<User> &user_ptr);
-	~Schedule();
 
 	/**
 	 * Acquire Schedule token from a User.
@@ -46,38 +45,38 @@ public:
 	const std::vector<Task> &GetTasks() const;
 
 	/**
-	 * Insert a Task asynchronously to the Schedule.
-	 * @brief Async insert a Task.
+	 * Insert a Task to the Schedule.
+	 * @brief Insert a Task.
 	 * @param task_property The TaskProperty data to be inserted.
-	 * @return Async Error code.
+	 * @return Error code.
 	 */
-	std::future<Error> TaskInsert(const TaskProperty &task_property);
+	Error TaskInsert(const TaskProperty &task_property);
 
 	/**
-	 * Erase a Task asynchronously from the Schedule.
-	 * @brief Async erase a Task.
+	 * Erase a Task from the Schedule.
+	 * @brief Erase a Task.
 	 * @param id The ID of the Task to be erased.
-	 * @return Async Error code.
+	 * @return Error code.
 	 */
-	std::future<Error> TaskErase(uint32_t id);
+	Error TaskErase(uint32_t id);
 
 	/**
-	 * Edit a Task asynchronously in the Schedule.
-	 * @brief Async edit a Task.
+	 * Edit a Task in the Schedule.
+	 * @brief Edit a Task.
 	 * @param id The ID of the Task to be edited.
 	 * @param property The updated TaskProperty.
 	 * @param property_edit_mask Specifying the parts to modify.
-	 * @return Async Error code.
+	 * @return Error code.
 	 */
-	std::future<Error> TaskEdit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask);
+	Error TaskEdit(uint32_t id, const TaskProperty &property, TaskPropertyMask property_edit_mask);
 
 	/**
 	 * Toggle the Done state of a Task asynchronously in the Schedule.
-	 * @brief Async done or undone a Task.
+	 * @brief Done or undone a Task.
 	 * @param id The ID of the Task.
-	 * @return Async Error code.
+	 * @return Error code.
 	 */
-	std::future<Error> TaskToggleDone(uint32_t id);
+	Error TaskToggleDone(uint32_t id);
 
 private:
 	inline static constexpr const char *kStringHeader = "Schedule";
@@ -90,36 +89,17 @@ private:
 	std::shared_ptr<SyncObject> m_sync_object;
 
 	// Objects to sync local tasks
+	mutable std::mutex m_local_tasks_mutex;
 	mutable std::unordered_map<std::thread::id, std::pair<std::vector<Task>, uint32_t>> m_local_tasks;
-	mutable std::mutex m_sync_tasks_mutex;
-	mutable uint32_t m_sync_tasks_version{0};
-	mutable std::vector<Task> m_sync_tasks;
 
-	struct Operation {
-		enum Op { kInsert, kErase, kToggleDone, kEdit, kQuit } op{};
-		uint32_t id;
-		TaskProperty task_property;
-		TaskPropertyMask task_property_mask;
-		std::promise<Error> error_promise;
-	};
-
-	std::atomic_bool m_thread_run{true};
-	std::condition_variable m_sync_thread_cv;
-	std::thread m_operation_thread, m_sync_thread;
-
-	void operation_thread_func();
-	void sync_thread_func();
-
-	Error store_tasks(const std::vector<Task> &tasks, bool lock);
-	std::tuple<std::vector<Task>, Error> load_tasks(bool lock);
-
-	void push_sync_tasks(std::vector<Task> &&tasks) const;
+	Error initialize_shm_locked();
+	std::vector<Task> load_tasks_from_shm() const;
+	Error store_tasks(const std::vector<Task> &tasks);
 
 	static std::string get_string(const std::vector<Task> &tasks);
-	static std::tuple<std::vector<Task>, Error> parse_string(std::string_view str);
+	static std::vector<Task> parse_string(std::string_view str);
 
 	static Error insert(std::vector<Task> *tasks, const Task &task);
-	static Error operate(std::vector<Task> *tasks, const Operation &operation);
 };
 
 } // namespace backend

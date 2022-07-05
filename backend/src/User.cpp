@@ -77,7 +77,15 @@ std::tuple<std::shared_ptr<User>, Error> User::Login(const std::shared_ptr<Insta
 			std::ifstream in{user->m_file_path};
 			if (!in.is_open())
 				return {nullptr, Error::kUserNotFound};
-			key = {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+			// get length of file
+			in.seekg(0, std::ifstream::end);
+			std::streamsize length = in.tellg();
+			in.seekg(0, std::ifstream::beg);
+			// read file
+			if (length > 0) {
+				key.resize(length);
+				in.read((char *)key.data(), length);
+			}
 		}
 		if (key != user->m_key)
 			return {nullptr, Error::kUserWrongPassword};
