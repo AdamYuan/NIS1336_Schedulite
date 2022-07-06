@@ -43,6 +43,10 @@ public:
 	 * Get all the Tasks in the Schedule.
 	 */
 	const std::vector<Task> &GetTasks() const;
+	/**
+	 * Get all the Tasks in the Schedule, and check whether the tasks are updated.
+	 */
+	const std::vector<Task> &GetTasks(bool *p_updated) const;
 
 	/**
 	 * Insert a Task to the Schedule.
