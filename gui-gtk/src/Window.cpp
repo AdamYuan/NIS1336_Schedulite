@@ -131,10 +131,7 @@ void Window::initialize_header_bar() {
 		m_header.status_filter_popover.add(m_header.status_filter_box);
 		m_header.status_filter_box.show();
 		m_header.status_filter_box.signal_modified().connect([this](const char *str, bool activate) {
-			backend::TaskStatus v = str[0] == 'O'
-			                            ? backend::TaskStatus::kBegun
-			                            : (str[0] == 'P' ? backend::TaskStatus::kPending : backend::TaskStatus::kDone);
-			m_body.task_list_box.set_status_filter(v, activate);
+			m_body.task_list_box.set_status_filter(backend::TaskStatusFromStr(str), activate);
 			m_body.task_list_box.refilter();
 		});
 		m_header.type_filter_popover.add(m_header.type_filter_box);
@@ -154,7 +151,7 @@ void Window::initialize_header_bar() {
 		m_header.status_filter_button.set_always_show_image(true);
 		m_header.status_filter_button.set_label("Status");
 		m_header.status_filter_button.set_popover(m_header.status_filter_popover);
-		m_header.status_filter_button.set_image_from_icon_name(GetTaskStatusIconName(backend::TaskStatus::kBegun),
+		m_header.status_filter_button.set_image_from_icon_name(GetTaskStatusIconName(backend::TaskStatus::kOngoing),
 		                                                       Gtk::ICON_SIZE_LARGE_TOOLBAR);
 		m_header.priority_filter_button.set_always_show_image(true);
 		m_header.priority_filter_button.set_label("Priority");

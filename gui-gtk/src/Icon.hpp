@@ -8,7 +8,7 @@ inline constexpr const char *GetTaskStatusIconName(backend::TaskStatus status) {
 	switch (status) {
 	case backend::TaskStatus::kPending:
 		return "user-status-pending";
-	case backend::TaskStatus::kBegun:
+	case backend::TaskStatus::kOngoing:
 		return "emblem-urgent";
 	case backend::TaskStatus::kDone:
 		return "object-select";
