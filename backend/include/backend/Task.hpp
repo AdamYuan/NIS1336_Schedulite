@@ -38,6 +38,7 @@ struct TaskProperty {
 		return begin_time == r.begin_time && name == r.name && begin_time == r.begin_time &&
 		       remind_time == r.remind_time && priority == r.priority && type == r.type && done == r.done;
 	}
+	inline bool operator!=(const TaskProperty &r) const { return !operator==(r); }
 };
 
 /**
@@ -109,6 +110,7 @@ struct Task {
 	TaskProperty property;
 
 	inline bool operator==(const Task &r) const { return id == r.id && property == r.property; }
+	inline bool operator!=(const Task &r) const { return id != r.id || property != r.property; }
 };
 
 /**
