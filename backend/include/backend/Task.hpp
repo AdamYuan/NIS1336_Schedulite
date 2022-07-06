@@ -256,6 +256,17 @@ inline constexpr const char *StrFromTaskStatus(TaskStatus status) {
 	}
 }
 
+/**
+ * Get all TaskStatus strings
+ */
+inline constexpr std::array<const char *, 3> GetTaskStatus() { return {"Pending", "Ongoing", "Done"}; }
+
+/**
+ * Get TaskStatus from a string, the letter case is ignored.
+ * @brief Get TaskStatus from string.
+ */
+TaskStatus TaskStatusFromStr(std::string_view str);
+
 } // namespace backend
 
 #endif
