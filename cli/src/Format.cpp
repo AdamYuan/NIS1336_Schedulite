@@ -15,7 +15,7 @@ void PrintTasks(const std::vector<backend::Task> &tasks) {
 		               backend::ToTimeStr(task.property.remind_time),
 		               backend::StrFromTaskPriority(task.property.priority),
 		               backend::StrFromTaskType(task.property.type), backend::StrFromTaskStatus(status)});
-		if (status == backend::TaskStatus::kBegun) {
+		if (status == backend::TaskStatus::kOngoing) {
 			table.row(row).format().font_style({tabulate::FontStyle::bold});
 		} else if (status == backend::TaskStatus::kDone)
 			table.row(row).format().font_style({tabulate::FontStyle::dark});

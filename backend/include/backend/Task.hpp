@@ -15,7 +15,7 @@ enum class TaskType : char { kNone = 0, kStudy, kPlay, kLife, kWork };
 constexpr TaskPriority kDefaultTaskPriority = TaskPriority::kMedium;
 constexpr TaskType kDefaultTaskType = TaskType::kNone;
 
-enum class TaskStatus { kPending, kBegun, kDone };
+enum class TaskStatus { kPending, kOngoing, kDone };
 
 /**
  * @brief Task property structure.
@@ -168,7 +168,7 @@ std::string StrFromTask(const Task &task);
  */
 inline TaskStatus TaskStatusFromTask(const TaskProperty &task_property, TimeInt time_int_now = GetTimeIntNow()) {
 	return task_property.done ? TaskStatus::kDone
-	                          : (task_property.begin_time > time_int_now ? TaskStatus::kPending : TaskStatus::kBegun);
+	                          : (task_property.begin_time > time_int_now ? TaskStatus::kPending : TaskStatus::kOngoing);
 }
 
 /**
@@ -247,8 +247,8 @@ inline constexpr const char *StrFromTaskStatus(TaskStatus status) {
 	switch (status) {
 	case TaskStatus::kPending:
 		return "Pending";
-	case TaskStatus::kBegun:
-		return "Begun";
+	case TaskStatus::kOngoing:
+		return "Ongoing";
 	case TaskStatus::kDone:
 		return "Done";
 	default:
