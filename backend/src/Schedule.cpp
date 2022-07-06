@@ -118,7 +118,8 @@ Error Schedule::TaskEdit(uint32_t id, const TaskProperty &property, TaskProperty
 	return store_tasks(tasks);
 }
 
-const std::vector<Task> &Schedule::GetTasks() const {
+const std::vector<Task> &Schedule::GetTasks() const { return GetTasks(nullptr); }
+const std::vector<Task> &Schedule::GetTasks(bool *p_updated) const {
 	// Acquire a local tasks cache
 	std::unique_lock cache_lock{m_local_tasks_mutex};
 	auto &local_tasks = m_local_tasks[std::this_thread::get_id()];
@@ -126,10 +127,13 @@ const std::vector<Task> &Schedule::GetTasks() const {
 
 	{ // Examine the shared version
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
-		if (*m_sync_object->shared_version > local_tasks.second)
+		if (*m_sync_object->shared_version > local_tasks.second) {
 			local_tasks = {load_tasks_from_shm(), *m_sync_object->shared_version};
+			if (p_updated)
+				*p_updated = true;
+		} else if (p_updated)
+			*p_updated = false;
 	}
-
 	return local_tasks.first;
 }
 
