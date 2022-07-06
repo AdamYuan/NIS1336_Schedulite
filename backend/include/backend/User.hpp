@@ -19,6 +19,9 @@ class Schedule;
 /** @brief A User token from a Instance. */
 class User {
 public:
+	/** @brief Maximum username length. */
+	static constexpr uint32_t kMaxUsernameLength = 10;
+
 	explicit User(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password);
 	inline ~User() = default;
 
