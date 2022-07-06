@@ -10,9 +10,13 @@ class TaskFlowBoxChild : public Gtk::FlowBoxChild {
 public:
 	explicit TaskFlowBoxChild(backend::Task task,
 	                          sigc::signal<void(const backend::Task &)> &parent_signal_task_selected);
-	inline const backend::Task &GetTask() const { return m_task; }
 	~TaskFlowBoxChild() override = default;
 
+	inline const backend::Task &get_task() const { return m_task; }
+	inline void set_task(const backend::Task &task) {
+		m_task = task;
+		update();
+	}
 	void on_grab_focus() override;
 
 private:

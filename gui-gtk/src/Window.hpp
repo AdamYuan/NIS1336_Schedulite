@@ -21,7 +21,6 @@ protected:
 	void message(Gtk::MessageType type, const char *str);
 	void message_error(backend::Error error);
 	void message_error(const char *str);
-	void message_info(const char *str);
 
 	void initialize();
 	void initialize_header_bar();
@@ -31,6 +30,11 @@ protected:
 	void register_button_click();
 
 	void set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
+
+	struct {
+		Glib::Thread *p_thread;
+		Glib::Dispatcher dispatcher;
+	} m_sync_thread;
 
 	struct {
 		Gtk::Popover *p_popover{};

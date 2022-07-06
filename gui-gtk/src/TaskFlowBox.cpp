@@ -3,10 +3,6 @@
 namespace gui {
 
 TaskFlowBox::TaskFlowBox() { initialize(); }
-TaskFlowBox::TaskFlowBox(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
-	initialize();
-	set_schedule(schedule_ptr);
-}
 
 void TaskFlowBox::initialize() {
 	set_selection_mode(Gtk::SELECTION_NONE);
@@ -17,17 +13,29 @@ void TaskFlowBox::initialize() {
 	set_max_children_per_line(3);
 }
 
-void TaskFlowBox::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
-	m_schedule_ptr = schedule_ptr;
-	for (auto *widget : get_children())
-		remove(*widget);
-	m_rows.clear();
-	for (const auto &task : m_schedule_ptr->GetTasks()) {
-		auto row = Gtk::make_managed<TaskFlowBoxChild>(task, m_signal_task_selected);
-		m_rows[task.id] = row;
-		insert(*row, -1);
-		row->show();
+void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
+	std::unordered_map<uint32_t, TaskFlowBoxChild *> update_set{}, erase_set = std::move(m_children);
+	for (const auto &task : tasks) {
+		auto it = erase_set.find(task.id);
+		if (it != erase_set.end()) {
+			// The task ID already exists, modify it
+			update_set.insert(*it);
+			if (it->second->get_task() != task)
+				it->second->set_task(task);
+			erase_set.erase(task.id);
+		} else {
+			// Not exist, insert it
+			auto child = Gtk::make_managed<TaskFlowBoxChild>(task, m_signal_task_selected);
+			update_set.insert({task.id, child});
+			Gtk::FlowBox::insert(*child, -1);
+			child->show();
+		}
 	}
+	for (const auto &p : erase_set) {
+		p.second->hide();
+		Gtk::FlowBox::remove(*p.second);
+	}
+	m_children = std::move(update_set);
 }
 
 } // namespace gui

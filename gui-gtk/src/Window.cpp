@@ -105,20 +105,27 @@ void Window::initialize_header_bar() {
 		m_header.bar.set_title(backend::kAppName);
 
 		m_header.bar.pack_start(m_header.user_button);
-		m_header.bar.pack_end(m_header.insert_button);
+		m_header.bar.pack_start(m_header.insert_button);
 
+		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
+		m_header.user_button.set_tooltip_text("User");
 
+		m_header.insert_button.set_always_show_image(true);
 		m_header.insert_button.set_image_from_icon_name("document-new-symbolic", Gtk::ICON_SIZE_DND);
+		m_header.insert_button.set_tooltip_text("Insert Task");
 		// m_header.insert_button.set_label("Insert");
 		m_header.insert_button.set_sensitive(false);
 
+		m_header.status_filter_button.set_always_show_image(true);
 		m_header.status_filter_button.set_label("Status");
 		m_header.status_filter_button.set_image_from_icon_name(GetTaskStatusIconName(backend::TaskStatus::kBegun),
 		                                                       Gtk::ICON_SIZE_DND);
+		m_header.priority_filter_button.set_always_show_image(true);
 		m_header.priority_filter_button.set_label("Priority");
 		m_header.priority_filter_button.set_image_from_icon_name(GetTaskPriorityIconName(backend::kDefaultTaskPriority),
 		                                                         Gtk::ICON_SIZE_DND);
+		m_header.type_filter_button.set_always_show_image(true);
 		m_header.type_filter_button.set_label("Type");
 		m_header.type_filter_button.set_image_from_icon_name(GetTaskTypeIconName(backend::kDefaultTaskType),
 		                                                     Gtk::ICON_SIZE_DND);
@@ -200,7 +207,7 @@ void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr
 	m_header.insert_button.set_sensitive(true);
 
 	m_user.p_username_label->set_text(m_schedule_ptr->GetUserPtr()->GetName());
-	m_body.task_list_box.set_schedule(m_schedule_ptr);
+	m_body.task_list_box.set_tasks(m_schedule_ptr->GetTasks());
 }
 
 void Window::message(Gtk::MessageType type, const char *str) {
