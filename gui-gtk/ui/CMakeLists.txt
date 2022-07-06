@@ -4,7 +4,6 @@ project(Schedulite)
 set(UI_SRC
         User
         Task
-        Filter
         )
 
 function(add_ui_header UI_NAME UI_FILE HEADER_FILE)

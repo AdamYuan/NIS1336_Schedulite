@@ -56,10 +56,10 @@ protected:
 	} m_user;
 
 	struct {
-		Gtk::MenuButton user_button, status_filter_button, priority_filter_button, type_filter_button;
+		Gtk::MenuButton user_button, status_filter_button, priority_filter_button, type_filter_button, more_button;
 		Gtk::Button insert_button;
 		Gtk::HeaderBar bar;
-		Gtk::ButtonBox button_box;
+		Gtk::ButtonBox right_button_box, filter_button_box;
 		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
 		EnumFilterBox status_filter_box{std::array<const char *, 3>{"Ongoing", "Pending", "Done"}},
 		    priority_filter_box{backend::GetTaskPriorityStrings()}, type_filter_box{backend::GetTaskTypeStrings()};

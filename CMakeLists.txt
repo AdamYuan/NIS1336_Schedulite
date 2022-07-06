@@ -20,5 +20,5 @@ if (CMAKE_SYSTEM_NAME STREQUAL Windows)
 endif ()
 
 add_subdirectory(backend)
-# add_subdirectory(cli)
+add_subdirectory(cli)
 add_subdirectory(gui-gtk)

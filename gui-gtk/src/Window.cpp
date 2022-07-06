@@ -21,6 +21,7 @@ void Window::initialize() {
 	initialize_header_bar();
 	initialize_user_panel();
 	initialize_body();
+	set_schedule(nullptr);
 }
 
 void Window::initialize_body() {
@@ -111,6 +112,10 @@ void Window::initialize_header_bar() {
 		m_header.bar.pack_start(m_header.user_button);
 		m_header.bar.pack_start(m_header.insert_button);
 
+		m_header.bar.pack_end(m_header.more_button);
+
+		m_header.right_button_box.set_layout(Gtk::BUTTONBOX_EXPAND);
+
 		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
 		m_header.user_button.set_tooltip_text("User");
@@ -118,8 +123,9 @@ void Window::initialize_header_bar() {
 		m_header.insert_button.set_always_show_image(true);
 		m_header.insert_button.set_image_from_icon_name("document-new-symbolic", Gtk::ICON_SIZE_DND);
 		m_header.insert_button.set_tooltip_text("Insert Task");
-		// m_header.insert_button.set_label("Insert");
-		m_header.insert_button.set_sensitive(false);
+
+		m_header.more_button.set_image_from_icon_name("view-more", Gtk::ICON_SIZE_DND);
+		m_header.more_button.set_tooltip_text("More");
 
 		// Filters
 		m_header.status_filter_popover.add(m_header.status_filter_box);
@@ -149,24 +155,24 @@ void Window::initialize_header_bar() {
 		m_header.status_filter_button.set_label("Status");
 		m_header.status_filter_button.set_popover(m_header.status_filter_popover);
 		m_header.status_filter_button.set_image_from_icon_name(GetTaskStatusIconName(backend::TaskStatus::kBegun),
-		                                                       Gtk::ICON_SIZE_DND);
+		                                                       Gtk::ICON_SIZE_LARGE_TOOLBAR);
 		m_header.priority_filter_button.set_always_show_image(true);
 		m_header.priority_filter_button.set_label("Priority");
 		m_header.priority_filter_button.set_popover(m_header.priority_filter_popover);
 		m_header.priority_filter_button.set_image_from_icon_name(GetTaskPriorityIconName(backend::kDefaultTaskPriority),
-		                                                         Gtk::ICON_SIZE_DND);
+		                                                         Gtk::ICON_SIZE_LARGE_TOOLBAR);
 		m_header.type_filter_button.set_always_show_image(true);
 		m_header.type_filter_button.set_label("Type");
 		m_header.type_filter_button.set_popover(m_header.type_filter_popover);
 		m_header.type_filter_button.set_image_from_icon_name(GetTaskTypeIconName(backend::kDefaultTaskType),
-		                                                     Gtk::ICON_SIZE_DND);
-		m_header.button_box.set_homogeneous(true);
-		m_header.button_box.set_layout(Gtk::BUTTONBOX_EXPAND);
-		m_header.button_box.add(m_header.priority_filter_button);
-		m_header.button_box.add(m_header.type_filter_button);
-		m_header.button_box.add(m_header.status_filter_button);
+		                                                     Gtk::ICON_SIZE_LARGE_TOOLBAR);
+		m_header.filter_button_box.set_homogeneous(true);
+		m_header.filter_button_box.set_layout(Gtk::BUTTONBOX_EXPAND);
+		m_header.filter_button_box.add(m_header.priority_filter_button);
+		m_header.filter_button_box.add(m_header.type_filter_button);
+		m_header.filter_button_box.add(m_header.status_filter_button);
 
-		m_header.bar.set_custom_title(m_header.button_box);
+		m_header.bar.set_custom_title(m_header.filter_button_box);
 
 		m_header.bar.show_all();
 		m_header.bar.set_size_request(-1, 64);
@@ -174,18 +180,19 @@ void Window::initialize_header_bar() {
 }
 
 void Window::login_button_click() {
+	std::string username = (std::string)m_user.p_login_username->get_text();
+	if (m_schedule_ptr && username == m_schedule_ptr->GetUserPtr()->GetName()) {
+		message(Gtk::MESSAGE_WARNING, "User already logged in");
+		return;
+	}
 	std::shared_ptr<backend::User> user;
 	std::shared_ptr<backend::Schedule> schedule;
 	backend::Error error;
 
-	std::tie(user, error) = backend::User::Login(m_instance_ptr, (std::string)m_user.p_login_username->get_text(),
-	                                             (std::string)m_user.p_login_password->get_text());
+	std::tie(user, error) =
+	    backend::User::Login(m_instance_ptr, username, (std::string)m_user.p_login_password->get_text());
 	if (!user) {
 		message_error(error);
-		return;
-	}
-	if (m_schedule_ptr && user->GetName() == m_schedule_ptr->GetUserPtr()->GetName()) {
-		message(Gtk::MESSAGE_WARNING, "User already logged in");
 		return;
 	}
 	std::tie(schedule, error) = backend::Schedule::Acquire(user);
@@ -230,12 +237,18 @@ void Window::register_button_click() {
 }
 
 void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
-	if (!schedule_ptr)
-		return;
 	std::atomic_store(&m_schedule_ptr, schedule_ptr);
-	m_user.p_username_label->set_label(m_schedule_ptr->GetUserPtr()->GetName());
-	m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
-	m_header.insert_button.set_sensitive(true);
+	if (!schedule_ptr) {
+		m_user.p_username_label->set_label("");
+		m_header.user_button.set_label("");
+		m_header.insert_button.hide();
+		m_header.filter_button_box.set_sensitive(false);
+	} else {
+		m_user.p_username_label->set_label(m_schedule_ptr->GetUserPtr()->GetName());
+		m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
+		m_header.insert_button.show();
+		m_header.filter_button_box.set_sensitive(true);
+	}
 }
 
 void Window::message(Gtk::MessageType type, const char *str) {
