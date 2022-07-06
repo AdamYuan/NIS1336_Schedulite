@@ -2,15 +2,28 @@
 
 namespace gui {
 
-TaskFlowBox::TaskFlowBox() { initialize(); }
+TaskFlowBox::TaskFlowBox() { init_widget(); }
 
-void TaskFlowBox::initialize() {
+void TaskFlowBox::init_widget() {
 	set_selection_mode(Gtk::SELECTION_NONE);
 	set_column_spacing(16);
 	set_row_spacing(16);
 	set_border_width(16);
 	set_homogeneous(true);
 	set_max_children_per_line(3);
+}
+
+void TaskFlowBox::refilter() {
+	for (Gtk::Widget *child : get_children()) {
+		const backend::TaskProperty &p = ((TaskFlowBoxChild *)child)->get_task().property;
+		bool show = bool(m_priority_filter & (1 << (uint32_t)p.priority)) &&
+		            bool(m_type_filter & (1 << (uint32_t)p.type)) &&
+		            bool(m_status_filter & (1 << (uint32_t)backend::TaskStatusFromTask(p)));
+		if (show)
+			child->show();
+		else
+			child->hide();
+	}
 }
 
 void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
@@ -20,8 +33,11 @@ void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 		if (it != erase_set.end()) {
 			// The task ID already exists, modify it
 			update_set.insert(*it);
-			if (it->second->get_task() != task)
-				it->second->set_task(task);
+			auto child = it->second;
+			if (child->get_task() != task)
+				child->set_task(task);
+			Gtk::FlowBox::remove(*child);
+			Gtk::FlowBox::insert(*child, -1);
 			erase_set.erase(task.id);
 		} else {
 			// Not exist, insert it
@@ -32,10 +48,24 @@ void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 		}
 	}
 	for (const auto &p : erase_set) {
-		p.second->hide();
-		Gtk::FlowBox::remove(*p.second);
+		auto child = p.second;
+		child->hide();
+		Gtk::FlowBox::remove(*child);
 	}
 	m_children = std::move(update_set);
+}
+
+void TaskFlowBox::set_status_filter(backend::TaskStatus status, bool activate) {
+	uint32_t d = (uint32_t)status, mask = ~(1u << d);
+	m_status_filter = (m_status_filter & mask) | ((uint32_t)activate << d);
+}
+void TaskFlowBox::set_type_filter(backend::TaskType type, bool activate) {
+	uint32_t d = (uint32_t)type, mask = ~(1u << d);
+	m_type_filter = (m_type_filter & mask) | ((uint32_t)activate << d);
+}
+void TaskFlowBox::set_priority_filter(backend::TaskPriority priority, bool activate) {
+	uint32_t d = (uint32_t)priority, mask = ~(1u << d);
+	m_priority_filter = (m_priority_filter & mask) | ((uint32_t)activate << d);
 }
 
 } // namespace gui

@@ -1,18 +1,21 @@
 #ifndef SCHEDULITE_GTK_WINDOW_HPP
 #define SCHEDULITE_GTK_WINDOW_HPP
 
+#include "EnumFilterBox.hpp"
+#include "TaskFlowBox.hpp"
+#include <backend/Schedule.hpp>
 #include <gtkmm.h>
 
-#include "TaskFlowBox.hpp"
-
-#include <backend/Schedule.hpp>
+#include <atomic>
+#include <condition_variable>
+#include <thread>
 
 namespace gui {
 
 class Window : public Gtk::Window {
 public:
 	Window();
-	~Window() override = default;
+	~Window() override;
 
 protected:
 	std::shared_ptr<backend::Instance> m_instance_ptr;
@@ -32,9 +35,15 @@ protected:
 	void set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 
 	struct {
-		Glib::Thread *p_thread;
-		Glib::Dispatcher dispatcher;
+		Glib::Dispatcher sync_dispatcher;
+		std::atomic_bool run;
+		std::condition_variable cv;
+		std::thread thread;
 	} m_sync_thread;
+	void sync_thread_init();
+	void sync_thread_func();
+	void sync_thread_join();
+	void sync_thread_launch();
 
 	struct {
 		Gtk::Popover *p_popover{};
@@ -51,6 +60,9 @@ protected:
 		Gtk::Button insert_button;
 		Gtk::HeaderBar bar;
 		Gtk::ButtonBox button_box;
+		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
+		EnumFilterBox status_filter_box{std::array<const char *, 3>{"Ongoing", "Pending", "Done"}},
+		    priority_filter_box{backend::GetTaskPriorityStrings()}, type_filter_box{backend::GetTaskTypeStrings()};
 	} m_header;
 
 	struct {

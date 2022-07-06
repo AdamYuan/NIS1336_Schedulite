@@ -7,8 +7,12 @@ namespace gui {
 
 Window::Window() {
 	m_instance_ptr = backend::Instance::Create();
+	sync_thread_init();
+	sync_thread_launch();
 	initialize();
 }
+
+Window::~Window() { sync_thread_join(); }
 
 void Window::initialize() {
 	set_title(backend::kAppName);
@@ -117,16 +121,43 @@ void Window::initialize_header_bar() {
 		// m_header.insert_button.set_label("Insert");
 		m_header.insert_button.set_sensitive(false);
 
+		// Filters
+		m_header.status_filter_popover.add(m_header.status_filter_box);
+		m_header.status_filter_box.show();
+		m_header.status_filter_box.signal_modified().connect([this](const char *str, bool activate) {
+			backend::TaskStatus v = str[0] == 'O'
+			                            ? backend::TaskStatus::kBegun
+			                            : (str[0] == 'P' ? backend::TaskStatus::kPending : backend::TaskStatus::kDone);
+			m_body.task_list_box.set_status_filter(v, activate);
+			m_body.task_list_box.refilter();
+		});
+		m_header.type_filter_popover.add(m_header.type_filter_box);
+		m_header.type_filter_box.show();
+		m_header.type_filter_box.signal_modified().connect([this](const char *str, bool activate) {
+			m_body.task_list_box.set_type_filter(backend::TaskTypeFromStr(str), activate);
+			m_body.task_list_box.refilter();
+		});
+		m_header.priority_filter_popover.add(m_header.priority_filter_box);
+		m_header.priority_filter_box.show();
+		m_header.priority_filter_box.signal_modified().connect([this](const char *str, bool activate) {
+			m_body.task_list_box.set_priority_filter(backend::TaskPriorityFromStr(str), activate);
+			m_body.task_list_box.refilter();
+		});
+
+		// Filter buttons
 		m_header.status_filter_button.set_always_show_image(true);
 		m_header.status_filter_button.set_label("Status");
+		m_header.status_filter_button.set_popover(m_header.status_filter_popover);
 		m_header.status_filter_button.set_image_from_icon_name(GetTaskStatusIconName(backend::TaskStatus::kBegun),
 		                                                       Gtk::ICON_SIZE_DND);
 		m_header.priority_filter_button.set_always_show_image(true);
 		m_header.priority_filter_button.set_label("Priority");
+		m_header.priority_filter_button.set_popover(m_header.priority_filter_popover);
 		m_header.priority_filter_button.set_image_from_icon_name(GetTaskPriorityIconName(backend::kDefaultTaskPriority),
 		                                                         Gtk::ICON_SIZE_DND);
 		m_header.type_filter_button.set_always_show_image(true);
 		m_header.type_filter_button.set_label("Type");
+		m_header.type_filter_button.set_popover(m_header.type_filter_popover);
 		m_header.type_filter_button.set_image_from_icon_name(GetTaskTypeIconName(backend::kDefaultTaskType),
 		                                                     Gtk::ICON_SIZE_DND);
 		m_header.button_box.set_homogeneous(true);
@@ -201,13 +232,10 @@ void Window::register_button_click() {
 void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
 	if (!schedule_ptr)
 		return;
-	m_schedule_ptr = schedule_ptr;
-
+	std::atomic_store(&m_schedule_ptr, schedule_ptr);
+	m_user.p_username_label->set_label(m_schedule_ptr->GetUserPtr()->GetName());
 	m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
 	m_header.insert_button.set_sensitive(true);
-
-	m_user.p_username_label->set_text(m_schedule_ptr->GetUserPtr()->GetName());
-	m_body.task_list_box.set_tasks(m_schedule_ptr->GetTasks());
 }
 
 void Window::message(Gtk::MessageType type, const char *str) {
@@ -234,6 +262,41 @@ void Window::message_error(const char *str) { message(Gtk::MESSAGE_ERROR, str); 
 void Window::message_error(backend::Error error) {
 	message(error == backend::Error::kSuccess ? Gtk::MESSAGE_INFO : Gtk::MESSAGE_ERROR,
 	        backend::GetErrorMessage(error));
+}
+
+void Window::sync_thread_func() {
+	std::mutex cv_mutex;
+	std::unique_lock cv_lock{cv_mutex};
+	while (m_sync_thread.run.load(std::memory_order_acquire)) {
+		m_sync_thread.sync_dispatcher();
+		m_sync_thread.cv.wait_for(cv_lock, std::chrono::milliseconds(100),
+		                          [this]() { return !m_sync_thread.run.load(std::memory_order_acquire); });
+	}
+}
+void Window::sync_thread_join() {
+	if (m_sync_thread.thread.joinable()) {
+		m_sync_thread.run.store(false, std::memory_order_release);
+		m_sync_thread.cv.notify_all();
+		m_sync_thread.thread.join();
+	}
+}
+void Window::sync_thread_launch() {
+	m_sync_thread.run.store(true, std::memory_order_release);
+	m_sync_thread.thread = std::thread(&Window::sync_thread_func, this);
+}
+
+void Window::sync_thread_init() {
+	m_sync_thread.sync_dispatcher.connect([this]() {
+		auto schedule = std::atomic_load(&m_schedule_ptr);
+		if (!schedule)
+			return;
+		bool updated;
+		std::vector<backend::Task> tasks;
+		tasks = schedule->GetTasks(&updated);
+		if (updated) {
+			m_body.task_list_box.set_tasks(tasks);
+		}
+	});
 }
 
 } // namespace gui
