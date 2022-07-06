@@ -91,4 +91,18 @@ TaskPriority TaskPriorityFromStr(std::string_view str) {
 	}
 }
 
+TaskStatus TaskStatusFromStr(std::string_view str) {
+	if (str.empty())
+		return TaskStatus::kPending;
+	switch (tolower(str[0])) {
+	case 'd':
+		return TaskStatus::kDone;
+	case 'o':
+		return TaskStatus::kOngoing;
+	case 'p':
+		return TaskStatus::kPending;
+	}
+	return TaskStatus::kPending;
+}
+
 } // namespace backend
