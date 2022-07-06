@@ -1,6 +1,7 @@
 #include <backend/Instance.hpp>
 
 #include <backend/Environment.hpp>
+#include <backend/User.hpp>
 
 #include <ghc/filesystem.hpp>
 
@@ -29,8 +30,11 @@ std::vector<std::string> Instance::FetchUsernames() const {
 	std::vector<std::string> usernames;
 	try {
 		for (auto const &entry : ghc::filesystem::directory_iterator(m_user_dir_path)) {
-			if (entry.is_regular_file())
-				usernames.push_back(entry.path().filename().string());
+			if (entry.is_regular_file()) {
+				auto name = entry.path().filename().string();
+				if (User::ValidateUsername(name))
+					usernames.push_back(name);
+			}
 		}
 	} catch (...) {
 		return {};
