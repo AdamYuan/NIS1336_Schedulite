@@ -46,6 +46,9 @@ protected:
 	void sync_thread_join();
 	void sync_thread_launch();
 
+	void goto_task_list_page();
+	void goto_insert_page();
+
 	struct {
 		Gtk::Popover *p_popover{};
 		Gtk::Box *p_current_user_box{};
@@ -58,18 +61,20 @@ protected:
 
 	struct {
 		Gtk::MenuButton user_button, status_filter_button, priority_filter_button, type_filter_button, more_button;
-		Gtk::Button insert_button;
+		Gtk::Button insert_button, back_button;
 		Gtk::HeaderBar bar;
-		Gtk::ButtonBox right_button_box, filter_button_box;
+		Gtk::ButtonBox filter_button_box;
 		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
 		EnumFilterBox status_filter_box{backend::GetTaskStatusStrings()},
 		    priority_filter_box{backend::GetTaskPriorityStrings()}, type_filter_box{backend::GetTaskTypeStrings()};
 	} m_header;
 
 	struct {
-		Gtk::Box box;
+		Gtk::Box box, insert_box;
+		Gtk::Stack stack;
+
 		Gtk::ScrolledWindow scrolled_window;
-		TaskFlowBox task_list_box;
+		TaskFlowBox task_flow_box;
 	} m_body;
 };
 

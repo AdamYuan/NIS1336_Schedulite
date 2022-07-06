@@ -22,13 +22,18 @@ void Window::initialize() {
 	initialize_user_panel();
 	initialize_body();
 	set_schedule(nullptr);
+	goto_task_list_page();
 }
 
 void Window::initialize_body() {
-	m_body.scrolled_window.add(m_body.task_list_box);
-	m_body.task_list_box.show();
+	m_body.scrolled_window.add(m_body.task_flow_box);
+	m_body.task_flow_box.show();
 
-	m_body.box.pack_end(m_body.scrolled_window, Gtk::PACK_EXPAND_WIDGET);
+	m_body.box.pack_end(m_body.stack, Gtk::PACK_EXPAND_WIDGET);
+	m_body.stack.add(m_body.scrolled_window);
+	m_body.stack.add(m_body.insert_box);
+	m_body.stack.show();
+
 	m_body.scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
 	m_body.scrolled_window.show();
 
@@ -36,7 +41,7 @@ void Window::initialize_body() {
 	m_body.box.set_orientation(Gtk::ORIENTATION_VERTICAL);
 	m_body.box.show();
 
-	m_body.task_list_box.signal_task_selected().connect(
+	m_body.task_flow_box.signal_task_selected().connect(
 	    [](const backend::Task &task) { printf("%s\n", task.property.name.c_str()); });
 }
 
@@ -112,12 +117,14 @@ void Window::initialize_header_bar() {
 		m_header.bar.set_show_close_button(TRUE);
 		m_header.bar.set_title(backend::kAppName);
 
+		m_header.bar.pack_start(m_header.back_button);
 		m_header.bar.pack_start(m_header.user_button);
 		m_header.bar.pack_start(m_header.insert_button);
-
 		m_header.bar.pack_end(m_header.more_button);
 
-		m_header.right_button_box.set_layout(Gtk::BUTTONBOX_EXPAND);
+		m_header.back_button.set_always_show_image(true);
+		m_header.back_button.set_image_from_icon_name("go-previous", Gtk::ICON_SIZE_DND);
+		m_header.back_button.signal_clicked().connect([this]() { goto_task_list_page(); });
 
 		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
@@ -126,6 +133,7 @@ void Window::initialize_header_bar() {
 		m_header.insert_button.set_always_show_image(true);
 		m_header.insert_button.set_image_from_icon_name("document-new-symbolic", Gtk::ICON_SIZE_DND);
 		m_header.insert_button.set_tooltip_text("Insert Task");
+		m_header.insert_button.signal_clicked().connect([this]() { goto_insert_page(); });
 
 		m_header.more_button.set_image_from_icon_name("view-more", Gtk::ICON_SIZE_DND);
 		m_header.more_button.set_tooltip_text("More");
@@ -134,20 +142,20 @@ void Window::initialize_header_bar() {
 		m_header.status_filter_popover.add(m_header.status_filter_box);
 		m_header.status_filter_box.show();
 		m_header.status_filter_box.signal_modified().connect([this](const char *str, bool activate) {
-			m_body.task_list_box.set_status_filter(backend::TaskStatusFromStr(str), activate);
-			m_body.task_list_box.refilter();
+			m_body.task_flow_box.set_status_filter(backend::TaskStatusFromStr(str), activate);
+			m_body.task_flow_box.refilter();
 		});
 		m_header.type_filter_popover.add(m_header.type_filter_box);
 		m_header.type_filter_box.show();
 		m_header.type_filter_box.signal_modified().connect([this](const char *str, bool activate) {
-			m_body.task_list_box.set_type_filter(backend::TaskTypeFromStr(str), activate);
-			m_body.task_list_box.refilter();
+			m_body.task_flow_box.set_type_filter(backend::TaskTypeFromStr(str), activate);
+			m_body.task_flow_box.refilter();
 		});
 		m_header.priority_filter_popover.add(m_header.priority_filter_box);
 		m_header.priority_filter_box.show();
 		m_header.priority_filter_box.signal_modified().connect([this](const char *str, bool activate) {
-			m_body.task_list_box.set_priority_filter(backend::TaskPriorityFromStr(str), activate);
-			m_body.task_list_box.refilter();
+			m_body.task_flow_box.set_priority_filter(backend::TaskPriorityFromStr(str), activate);
+			m_body.task_flow_box.refilter();
 		});
 
 		// Filter buttons
@@ -175,7 +183,6 @@ void Window::initialize_header_bar() {
 		m_header.bar.set_custom_title(m_header.filter_button_box);
 
 		m_header.bar.show_all();
-		m_header.bar.set_size_request(-1, 64);
 	}
 }
 
@@ -307,9 +314,31 @@ void Window::sync_thread_init() {
 		std::vector<backend::Task> tasks;
 		tasks = schedule->GetTasks(&updated);
 		if (updated) {
-			m_body.task_list_box.set_tasks(tasks);
+			m_body.task_flow_box.set_tasks(tasks);
+			printf("update\n");
 		}
 	});
+}
+
+void Window::goto_task_list_page() {
+	m_body.stack.set_visible_child(m_body.scrolled_window);
+	m_body.insert_box.hide();
+	m_body.task_flow_box.show();
+
+	m_header.back_button.hide();
+	m_header.user_button.show();
+	m_header.insert_button.show();
+	m_header.filter_button_box.show();
+}
+void Window::goto_insert_page() {
+	m_body.stack.set_visible_child(m_body.insert_box);
+	m_body.insert_box.show();
+	m_body.task_flow_box.hide();
+
+	m_header.back_button.show();
+	m_header.user_button.hide();
+	m_header.insert_button.hide();
+	m_header.filter_button_box.hide();
 }
 
 } // namespace gui
