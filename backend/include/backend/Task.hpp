@@ -259,7 +259,7 @@ inline constexpr const char *StrFromTaskStatus(TaskStatus status) {
 /**
  * Get all TaskStatus strings
  */
-inline constexpr std::array<const char *, 3> GetTaskStatus() { return {"Pending", "Ongoing", "Done"}; }
+inline constexpr std::array<const char *, 3> GetTaskStatusStrings() { return {"Pending", "Ongoing", "Done"}; }
 
 /**
  * Get TaskStatus from a string, the letter case is ignored.

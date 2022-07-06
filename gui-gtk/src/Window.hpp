@@ -3,6 +3,7 @@
 
 #include "EnumFilterBox.hpp"
 #include "TaskFlowBox.hpp"
+#include "TimePopover.hpp"
 #include <backend/Schedule.hpp>
 #include <gtkmm.h>
 
@@ -61,7 +62,7 @@ protected:
 		Gtk::HeaderBar bar;
 		Gtk::ButtonBox right_button_box, filter_button_box;
 		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
-		EnumFilterBox status_filter_box{std::array<const char *, 3>{"Ongoing", "Pending", "Done"}},
+		EnumFilterBox status_filter_box{backend::GetTaskStatusStrings()},
 		    priority_filter_box{backend::GetTaskPriorityStrings()}, type_filter_box{backend::GetTaskTypeStrings()};
 	} m_header;
 
