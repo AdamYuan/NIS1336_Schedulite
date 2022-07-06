@@ -57,6 +57,9 @@ void Window::initialize_user_panel() {
 	m_user.p_login_button->signal_clicked().connect([this]() { login_button_click(); });
 	m_user.p_register_button->signal_clicked().connect([this]() { register_button_click(); });
 
+	m_user.p_login_username->set_max_length(backend::User::kMaxUsernameLength);
+	m_user.p_register_username->set_max_length(backend::User::kMaxUsernameLength);
+
 	{
 		m_user.p_login_username->signal_changed().connect([this]() {
 			m_user.p_login_button->set_sensitive(!m_user.p_login_username->get_text().empty() &&
@@ -237,13 +240,13 @@ void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr
 	std::atomic_store(&m_schedule_ptr, schedule_ptr);
 	if (!schedule_ptr) {
 		m_user.p_username_label->set_label("");
-		m_header.user_button.set_label("");
-		m_header.insert_button.hide();
+		// m_header.user_button.set_label("");
+		m_header.insert_button.set_sensitive(false);
 		m_header.filter_button_box.set_sensitive(false);
 	} else {
 		m_user.p_username_label->set_label(m_schedule_ptr->GetUserPtr()->GetName());
-		m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
-		m_header.insert_button.show();
+		// m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
+		m_header.insert_button.set_sensitive(true);
 		m_header.filter_button_box.set_sensitive(true);
 	}
 }

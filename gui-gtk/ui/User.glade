@@ -145,7 +145,6 @@
                       <object class="GtkEntry" id="login_username">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="max-length">10</property>
                       </object>
                     </child>
                   </object>
@@ -218,7 +217,6 @@
                   <object class="GtkEntry" id="register_username">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <property name="max-length">10</property>
                     <property name="caps-lock-warning">False</property>
                     <property name="input-purpose">name</property>
                   </object>

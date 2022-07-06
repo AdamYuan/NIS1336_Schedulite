@@ -32,9 +32,17 @@ void TaskFlowBoxChild::initialize() {
 	m_p_task_button->signal_clicked().connect([this]() { m_parent_signal_task_selected.emit(m_task); });
 }
 void TaskFlowBoxChild::update() {
+	auto status = backend::TaskStatusFromTask(m_task);
 	m_p_priority_icon->set_from_icon_name(GetTaskPriorityIconName(m_task.property.priority), Gtk::ICON_SIZE_DND);
+	m_p_priority_icon->set_tooltip_text((std::string)backend::StrFromTaskPriority(m_task.property.priority) +
+	                                    " Priority");
+	m_p_priority_icon->set_tooltip_text((std::string)backend::StrFromTaskPriority(m_task.property.priority) +
+	                                    " Priority");
+
 	m_p_type_icon->set_from_icon_name(GetTaskTypeIconName(m_task.property.type), Gtk::ICON_SIZE_DND);
-	m_p_status_icon->set_from_icon_name(GetTaskStatusIconName(backend::TaskStatusFromTask(m_task)), Gtk::ICON_SIZE_DND);
+
+	m_p_status_icon->set_from_icon_name(GetTaskStatusIconName(status), Gtk::ICON_SIZE_DND);
+	m_p_status_icon->set_tooltip_text((std::string)backend::StrFromTaskStatus(status));
 
 	if (m_task.property.type != backend::TaskType::kNone) {
 		m_p_type_label->set_text(backend::StrFromTaskType(m_task.property.type));
