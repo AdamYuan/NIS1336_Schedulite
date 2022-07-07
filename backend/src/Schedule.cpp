@@ -104,7 +104,6 @@ Error Schedule::TaskEdit(uint32_t id, const TaskProperty &property, TaskProperty
 		auto it = std::find_if(tasks.begin(), tasks.end(), [&id](const Task &c) { return c.id == id; });
 		if (it == tasks.end())
 			return Error::kTaskNotFound;
-		it->property.done ^= 1;
 
 		Task task = TaskPatch(*it, property, property_edit_mask);
 		if ((property_edit_mask & TaskPropertyMask::kKey) != TaskPropertyMask::kNone) {
