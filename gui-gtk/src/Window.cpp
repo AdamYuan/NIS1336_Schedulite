@@ -43,7 +43,7 @@ void Window::initialize_body() {
 	m_body.box.show();
 
 	m_body.task_flow_box.signal_task_selected().connect([this](const backend::Task &task) {
-		printf("%s\n", task.property.name.c_str());
+		m_body.task_detail_box.set_task(task);
 		goto_detail_page();
 	});
 
@@ -55,6 +55,14 @@ void Window::initialize_body() {
 			m_body.task_insert_box.restore();
 		}
 	});
+
+	m_body.task_detail_box.signal_task_edited().connect(
+	    [this](uint32_t id, const backend::TaskProperty &property, backend::TaskPropertyMask mask) {
+		    auto error = m_schedule_ptr->TaskEdit(id, property, mask);
+		    if (error != backend::Error::kSuccess) {
+			    message_error(error);
+		    }
+	    });
 }
 
 void Window::initialize_user_panel() {
@@ -334,6 +342,7 @@ void Window::sync_thread_init() {
 		tasks = schedule->GetTasks(&updated);
 		if (updated) {
 			m_body.task_flow_box.set_tasks(tasks);
+			m_body.task_detail_box.update_from_tasks(tasks);
 		}
 	});
 }
