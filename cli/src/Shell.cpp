@@ -153,7 +153,7 @@ void Shell::cmd_insert() {
 	    Input((std::string) "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")"));
 	property.type =
 	    backend::TaskTypeFromStr(Input((std::string) "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")"));
-	PrintError(m_schedule_ptr->TaskInsert(property).get());
+	PrintError(m_schedule_ptr->TaskInsert(property));
 }
 void Shell::cmd_edit() {
 	if (!m_schedule_ptr) {
@@ -203,7 +203,7 @@ void Shell::cmd_edit() {
 			edit_mask |= backend::TaskPropertyMask::kType;
 		}
 	}
-	PrintError(m_schedule_ptr->TaskEdit(id, property, edit_mask).get());
+	PrintError(m_schedule_ptr->TaskEdit(id, property, edit_mask));
 }
 void Shell::cmd_erase() {
 	if (!m_schedule_ptr) {
@@ -218,7 +218,7 @@ void Shell::cmd_erase() {
 		return;
 	}
 
-	PrintError(m_schedule_ptr->TaskErase(id).get());
+	PrintError(m_schedule_ptr->TaskErase(id));
 }
 void Shell::cmd_done() {
 	if (!m_schedule_ptr) {
@@ -233,7 +233,7 @@ void Shell::cmd_done() {
 		return;
 	}
 
-	PrintError(m_schedule_ptr->TaskToggleDone(id).get());
+	PrintError(m_schedule_ptr->TaskToggleDone(id));
 }
 
 void Shell::launch_reminder_thread() {
