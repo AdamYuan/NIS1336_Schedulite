@@ -12,7 +12,10 @@ Window::Window() {
 	initialize();
 }
 
-Window::~Window() { sync_thread_join(); }
+Window::~Window() {
+	gtk_widget_destroy(m_body.flap);
+	sync_thread_join();
+}
 
 void Window::initialize() {
 	set_title(backend::kAppName);
@@ -29,10 +32,21 @@ void Window::initialize_body() {
 	m_body.scrolled_window.add(m_body.task_flow_box);
 	m_body.task_flow_box.show();
 
-	m_body.box.pack_end(m_body.stack, Gtk::PACK_EXPAND_WIDGET);
-	m_body.stack.add(m_body.scrolled_window);
+	m_body.flap = hdy_flap_new();
+
 	m_body.stack.add(m_body.task_insert_box);
 	m_body.stack.add(m_body.task_detail_box);
+
+	gtk_box_pack_end(GTK_BOX(m_body.box.gobj()), m_body.flap, true, true, 0);
+	hdy_flap_set_content(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.scrolled_window.gobj()));
+	hdy_flap_set_flap(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.stack.gobj()));
+	hdy_flap_set_fold_policy(HDY_FLAP(m_body.flap), HDY_FLAP_FOLD_POLICY_ALWAYS);
+	hdy_flap_set_transition_type(HDY_FLAP(m_body.flap), HDY_FLAP_TRANSITION_TYPE_UNDER);
+	hdy_flap_set_modal(HDY_FLAP(m_body.flap), true);
+	gtk_widget_show(GTK_WIDGET(m_body.flap));
+	// m_body.box.pack_end(m_body.stack, Gtk::PACK_EXPAND_WIDGET);
+	// m_body.stack.add(m_body.scrolled_window);
+
 	m_body.stack.show();
 
 	m_body.scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
@@ -48,6 +62,8 @@ void Window::initialize_body() {
 	});
 
 	m_body.task_insert_box.signal_task_inserted().connect([this](const backend::TaskProperty &property) {
+		if (!m_schedule_ptr)
+			return;
 		auto error = m_schedule_ptr->TaskInsert(property);
 		if (error == backend::Error::kSuccess) {
 			goto_list_page();
@@ -58,6 +74,8 @@ void Window::initialize_body() {
 
 	m_body.task_detail_box.signal_task_edited().connect(
 	    [this](uint32_t id, const backend::TaskProperty &property, backend::TaskPropertyMask mask) {
+		    if (!m_schedule_ptr)
+			    return;
 		    auto error = m_schedule_ptr->TaskEdit(id, property, mask);
 		    if (error != backend::Error::kSuccess) {
 			    message_error(error);
@@ -65,6 +83,8 @@ void Window::initialize_body() {
 	    });
 
 	m_body.task_detail_box.signal_task_erased().connect([this](uint32_t id) {
+		if (!m_schedule_ptr)
+			return;
 		auto error = m_schedule_ptr->TaskErase(id);
 		if (error != backend::Error::kSuccess) {
 			message_error(error);
@@ -150,14 +170,9 @@ void Window::initialize_header_bar() {
 		m_header.bar.set_show_close_button(TRUE);
 		m_header.bar.set_title(backend::kAppName);
 
-		m_header.bar.pack_start(m_header.back_button);
 		m_header.bar.pack_start(m_header.user_button);
 		m_header.bar.pack_start(m_header.insert_button);
 		m_header.bar.pack_end(m_header.more_button);
-
-		m_header.back_button.set_always_show_image(true);
-		m_header.back_button.set_image_from_icon_name("go-previous", Gtk::ICON_SIZE_DND);
-		m_header.back_button.signal_clicked().connect([this]() { goto_list_page(); });
 
 		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
@@ -357,40 +372,42 @@ void Window::sync_thread_init() {
 }
 
 void Window::goto_list_page() {
-	m_body.task_insert_box.hide();
-	m_body.task_detail_box.hide();
-	m_body.task_flow_box.show();
-	m_body.stack.set_visible_child(m_body.scrolled_window);
+	// m_body.task_insert_box.hide();
+	// m_body.task_detail_box.hide();
+	//  m_body.stack.set_visible_child(m_body.scrolled_window);
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), false);
 
-	m_header.back_button.hide();
+	/*m_header.back_button.hide();
 	m_header.user_button.show();
 	m_header.insert_button.show();
 	m_header.filter_button_box.show();
-	m_header.bar.set_custom_title(m_header.filter_button_box);
+	m_header.bar.set_custom_title(m_header.filter_button_box); */
 }
 void Window::goto_insert_page() {
 	m_body.task_insert_box.show();
 	m_body.task_detail_box.hide();
-	m_body.task_flow_box.hide();
 	m_body.stack.set_visible_child(m_body.task_insert_box);
 
-	m_header.back_button.show();
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
+
+	/*m_header.back_button.show();
 	m_header.user_button.hide();
 	m_header.insert_button.hide();
 	m_header.filter_button_box.hide();
-	m_header.bar.set_title("Insert Task");
+	m_header.bar.set_title("Insert Task"); */
 }
 void Window::goto_detail_page() {
 	m_body.task_detail_box.show();
 	m_body.task_insert_box.hide();
-	m_body.task_flow_box.hide();
 	m_body.stack.set_visible_child(m_body.task_detail_box);
 
-	m_header.back_button.show();
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
+
+	/* m_header.back_button.show();
 	m_header.user_button.hide();
 	m_header.insert_button.hide();
 	m_header.filter_button_box.hide();
-	m_header.bar.set_title("Task Detail");
+	m_header.bar.set_title("Task Detail"); */
 }
 
 } // namespace gui

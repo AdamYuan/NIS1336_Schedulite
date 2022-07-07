@@ -7,6 +7,7 @@
 #include "TaskInsertBox.hpp"
 #include <backend/Schedule.hpp>
 #include <gtkmm.h>
+#include <handy.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -63,7 +64,7 @@ protected:
 
 	struct {
 		Gtk::MenuButton user_button, status_filter_button, priority_filter_button, type_filter_button, more_button;
-		Gtk::Button insert_button, back_button;
+		Gtk::Button insert_button;
 		Gtk::HeaderBar bar;
 		Gtk::ButtonBox filter_button_box;
 		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
@@ -74,6 +75,8 @@ protected:
 	struct {
 		Gtk::Box box;
 		Gtk::Stack stack;
+
+		GtkWidget *flap;
 
 		Gtk::ScrolledWindow scrolled_window;
 		TaskFlowBox task_flow_box;
