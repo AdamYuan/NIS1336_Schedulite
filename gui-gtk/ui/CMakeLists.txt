@@ -4,7 +4,7 @@ project(Schedulite)
 set(UI_SRC
         User
         Task
-        Edit
+        Detail
         Insert
         Time
         )

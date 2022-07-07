@@ -17,6 +17,7 @@ add_executable(ScheduliteGTK
         src/EnumFilterBox.cpp
         src/TimePopover.cpp
         src/TaskInsertBox.cpp
+        src/TaskDetailBox.cpp
         src/EnumSelectPopover.cpp
         )
 

@@ -22,7 +22,7 @@ void Window::initialize() {
 	initialize_user_panel();
 	initialize_body();
 	set_schedule(nullptr);
-	goto_task_list_page();
+	goto_list_page();
 }
 
 void Window::initialize_body() {
@@ -32,6 +32,7 @@ void Window::initialize_body() {
 	m_body.box.pack_end(m_body.stack, Gtk::PACK_EXPAND_WIDGET);
 	m_body.stack.add(m_body.scrolled_window);
 	m_body.stack.add(m_body.task_insert_box);
+	m_body.stack.add(m_body.task_detail_box);
 	m_body.stack.show();
 
 	m_body.scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
@@ -41,14 +42,16 @@ void Window::initialize_body() {
 	m_body.box.set_orientation(Gtk::ORIENTATION_VERTICAL);
 	m_body.box.show();
 
-	m_body.task_flow_box.signal_task_selected().connect(
-	    [](const backend::Task &task) { printf("%s\n", task.property.name.c_str()); });
+	m_body.task_flow_box.signal_task_selected().connect([this](const backend::Task &task) {
+		printf("%s\n", task.property.name.c_str());
+		goto_detail_page();
+	});
 
 	m_body.task_insert_box.signal_task_inserted().connect([this](const backend::TaskProperty &property) {
 		auto error = m_schedule_ptr->TaskInsert(property);
 		message_error(error);
 		if (error == backend::Error::kSuccess) {
-			goto_task_list_page();
+			goto_list_page();
 			m_body.task_insert_box.restore();
 		}
 	});
@@ -139,7 +142,7 @@ void Window::initialize_header_bar() {
 
 		m_header.back_button.set_always_show_image(true);
 		m_header.back_button.set_image_from_icon_name("go-previous", Gtk::ICON_SIZE_DND);
-		m_header.back_button.signal_clicked().connect([this]() { goto_task_list_page(); });
+		m_header.back_button.signal_clicked().connect([this]() { goto_list_page(); });
 
 		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
@@ -335,8 +338,9 @@ void Window::sync_thread_init() {
 	});
 }
 
-void Window::goto_task_list_page() {
+void Window::goto_list_page() {
 	m_body.task_insert_box.hide();
+	m_body.task_detail_box.hide();
 	m_body.task_flow_box.show();
 	m_body.stack.set_visible_child(m_body.scrolled_window);
 
@@ -348,6 +352,7 @@ void Window::goto_task_list_page() {
 }
 void Window::goto_insert_page() {
 	m_body.task_insert_box.show();
+	m_body.task_detail_box.hide();
 	m_body.task_flow_box.hide();
 	m_body.stack.set_visible_child(m_body.task_insert_box);
 
@@ -356,6 +361,18 @@ void Window::goto_insert_page() {
 	m_header.insert_button.hide();
 	m_header.filter_button_box.hide();
 	m_header.bar.set_title("Insert Task");
+}
+void Window::goto_detail_page() {
+	m_body.task_detail_box.show();
+	m_body.task_insert_box.hide();
+	m_body.task_flow_box.hide();
+	m_body.stack.set_visible_child(m_body.task_detail_box);
+
+	m_header.back_button.show();
+	m_header.user_button.hide();
+	m_header.insert_button.hide();
+	m_header.filter_button_box.hide();
+	m_header.bar.set_title("Task Detail");
 }
 
 } // namespace gui

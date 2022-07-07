@@ -2,6 +2,7 @@
 #define SCHEDULITE_GTK_WINDOW_HPP
 
 #include "EnumFilterBox.hpp"
+#include "TaskDetailBox.hpp"
 #include "TaskFlowBox.hpp"
 #include "TaskInsertBox.hpp"
 #include <backend/Schedule.hpp>
@@ -46,8 +47,9 @@ protected:
 	void sync_thread_join();
 	void sync_thread_launch();
 
-	void goto_task_list_page();
+	void goto_list_page();
 	void goto_insert_page();
+	void goto_detail_page();
 
 	struct {
 		Gtk::Popover *p_popover{};
@@ -75,8 +77,8 @@ protected:
 
 		Gtk::ScrolledWindow scrolled_window;
 		TaskFlowBox task_flow_box;
-
 		TaskInsertBox task_insert_box;
+		TaskDetailBox task_detail_box;
 	} m_body;
 };
 

@@ -43,7 +43,7 @@ jobs:
         with:
           msystem: ${{matrix.config.sys}}
           update: false
-          install: mingw-w64-${{matrix.config.env}}-cmake mingw-w64-${{matrix.config.env}}-ninja mingw-w64-${{matrix.config.env}}-gcc mingw-w64-${{matrix.config.env}}-gtkmm3
+          install: mingw-w64-${{matrix.config.env}}-cmake mingw-w64-${{matrix.config.env}}-ninja mingw-w64-${{matrix.config.env}}-gcc mingw-w64-${{matrix.config.env}}-gtkmm3 mingw-w64-${{matrix.config.env}}-libhandy
 
       - name: Configure
         shell: msys2 {0}
