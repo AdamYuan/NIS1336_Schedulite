@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build libgtkmm-3.0-dev
+          sudo apt-get install ninja-build libhandy-1-dev libgtkmm-3.0-dev
 
       - name: Configure
         shell: bash
