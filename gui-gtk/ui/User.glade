@@ -121,22 +121,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkModelButton" id="login_button">
-                    <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="text" translatable="yes">OK</property>
-                    <property name="use-markup">True</property>
-                    <property name="centered">True</property>
-                  </object>
-                  <packing>
-                    <property name="left-attach">0</property>
-                    <property name="top-attach">2</property>
-                    <property name="width">2</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkComboBoxText" id="login_username_combo">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
@@ -151,6 +135,23 @@
                   <packing>
                     <property name="left-attach">1</property>
                     <property name="top-attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="login_button">
+                    <property name="label" translatable="yes">OK</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <style>
+                      <class name="suggested-action"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">2</property>
+                    <property name="width">2</property>
                   </packing>
                 </child>
               </object>
@@ -173,22 +174,6 @@
                 <property name="row-spacing">16</property>
                 <property name="column-spacing">8</property>
                 <property name="row-homogeneous">True</property>
-                <child>
-                  <object class="GtkModelButton" id="register_button">
-                    <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="text" translatable="yes">OK</property>
-                    <property name="use-markup">True</property>
-                    <property name="centered">True</property>
-                  </object>
-                  <packing>
-                    <property name="left-attach">0</property>
-                    <property name="top-attach">3</property>
-                    <property name="width">2</property>
-                  </packing>
-                </child>
                 <child>
                   <object class="GtkEntry" id="register_password2">
                     <property name="visible">True</property>
@@ -262,6 +247,23 @@
                   <packing>
                     <property name="left-attach">0</property>
                     <property name="top-attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="register_button">
+                    <property name="label" translatable="yes">OK</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <style>
+                      <class name="suggested-action"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">3</property>
+                    <property name="width">2</property>
                   </packing>
                 </child>
               </object>

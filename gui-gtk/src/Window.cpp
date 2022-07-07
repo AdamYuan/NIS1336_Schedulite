@@ -31,7 +31,7 @@ void Window::initialize_body() {
 
 	m_body.box.pack_end(m_body.stack, Gtk::PACK_EXPAND_WIDGET);
 	m_body.stack.add(m_body.scrolled_window);
-	m_body.stack.add(m_body.insert_box);
+	m_body.stack.add(m_body.task_insert_box);
 	m_body.stack.show();
 
 	m_body.scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
@@ -43,6 +43,15 @@ void Window::initialize_body() {
 
 	m_body.task_flow_box.signal_task_selected().connect(
 	    [](const backend::Task &task) { printf("%s\n", task.property.name.c_str()); });
+
+	m_body.task_insert_box.signal_task_inserted().connect([this](const backend::TaskProperty &property) {
+		auto error = m_schedule_ptr->TaskInsert(property);
+		message_error(error);
+		if (error == backend::Error::kSuccess) {
+			goto_task_list_page();
+			m_body.task_insert_box.restore();
+		}
+	});
 }
 
 void Window::initialize_user_panel() {
@@ -59,8 +68,14 @@ void Window::initialize_user_panel() {
 	user_builder->get_widget("register_username", m_user.p_register_username);
 	user_builder->get_widget("register_password1", m_user.p_register_password1);
 	user_builder->get_widget("register_password2", m_user.p_register_password2);
-	m_user.p_login_button->signal_clicked().connect([this]() { login_button_click(); });
-	m_user.p_register_button->signal_clicked().connect([this]() { register_button_click(); });
+	m_user.p_login_button->signal_clicked().connect([this]() {
+		login_button_click();
+		m_user.p_popover->hide();
+	});
+	m_user.p_register_button->signal_clicked().connect([this]() {
+		register_button_click();
+		m_user.p_popover->hide();
+	});
 
 	m_user.p_login_username->set_max_length(backend::User::kMaxUsernameLength);
 	m_user.p_register_username->set_max_length(backend::User::kMaxUsernameLength);
@@ -137,6 +152,7 @@ void Window::initialize_header_bar() {
 
 		m_header.more_button.set_image_from_icon_name("view-more", Gtk::ICON_SIZE_DND);
 		m_header.more_button.set_tooltip_text("More");
+		// m_header.more_button.set_popover(*Gtk::make_managed<TimePopover>());
 
 		// Filters
 		m_header.status_filter_popover.add(m_header.status_filter_box);
@@ -315,30 +331,31 @@ void Window::sync_thread_init() {
 		tasks = schedule->GetTasks(&updated);
 		if (updated) {
 			m_body.task_flow_box.set_tasks(tasks);
-			printf("update\n");
 		}
 	});
 }
 
 void Window::goto_task_list_page() {
-	m_body.stack.set_visible_child(m_body.scrolled_window);
-	m_body.insert_box.hide();
+	m_body.task_insert_box.hide();
 	m_body.task_flow_box.show();
+	m_body.stack.set_visible_child(m_body.scrolled_window);
 
 	m_header.back_button.hide();
 	m_header.user_button.show();
 	m_header.insert_button.show();
 	m_header.filter_button_box.show();
+	m_header.bar.set_custom_title(m_header.filter_button_box);
 }
 void Window::goto_insert_page() {
-	m_body.stack.set_visible_child(m_body.insert_box);
-	m_body.insert_box.show();
+	m_body.task_insert_box.show();
 	m_body.task_flow_box.hide();
+	m_body.stack.set_visible_child(m_body.task_insert_box);
 
 	m_header.back_button.show();
 	m_header.user_button.hide();
 	m_header.insert_button.hide();
 	m_header.filter_button_box.hide();
+	m_header.bar.set_title("Insert Task");
 }
 
 } // namespace gui

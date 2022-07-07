@@ -7,7 +7,9 @@
 namespace gui {
 class TimePopover : public Gtk::Popover {
 public:
-	inline TimePopover() { init_widget(); }
+	inline TimePopover(bool use_ok_button) : m_use_ok_button{use_ok_button} {
+		init_widget();
+	}
 	void set_time(const backend::TimeInfo &time);
 	backend::TimeInfo get_time();
 
@@ -19,10 +21,12 @@ protected:
 private:
 	void init_widget();
 
+	bool m_use_ok_button;
+
 	Gtk::Box *m_p_box{};
 	Gtk::Calendar *m_p_date{};
 	Gtk::SpinButton *m_p_hour{}, *m_p_minute{};
-	Gtk::ModelButton *m_p_ok_button{};
+	Gtk::Button *m_p_ok_button{};
 };
 } // namespace gui
 

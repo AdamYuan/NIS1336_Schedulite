@@ -16,6 +16,8 @@ add_executable(ScheduliteGTK
         src/TaskFlowBoxChild.cpp
         src/EnumFilterBox.cpp
         src/TimePopover.cpp
+        src/TaskInsertBox.cpp
+        src/EnumSelectPopover.cpp
         )
 
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gtk::dep schedulite::gtk::ui schedulite::backend)

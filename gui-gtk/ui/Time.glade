@@ -113,15 +113,18 @@
       </packing>
     </child>
     <child>
-      <object class="GtkModelButton" id="ok">
+      <object class="GtkButton" id="ok">
+        <property name="label" translatable="yes">OK</property>
+        <property name="height-request">32</property>
         <property name="visible">True</property>
         <property name="can-focus">True</property>
         <property name="receives-default">True</property>
-        <property name="text" translatable="yes">OK</property>
-        <property name="centered">True</property>
+        <style>
+          <class name="suggested-action"/>
+        </style>
       </object>
       <packing>
-        <property name="expand">True</property>
+        <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="position">1</property>
       </packing>

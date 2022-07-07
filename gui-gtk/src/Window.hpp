@@ -3,7 +3,7 @@
 
 #include "EnumFilterBox.hpp"
 #include "TaskFlowBox.hpp"
-#include "TimePopover.hpp"
+#include "TaskInsertBox.hpp"
 #include <backend/Schedule.hpp>
 #include <gtkmm.h>
 
@@ -70,11 +70,13 @@ protected:
 	} m_header;
 
 	struct {
-		Gtk::Box box, insert_box;
+		Gtk::Box box;
 		Gtk::Stack stack;
 
 		Gtk::ScrolledWindow scrolled_window;
 		TaskFlowBox task_flow_box;
+
+		TaskInsertBox task_insert_box;
 	} m_body;
 };
 
