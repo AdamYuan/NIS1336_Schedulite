@@ -2,16 +2,72 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkPopover" id="done_popover">
-    <property name="can-focus">False</property>
-    <child>
-      <placeholder/>
-    </child>
-  </object>
   <object class="GtkPopover" id="erase_popover">
     <property name="can-focus">False</property>
     <child>
-      <placeholder/>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="border-width">16</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">8</property>
+        <property name="homogeneous">True</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">Are you sure you want to erase this task?</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="spacing">8</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkModelButton">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="text" translatable="yes">No</property>
+                <property name="centered">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="erase_button">
+                <property name="label" translatable="yes">Yes</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <style>
+                  <class name="destructive-action"/>
+                </style>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
     </child>
   </object>
   <object class="GtkPopover" id="name_popover">
@@ -76,7 +132,7 @@
             <property name="spacing">16</property>
             <property name="homogeneous">True</property>
             <child>
-              <object class="GtkMenuButton" id="erase_button">
+              <object class="GtkMenuButton">
                 <property name="width-request">128</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>

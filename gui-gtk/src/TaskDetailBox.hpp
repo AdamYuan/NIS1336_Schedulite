@@ -27,8 +27,8 @@ private:
 	Gtk::Entry *m_p_name_entry{};
 	Gtk::Image *m_p_priority_icon{}, *m_p_type_icon{}, *m_p_status_icon{};
 	Gtk::Popover *m_p_name_popover{};
-	Gtk::Button *m_p_done_button{}, *m_p_undone_button{}, *m_p_name_apply_button{};
-	Gtk::MenuButton *m_p_erase_button{}, *m_p_edit_begin_time_button{}, *m_p_edit_remind_time_button{},
+	Gtk::Button *m_p_done_button{}, *m_p_undone_button{}, *m_p_name_apply_button{}, *m_p_erase_button{};
+	Gtk::MenuButton *m_p_edit_begin_time_button{}, *m_p_edit_remind_time_button{},
 	    *m_p_edit_priority_button{}, *m_p_edit_type_button{};
 	TimePopover m_begin_time_popover{true}, m_remind_time_popover{true};
 	EnumSelectPopover m_priority_popover{backend::GetTaskPriorityStrings()},
@@ -37,9 +37,11 @@ private:
 
 protected:
 	sigc::signal<void(uint32_t, const backend::TaskProperty &, backend::TaskPropertyMask)> m_signal_task_edited;
+	sigc::signal<void(uint32_t)> m_signal_task_erased;
 
 public:
 	inline decltype(m_signal_task_edited) signal_task_edited() { return m_signal_task_edited; }
+	inline decltype(m_signal_task_erased) signal_task_erased() { return m_signal_task_erased; }
 };
 } // namespace gui
 

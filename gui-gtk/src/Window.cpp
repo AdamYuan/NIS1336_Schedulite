@@ -49,11 +49,11 @@ void Window::initialize_body() {
 
 	m_body.task_insert_box.signal_task_inserted().connect([this](const backend::TaskProperty &property) {
 		auto error = m_schedule_ptr->TaskInsert(property);
-		message_error(error);
 		if (error == backend::Error::kSuccess) {
 			goto_list_page();
 			m_body.task_insert_box.restore();
-		}
+		} else
+			message_error(error);
 	});
 
 	m_body.task_detail_box.signal_task_edited().connect(
@@ -63,6 +63,13 @@ void Window::initialize_body() {
 			    message_error(error);
 		    }
 	    });
+
+	m_body.task_detail_box.signal_task_erased().connect([this](uint32_t id) {
+		auto error = m_schedule_ptr->TaskErase(id);
+		if (error != backend::Error::kSuccess) {
+			message_error(error);
+		}
+	});
 }
 
 void Window::initialize_user_panel() {
@@ -342,7 +349,9 @@ void Window::sync_thread_init() {
 		tasks = schedule->GetTasks(&updated);
 		if (updated) {
 			m_body.task_flow_box.set_tasks(tasks);
-			m_body.task_detail_box.update_from_tasks(tasks);
+			if (!m_body.task_detail_box.update_from_tasks(tasks)) {
+				goto_list_page();
+			}
 		}
 	});
 }

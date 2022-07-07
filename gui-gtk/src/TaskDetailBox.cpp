@@ -87,6 +87,9 @@ void TaskDetailBox::init_widget() {
 		p.done = true;
 		m_signal_task_edited.emit(m_task.id, p, backend::TaskPropertyMask::kDone);
 	});
+
+	// erase
+	m_p_erase_button->signal_clicked().connect([this]() { m_signal_task_erased.emit(m_task.id); });
 }
 
 void TaskDetailBox::set_task(const backend::Task &task) {
