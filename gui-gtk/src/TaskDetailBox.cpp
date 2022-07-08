@@ -23,6 +23,7 @@ void TaskDetailBox::init_widget() {
 	builder->get_widget("status_icon", m_p_status_icon);
 
 	builder->get_widget("name_popover", m_p_name_popover);
+	builder->get_widget("erase_popover", m_p_erase_popover);
 
 	builder->get_widget("undone_button", m_p_undone_button);
 	builder->get_widget("done_button", m_p_done_button);
@@ -89,7 +90,10 @@ void TaskDetailBox::init_widget() {
 	});
 
 	// erase
-	m_p_erase_button->signal_clicked().connect([this]() { m_signal_task_erased.emit(m_task.id); });
+	m_p_erase_button->signal_clicked().connect([this]() {
+		m_signal_task_erased.emit(m_task.id);
+		m_p_erase_popover->hide();
+	});
 }
 
 void TaskDetailBox::set_task(const backend::Task &task) {
@@ -119,7 +123,7 @@ void TaskDetailBox::update_status() {
 
 bool TaskDetailBox::update_from_tasks(const std::vector<backend::Task> &tasks) {
 	auto it = std::find_if(tasks.begin(), tasks.end(), [this](const backend::Task &t) { return m_task.id == t.id; });
-	if (it == tasks.end())
+	if (it == tasks.end() && m_task.id != 0)
 		return false;
 	set_task(*it);
 	return true;

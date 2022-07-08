@@ -12,6 +12,7 @@ add_subdirectory(ui)
 add_executable(ScheduliteGTK
         src/main.cpp
         src/Window.cpp
+        src/UserBox.cpp
         src/TaskFlowBox.cpp
         src/TaskFlowBoxChild.cpp
         src/EnumFilterBox.cpp

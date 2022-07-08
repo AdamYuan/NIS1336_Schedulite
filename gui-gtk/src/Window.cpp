@@ -22,10 +22,12 @@ void Window::initialize() {
 	set_default_size(640, 480);
 
 	initialize_header_bar();
-	initialize_user_panel();
 	initialize_body();
 	set_schedule(nullptr);
 	goto_list_page();
+
+	signal_size_allocate().connect(
+	    [this](const Gtk::Allocation &size) { m_body.stack.set_size_request(size.get_width() * 3 / 10, -1); });
 }
 
 void Window::initialize_body() {
@@ -34,6 +36,7 @@ void Window::initialize_body() {
 
 	m_body.flap = hdy_flap_new();
 
+	m_body.stack.add(m_body.user_box);
 	m_body.stack.add(m_body.task_insert_box);
 	m_body.stack.add(m_body.task_detail_box);
 
@@ -42,10 +45,9 @@ void Window::initialize_body() {
 	hdy_flap_set_flap(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.stack.gobj()));
 	hdy_flap_set_fold_policy(HDY_FLAP(m_body.flap), HDY_FLAP_FOLD_POLICY_ALWAYS);
 	hdy_flap_set_transition_type(HDY_FLAP(m_body.flap), HDY_FLAP_TRANSITION_TYPE_UNDER);
-	hdy_flap_set_modal(HDY_FLAP(m_body.flap), true);
 	gtk_widget_show(GTK_WIDGET(m_body.flap));
-	// m_body.box.pack_end(m_body.stack, Gtk::PACK_EXPAND_WIDGET);
-	// m_body.stack.add(m_body.scrolled_window);
+
+	g_signal_connect(G_OBJECT(m_body.flap), "child-switched", G_CALLBACK(Window::flap_switched), this);
 
 	m_body.stack.show();
 
@@ -90,78 +92,9 @@ void Window::initialize_body() {
 			message_error(error);
 		}
 	});
-}
 
-void Window::initialize_user_panel() {
-#include <ui/User.hpp>
-	auto user_builder = Gtk::Builder::create_from_string(kUserUIString);
-	user_builder->get_widget("user_popover", m_user.p_popover);
-	user_builder->get_widget("current_user_box", m_user.p_current_user_box);
-	user_builder->get_widget("username_label", m_user.p_username_label);
-	user_builder->get_widget("login_button", m_user.p_login_button);
-	user_builder->get_widget("login_username", m_user.p_login_username);
-	user_builder->get_widget("login_username_combo", m_user.p_login_username_combo);
-	user_builder->get_widget("login_password", m_user.p_login_password);
-	user_builder->get_widget("register_button", m_user.p_register_button);
-	user_builder->get_widget("register_username", m_user.p_register_username);
-	user_builder->get_widget("register_password1", m_user.p_register_password1);
-	user_builder->get_widget("register_password2", m_user.p_register_password2);
-	m_user.p_login_button->signal_clicked().connect([this]() {
-		login_button_click();
-		m_user.p_popover->hide();
-	});
-	m_user.p_register_button->signal_clicked().connect([this]() {
-		register_button_click();
-		m_user.p_popover->hide();
-	});
-
-	m_user.p_login_username->set_max_length(backend::User::kMaxUsernameLength);
-	m_user.p_register_username->set_max_length(backend::User::kMaxUsernameLength);
-
-	{
-		m_user.p_login_username->signal_changed().connect([this]() {
-			m_user.p_login_button->set_sensitive(!m_user.p_login_username->get_text().empty() &&
-			                                     !m_user.p_login_password->get_text().empty());
-		});
-		m_user.p_login_password->signal_changed().connect([this]() {
-			m_user.p_login_button->set_sensitive(!m_user.p_login_username->get_text().empty() &&
-			                                     !m_user.p_login_password->get_text().empty());
-		});
-	}
-
-	{
-		m_user.p_register_username->signal_changed().connect([this]() {
-			m_user.p_register_button->set_sensitive(!m_user.p_register_username->get_text().empty() &&
-			                                        !m_user.p_register_password1->get_text().empty() &&
-			                                        !m_user.p_register_password2->get_text().empty());
-		});
-		m_user.p_register_password1->signal_changed().connect([this]() {
-			m_user.p_register_button->set_sensitive(!m_user.p_register_username->get_text().empty() &&
-			                                        !m_user.p_register_password1->get_text().empty() &&
-			                                        !m_user.p_register_password2->get_text().empty());
-		});
-		m_user.p_register_password2->signal_changed().connect([this]() {
-			m_user.p_register_button->set_sensitive(!m_user.p_register_username->get_text().empty() &&
-			                                        !m_user.p_register_password1->get_text().empty() &&
-			                                        !m_user.p_register_password2->get_text().empty());
-		});
-	}
-
-	{
-		m_user.p_popover->signal_show().connect([this]() {
-			m_user.p_login_username_combo->remove_all();
-			for (const std::string &name : m_instance_ptr->FetchUsernames())
-				m_user.p_login_username_combo->append(name);
-
-			if (!m_schedule_ptr)
-				m_user.p_current_user_box->hide();
-			else {
-				m_user.p_current_user_box->show();
-				((Gtk::Stack *)m_user.p_current_user_box->get_parent())->set_visible_child(*m_user.p_current_user_box);
-			}
-		});
-	}
-	m_header.user_button.set_popover(*m_user.p_popover);
+	m_body.user_box.signal_login().connect(sigc::mem_fun(*this, &Window::user_login));
+	m_body.user_box.signal_register().connect(sigc::mem_fun(*this, &Window::user_register));
 }
 
 void Window::initialize_header_bar() {
@@ -177,15 +110,25 @@ void Window::initialize_header_bar() {
 		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
 		m_header.user_button.set_tooltip_text("User");
+		m_header.user_button.signal_clicked().connect([this]() {
+			if (m_header.user_button.get_active()) {
+				m_header.insert_button.set_active(false);
+				goto_user_page();
+			}
+		});
 
 		m_header.insert_button.set_always_show_image(true);
 		m_header.insert_button.set_image_from_icon_name("document-new-symbolic", Gtk::ICON_SIZE_DND);
 		m_header.insert_button.set_tooltip_text("Insert Task");
-		m_header.insert_button.signal_clicked().connect([this]() { goto_insert_page(); });
+		m_header.insert_button.signal_clicked().connect([this]() {
+			if (m_header.insert_button.get_active()) {
+				m_header.user_button.set_active(false);
+				goto_insert_page();
+			}
+		});
 
 		m_header.more_button.set_image_from_icon_name("view-more", Gtk::ICON_SIZE_DND);
 		m_header.more_button.set_tooltip_text("More");
-		// m_header.more_button.set_popover(*Gtk::make_managed<TimePopover>());
 
 		// Filters
 		m_header.status_filter_popover.add(m_header.status_filter_box);
@@ -235,8 +178,7 @@ void Window::initialize_header_bar() {
 	}
 }
 
-void Window::login_button_click() {
-	std::string username = (std::string)m_user.p_login_username->get_text();
+void Window::user_login(const char *username, const char *password) {
 	if (m_schedule_ptr && username == m_schedule_ptr->GetUserPtr()->GetName()) {
 		message(Gtk::MESSAGE_WARNING, "User already logged in");
 		return;
@@ -245,8 +187,7 @@ void Window::login_button_click() {
 	std::shared_ptr<backend::Schedule> schedule;
 	backend::Error error;
 
-	std::tie(user, error) =
-	    backend::User::Login(m_instance_ptr, username, (std::string)m_user.p_login_password->get_text());
+	std::tie(user, error) = backend::User::Login(m_instance_ptr, username, password);
 	if (!user) {
 		message_error(error);
 		return;
@@ -256,24 +197,23 @@ void Window::login_button_click() {
 		message_error(error);
 		return;
 	}
-	m_user.p_login_username->set_text("");
-	m_user.p_login_password->set_text("");
-	m_user.p_login_button->set_sensitive(false);
 
 	set_schedule(schedule);
+	m_body.user_box.clear_login_data();
+	m_body.user_box.goto_current_user_page();
+
 	message_error(backend::Error::kSuccess);
 }
 
-void Window::register_button_click() {
-	if (m_user.p_register_password1->get_text() != m_user.p_register_password2->get_text()) {
+void Window::user_register(const char *username, const char *password1, const char *password2) {
+	if (std::string_view{password1} != password2) {
 		message_error("Passwords not equal");
 		return;
 	}
 	std::shared_ptr<backend::User> user;
 	std::shared_ptr<backend::Schedule> schedule;
 	backend::Error error;
-	std::tie(user, error) = backend::User::Register(m_instance_ptr, (std::string)m_user.p_register_username->get_text(),
-	                                                (std::string)m_user.p_register_password1->get_text());
+	std::tie(user, error) = backend::User::Register(m_instance_ptr, username, password1);
 	if (!user) {
 		message_error(error);
 		return;
@@ -283,25 +223,22 @@ void Window::register_button_click() {
 		message_error(error);
 		return;
 	}
-	m_user.p_register_username->set_text("");
-	m_user.p_register_password1->set_text("");
-	m_user.p_register_password2->set_text("");
-	m_user.p_register_button->set_sensitive(false);
 
 	set_schedule(schedule);
+	m_body.user_box.clear_register_data();
+	m_body.user_box.goto_current_user_page();
+
 	message_error(backend::Error::kSuccess);
 }
 
 void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
 	std::atomic_store(&m_schedule_ptr, schedule_ptr);
 	if (!schedule_ptr) {
-		m_user.p_username_label->set_label("");
-		// m_header.user_button.set_label("");
+		m_body.user_box.set_current_user(false);
 		m_header.insert_button.set_sensitive(false);
 		m_header.filter_button_box.set_sensitive(false);
 	} else {
-		m_user.p_username_label->set_label(m_schedule_ptr->GetUserPtr()->GetName());
-		// m_header.user_button.set_label(m_schedule_ptr->GetUserPtr()->GetName());
+		m_body.user_box.set_current_user(true, m_schedule_ptr->GetUserPtr()->GetName().c_str());
 		m_header.insert_button.set_sensitive(true);
 		m_header.filter_button_box.set_sensitive(true);
 	}
@@ -372,22 +309,31 @@ void Window::sync_thread_init() {
 }
 
 void Window::goto_list_page() {
-	// m_body.task_insert_box.hide();
-	// m_body.task_detail_box.hide();
-	//  m_body.stack.set_visible_child(m_body.scrolled_window);
+	m_body.user_box.hide();
+	m_body.task_insert_box.hide();
+	m_body.task_detail_box.hide();
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), false);
+}
+void Window::goto_user_page() {
+	if (m_schedule_ptr)
+		m_body.user_box.goto_current_user_page();
+	m_body.user_box.set_username_options(m_instance_ptr->FetchUsernames());
 
-	/*m_header.back_button.hide();
-	m_header.user_button.show();
-	m_header.insert_button.show();
-	m_header.filter_button_box.show();
-	m_header.bar.set_custom_title(m_header.filter_button_box); */
+	m_body.user_box.show();
+	m_body.task_insert_box.hide();
+	m_body.task_detail_box.hide();
+	m_body.stack.set_visible_child(m_body.user_box);
+
+	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 }
 void Window::goto_insert_page() {
+	m_body.user_box.hide();
 	m_body.task_insert_box.show();
 	m_body.task_detail_box.hide();
 	m_body.stack.set_visible_child(m_body.task_insert_box);
 
+	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 
 	/*m_header.back_button.show();
@@ -397,10 +343,12 @@ void Window::goto_insert_page() {
 	m_header.bar.set_title("Insert Task"); */
 }
 void Window::goto_detail_page() {
-	m_body.task_detail_box.show();
+	m_body.user_box.hide();
 	m_body.task_insert_box.hide();
+	m_body.task_detail_box.show();
 	m_body.stack.set_visible_child(m_body.task_detail_box);
 
+	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_END);
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 
 	/* m_header.back_button.show();
@@ -408,6 +356,16 @@ void Window::goto_detail_page() {
 	m_header.insert_button.hide();
 	m_header.filter_button_box.hide();
 	m_header.bar.set_title("Task Detail"); */
+}
+
+void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window *window) {
+	if (index == 0) {
+		// printf("flap %ld\n", duration);
+		if (window->m_header.user_button.get_active())
+			window->m_header.user_button.set_active(false);
+		if (window->m_header.insert_button.get_active())
+			window->m_header.insert_button.set_active(false);
+	}
 }
 
 } // namespace gui

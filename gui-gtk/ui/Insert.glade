@@ -94,6 +94,7 @@
     </child>
     <child>
       <object class="GtkMenuButton" id="type_button">
+        <property name="width-request">200</property>
         <property name="visible">True</property>
         <property name="can-focus">True</property>
         <property name="focus-on-click">False</property>

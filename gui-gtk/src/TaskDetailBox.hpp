@@ -26,7 +26,7 @@ private:
 	    *m_p_type_label{}, *m_p_status_label{};
 	Gtk::Entry *m_p_name_entry{};
 	Gtk::Image *m_p_priority_icon{}, *m_p_type_icon{}, *m_p_status_icon{};
-	Gtk::Popover *m_p_name_popover{};
+	Gtk::Popover *m_p_name_popover{}, *m_p_erase_popover{};
 	Gtk::Button *m_p_done_button{}, *m_p_undone_button{}, *m_p_name_apply_button{}, *m_p_erase_button{};
 	Gtk::MenuButton *m_p_edit_begin_time_button{}, *m_p_edit_remind_time_button{},
 	    *m_p_edit_priority_button{}, *m_p_edit_type_button{};

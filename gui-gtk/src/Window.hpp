@@ -5,6 +5,7 @@
 #include "TaskDetailBox.hpp"
 #include "TaskFlowBox.hpp"
 #include "TaskInsertBox.hpp"
+#include "UserBox.hpp"
 #include <backend/Schedule.hpp>
 #include <gtkmm.h>
 #include <handy.h>
@@ -30,10 +31,9 @@ protected:
 
 	void initialize();
 	void initialize_header_bar();
-	void initialize_user_panel();
 	void initialize_body();
-	void login_button_click();
-	void register_button_click();
+	void user_login(const char *username, const char *password);
+	void user_register(const char *username, const char *password1, const char *password2);
 
 	void set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 
@@ -49,22 +49,13 @@ protected:
 	void sync_thread_launch();
 
 	void goto_list_page();
+	void goto_user_page();
 	void goto_insert_page();
 	void goto_detail_page();
 
 	struct {
-		Gtk::Popover *p_popover{};
-		Gtk::Box *p_current_user_box{};
-		Gtk::ComboBoxText *p_login_username_combo{};
-		Gtk::Label *p_username_label{};
-		Gtk::Entry *p_login_username{}, *p_login_password{}, *p_register_username{}, *p_register_password1{},
-		    *p_register_password2{};
-		Gtk::Button *p_login_button{}, *p_register_button{};
-	} m_user;
-
-	struct {
-		Gtk::MenuButton user_button, status_filter_button, priority_filter_button, type_filter_button, more_button;
-		Gtk::Button insert_button;
+		Gtk::MenuButton status_filter_button, priority_filter_button, type_filter_button, more_button;
+		Gtk::ToggleButton user_button, insert_button;
 		Gtk::HeaderBar bar;
 		Gtk::ButtonBox filter_button_box;
 		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
@@ -82,7 +73,10 @@ protected:
 		TaskFlowBox task_flow_box;
 		TaskInsertBox task_insert_box;
 		TaskDetailBox task_detail_box;
+		UserBox user_box;
 	} m_body;
+
+	static void flap_switched(GtkWidget *flap, guint index, gint64 duration, Window *window);
 };
 
 } // namespace gui
