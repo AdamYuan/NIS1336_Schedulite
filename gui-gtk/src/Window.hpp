@@ -68,6 +68,7 @@ protected:
 		Gtk::Stack stack;
 
 		GtkWidget *flap;
+		Gtk::Separator separator;
 
 		Gtk::ScrolledWindow scrolled_window;
 		TaskFlowBox task_flow_box;

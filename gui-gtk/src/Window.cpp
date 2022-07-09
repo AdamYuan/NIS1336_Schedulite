@@ -24,7 +24,7 @@ void Window::initialize() {
 	initialize_header_bar();
 	initialize_body();
 	set_schedule(nullptr);
-	goto_list_page();
+	m_header.user_button.set_active(true);
 
 	signal_size_allocate().connect(
 	    [this](const Gtk::Allocation &size) { m_body.stack.set_size_request(size.get_width() * 3 / 10, -1); });
@@ -40,8 +40,10 @@ void Window::initialize_body() {
 	m_body.stack.add(m_body.task_insert_box);
 	m_body.stack.add(m_body.task_detail_box);
 
-	gtk_box_pack_end(GTK_BOX(m_body.box.gobj()), m_body.flap, true, true, 0);
+	gtk_box_pack_end(GTK_BOX(m_body.box.gobj()), m_body.flap, false, true, 0);
 	hdy_flap_set_content(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.scrolled_window.gobj()));
+	hdy_flap_set_separator(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.separator.gobj()));
+	m_body.separator.show();
 	hdy_flap_set_flap(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.stack.gobj()));
 	hdy_flap_set_fold_policy(HDY_FLAP(m_body.flap), HDY_FLAP_FOLD_POLICY_ALWAYS);
 	hdy_flap_set_transition_type(HDY_FLAP(m_body.flap), HDY_FLAP_TRANSITION_TYPE_UNDER);
@@ -114,7 +116,8 @@ void Window::initialize_header_bar() {
 			if (m_header.user_button.get_active()) {
 				m_header.insert_button.set_active(false);
 				goto_user_page();
-			}
+			} else if (!m_header.insert_button.get_active())
+				goto_list_page();
 		});
 
 		m_header.insert_button.set_always_show_image(true);
@@ -124,7 +127,8 @@ void Window::initialize_header_bar() {
 			if (m_header.insert_button.get_active()) {
 				m_header.user_button.set_active(false);
 				goto_insert_page();
-			}
+			} else if (!m_header.user_button.get_active())
+				goto_list_page();
 		});
 
 		m_header.more_button.set_image_from_icon_name("view-more", Gtk::ICON_SIZE_DND);
@@ -360,7 +364,6 @@ void Window::goto_detail_page() {
 
 void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window *window) {
 	if (index == 0) {
-		// printf("flap %ld\n", duration);
 		if (window->m_header.user_button.get_active())
 			window->m_header.user_button.set_active(false);
 		if (window->m_header.insert_button.get_active())
