@@ -79,12 +79,15 @@ void TaskFlowBoxChild::initialize() {
 	show_all();
 
 	m_button.signal_clicked().connect([this]() {
+		auto parent = (TaskFlowBox *)get_parent();
 		if (m_button.get_active()) {
-			auto parent = (TaskFlowBox *)get_parent();
 			if (parent->m_active_child && parent->m_active_child != this)
 				parent->m_active_child->set_active(false);
 			parent->m_active_child = this;
 			parent->m_signal_task_selected.emit(m_task);
+		} else if (parent->m_active_child == this) {
+			parent->m_active_child = nullptr;
+			parent->m_signal_deactivate.emit();
 		}
 	});
 }

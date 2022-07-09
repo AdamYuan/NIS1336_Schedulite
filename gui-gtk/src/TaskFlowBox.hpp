@@ -18,12 +18,14 @@ public:
 
 	void set_tasks(const std::vector<backend::Task> &tasks);
 	sigc::signal<void(const backend::Task &)> signal_task_selected() { return m_signal_task_selected; }
+	sigc::signal<void()> signal_deactivate() { return m_signal_deactivate; }
 
 	void set_status_filter(backend::TaskStatus status, bool activate);
 	void set_type_filter(backend::TaskType type, bool activate);
 	void set_priority_filter(backend::TaskPriority priority, bool activate);
 
 	inline bool have_active_child() const { return m_active_child; }
+	bool activate_children(uint32_t id);
 	inline void deactivate_children() {
 		if (m_active_child) {
 			m_active_child->set_active(false);
@@ -33,6 +35,7 @@ public:
 
 protected:
 	sigc::signal<void(const backend::Task &)> m_signal_task_selected;
+	sigc::signal<void()> m_signal_deactivate;
 
 private:
 	TaskFlowBoxChild *m_active_child{};

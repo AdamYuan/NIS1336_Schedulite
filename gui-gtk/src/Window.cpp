@@ -65,6 +65,11 @@ void Window::initialize_body() {
 		goto_detail_page();
 	});
 
+	m_body.task_flow_box.signal_deactivate().connect([this]() {
+		if (!m_header.insert_button.get_active() && !m_header.user_button.get_active())
+			goto_list_page();
+	});
+
 	m_body.task_insert_box.signal_task_inserted().connect([this](const backend::TaskProperty &property) {
 		if (!m_schedule_ptr)
 			return;
@@ -334,33 +339,21 @@ void Window::goto_user_page() {
 	m_body.task_detail_box.clear_task();
 	m_body.stack.set_visible_child(m_body.user_box);
 
-	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 }
 void Window::goto_insert_page() {
 	m_body.stack.set_visible_child(m_body.task_insert_box);
 	m_body.task_detail_box.clear_task();
 
-	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
-
-	/*m_header.back_button.show();
-	m_header.user_button.hide();
-	m_header.insert_button.hide();
-	m_header.filter_button_box.hide();
-	m_header.bar.set_title("Insert Task"); */
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 }
 void Window::goto_detail_page() {
 	m_body.stack.set_visible_child(m_body.task_detail_box);
 
-	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_END);
-
-	/* m_header.back_button.show();
-	m_header.user_button.hide();
-	m_header.insert_button.hide();
-	m_header.filter_button_box.hide();
-	m_header.bar.set_title("Task Detail"); */
+	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
 }
 
 void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window *window) {
@@ -369,8 +362,9 @@ void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window
 			window->m_header.user_button.set_active(false);
 		if (window->m_header.insert_button.get_active())
 			window->m_header.insert_button.set_active(false);
-		if (window->m_body.task_flow_box.have_active_child())
+		if (window->m_body.task_flow_box.have_active_child()) {
 			window->m_body.task_flow_box.deactivate_children();
+		}
 	}
 }
 

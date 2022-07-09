@@ -75,5 +75,12 @@ void TaskFlowBox::set_priority_filter(backend::TaskPriority priority, bool activ
 	uint32_t d = (uint32_t)priority, mask = ~(1u << d);
 	m_priority_filter = (m_priority_filter & mask) | ((uint32_t)activate << d);
 }
+bool TaskFlowBox::activate_children(uint32_t id) {
+	auto it = m_children.find(id);
+	if (it == m_children.end())
+		return false;
+	it->second->set_active(true);
+	return true;
+}
 
 } // namespace gui
