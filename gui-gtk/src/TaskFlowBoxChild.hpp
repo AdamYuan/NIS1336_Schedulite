@@ -8,8 +8,7 @@
 namespace gui {
 class TaskFlowBoxChild : public Gtk::FlowBoxChild {
 public:
-	explicit TaskFlowBoxChild(backend::Task task,
-	                          sigc::signal<void(const backend::Task &)> &parent_signal_task_selected);
+	explicit TaskFlowBoxChild(backend::Task task);
 	~TaskFlowBoxChild() override = default;
 
 	inline const backend::Task &get_task() const { return m_task; }
@@ -18,10 +17,11 @@ public:
 		update();
 	}
 	void on_grab_focus() override;
+	inline void set_active(bool active = true) { m_button.set_active(active); }
+	inline bool get_active() { return m_button.get_active(); }
 
 private:
 	backend::Task m_task;
-	sigc::signal<void(const backend::Task &)> &m_parent_signal_task_selected;
 
 	Gtk::ToggleButton m_button;
 	Gtk::Box m_content_box, m_time_box, m_remind_box;

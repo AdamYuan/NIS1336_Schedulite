@@ -46,7 +46,7 @@ void Window::initialize_body() {
 	m_body.separator.show();
 	hdy_flap_set_flap(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.stack.gobj()));
 	hdy_flap_set_fold_policy(HDY_FLAP(m_body.flap), HDY_FLAP_FOLD_POLICY_ALWAYS);
-	hdy_flap_set_transition_type(HDY_FLAP(m_body.flap), HDY_FLAP_TRANSITION_TYPE_UNDER);
+	hdy_flap_set_transition_type(HDY_FLAP(m_body.flap), HDY_FLAP_TRANSITION_TYPE_SLIDE);
 	gtk_widget_show(GTK_WIDGET(m_body.flap));
 
 	g_signal_connect(G_OBJECT(m_body.flap), "child-switched", G_CALLBACK(Window::flap_switched), this);
@@ -97,6 +97,10 @@ void Window::initialize_body() {
 
 	m_body.user_box.signal_login().connect(sigc::mem_fun(*this, &Window::user_login));
 	m_body.user_box.signal_register().connect(sigc::mem_fun(*this, &Window::user_register));
+
+	m_body.user_box.show();
+	m_body.task_insert_box.show();
+	m_body.task_detail_box.show();
 }
 
 void Window::initialize_header_bar() {
@@ -115,6 +119,7 @@ void Window::initialize_header_bar() {
 		m_header.user_button.signal_clicked().connect([this]() {
 			if (m_header.user_button.get_active()) {
 				m_header.insert_button.set_active(false);
+				m_body.task_flow_box.deactivate_children();
 				goto_user_page();
 			} else if (!m_header.insert_button.get_active())
 				goto_list_page();
@@ -126,6 +131,7 @@ void Window::initialize_header_bar() {
 		m_header.insert_button.signal_clicked().connect([this]() {
 			if (m_header.insert_button.get_active()) {
 				m_header.user_button.set_active(false);
+				m_body.task_flow_box.deactivate_children();
 				goto_insert_page();
 			} else if (!m_header.user_button.get_active())
 				goto_list_page();
@@ -309,7 +315,7 @@ void Window::sync_thread_init() {
 		tasks = schedule->GetTasks(&updated);
 		if (updated) {
 			m_body.task_flow_box.set_tasks(tasks);
-			if (m_body.task_detail_box.is_visible() && !m_body.task_detail_box.update_from_tasks(tasks)) {
+			if (m_body.task_detail_box.have_task() && !m_body.task_detail_box.update_from_tasks(tasks)) {
 				goto_list_page();
 			}
 		}
@@ -317,32 +323,26 @@ void Window::sync_thread_init() {
 }
 
 void Window::goto_list_page() {
-	m_body.user_box.hide();
-	m_body.task_insert_box.hide();
-	m_body.task_detail_box.hide();
+	m_body.task_detail_box.clear_task();
+
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), false);
 }
 void Window::goto_user_page() {
 	if (m_schedule_ptr)
 		m_body.user_box.goto_current_user_page();
 	m_body.user_box.set_username_options(m_instance_ptr->FetchUsernames());
-
-	m_body.user_box.show();
-	m_body.task_insert_box.hide();
-	m_body.task_detail_box.hide();
+	m_body.task_detail_box.clear_task();
 	m_body.stack.set_visible_child(m_body.user_box);
 
-	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
+	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
 }
 void Window::goto_insert_page() {
-	m_body.user_box.hide();
-	m_body.task_insert_box.show();
-	m_body.task_detail_box.hide();
 	m_body.stack.set_visible_child(m_body.task_insert_box);
+	m_body.task_detail_box.clear_task();
 
-	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
+	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_START);
 
 	/*m_header.back_button.show();
 	m_header.user_button.hide();
@@ -351,13 +351,10 @@ void Window::goto_insert_page() {
 	m_header.bar.set_title("Insert Task"); */
 }
 void Window::goto_detail_page() {
-	m_body.user_box.hide();
-	m_body.task_insert_box.hide();
-	m_body.task_detail_box.show();
 	m_body.stack.set_visible_child(m_body.task_detail_box);
 
-	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_END);
 	hdy_flap_set_reveal_flap(HDY_FLAP(m_body.flap), true);
+	hdy_flap_set_flap_position(HDY_FLAP(m_body.flap), GTK_PACK_END);
 
 	/* m_header.back_button.show();
 	m_header.user_button.hide();
@@ -372,6 +369,8 @@ void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window
 			window->m_header.user_button.set_active(false);
 		if (window->m_header.insert_button.get_active())
 			window->m_header.insert_button.set_active(false);
+		if (window->m_body.task_flow_box.have_active_child())
+			window->m_body.task_flow_box.deactivate_children();
 	}
 }
 

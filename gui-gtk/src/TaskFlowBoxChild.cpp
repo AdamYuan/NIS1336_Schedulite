@@ -1,13 +1,12 @@
 #include "TaskFlowBoxChild.hpp"
 
 #include "Icon.hpp"
+#include "TaskFlowBox.hpp"
 #include <utility>
 
 namespace gui {
 
-TaskFlowBoxChild::TaskFlowBoxChild(backend::Task task,
-                                   sigc::signal<void(const backend::Task &)> &parent_signal_task_selected)
-    : m_task{std::move(task)}, m_parent_signal_task_selected{parent_signal_task_selected} {
+TaskFlowBoxChild::TaskFlowBoxChild(backend::Task task) : m_task{std::move(task)} {
 	initialize();
 	update();
 }
@@ -17,19 +16,6 @@ void TaskFlowBoxChild::initialize() {
 	set_halign(Gtk::ALIGN_BASELINE);
 	set_hexpand(true);
 	set_vexpand(true);
-	/* #include <ui/Task.hpp>
-	    auto builder = Gtk::Builder::create_from_string(kTaskUIString);
-	    builder->get_widget("priority_icon", m_p_priority_icon);
-	    builder->get_widget("type_icon", m_p_type_icon);
-	    builder->get_widget("status_icon", m_p_status_icon);
-	    builder->get_widget("type_label", m_p_type_label);
-	    builder->get_widget("name_label", m_p_name_label);
-	    builder->get_widget("begin_time_label", m_p_begin_time_label);
-	    builder->get_widget("remind_time_label", m_p_remind_time_label);
-	    builder->get_widget("task_content", m_p_task_content_box);
-	    builder->get_widget("task", m_p_task_button);
-	    add(*m_p_task_button);
-	    show_all(); */
 
 	m_button.add(m_content_box);
 	m_button.set_halign(Gtk::ALIGN_FILL);
@@ -60,9 +46,7 @@ void TaskFlowBoxChild::initialize() {
 	{
 		Pango::AttrList attr_list;
 		auto scale = Pango::Attribute::create_attr_scale(1.5);
-		// auto bold = Pango::Attribute::create_attr_weight(Pango::WEIGHT_HEAVY);
 		attr_list.change(scale);
-		// attr_list.change(bold);
 		m_name_label.set_attributes(attr_list);
 	}
 	m_name_label.set_ellipsize(Pango::ELLIPSIZE_END);
@@ -94,7 +78,15 @@ void TaskFlowBoxChild::initialize() {
 
 	show_all();
 
-	m_button.signal_clicked().connect([this]() { m_parent_signal_task_selected.emit(m_task); });
+	m_button.signal_clicked().connect([this]() {
+		if (m_button.get_active()) {
+			auto parent = (TaskFlowBox *)get_parent();
+			if (parent->m_active_child && parent->m_active_child != this)
+				parent->m_active_child->set_active(false);
+			parent->m_active_child = this;
+			parent->m_signal_task_selected.emit(m_task);
+		}
+	});
 }
 void TaskFlowBoxChild::update() {
 	auto status = backend::TaskStatusFromTask(m_task);

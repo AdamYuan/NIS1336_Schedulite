@@ -45,7 +45,7 @@ void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 			erase_set.erase(task.id);
 		} else {
 			// Not exist, insert it
-			auto child = Gtk::make_managed<TaskFlowBoxChild>(task, m_signal_task_selected);
+			auto child = Gtk::make_managed<TaskFlowBoxChild>(task);
 			update_set.insert({task.id, child});
 			Gtk::FlowBox::insert(*child, pos);
 			child->show();
@@ -55,6 +55,9 @@ void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 	for (const auto &p : erase_set) {
 		auto child = p.second;
 		child->hide();
+		if (child == m_active_child) {
+			m_active_child = nullptr;
+		}
 		Gtk::FlowBox::remove(*child);
 	}
 	m_children = std::move(update_set);
