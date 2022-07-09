@@ -61,6 +61,7 @@ void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 		Gtk::FlowBox::remove(*child);
 	}
 	m_children = std::move(update_set);
+	refilter();
 }
 
 void TaskFlowBox::set_status_filter(backend::TaskStatus status, bool activate) {

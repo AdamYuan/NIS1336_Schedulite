@@ -52,9 +52,9 @@ public:
 	 * Insert a Task to the Schedule.
 	 * @brief Insert a Task.
 	 * @param task_property The TaskProperty data to be inserted.
-	 * @return Error code.
+	 * @return Inserted task ID and Error code.
 	 */
-	Error TaskInsert(const TaskProperty &task_property);
+	std::tuple<uint32_t, Error> TaskInsert(const TaskProperty &task_property);
 
 	/**
 	 * Erase a Task from the Schedule.

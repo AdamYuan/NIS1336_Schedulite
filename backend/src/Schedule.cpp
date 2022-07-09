@@ -48,20 +48,22 @@ std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Acquire(const std::shared
 	return {std::move(ret), Error::kSuccess};
 }
 
-Error Schedule::TaskInsert(const TaskProperty &task_property) {
+std::tuple<uint32_t, Error> Schedule::TaskInsert(const TaskProperty &task_property) {
 	std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 	// Load shared tasks
 	std::vector<Task> tasks = load_tasks_from_shm();
+	uint32_t id;
 	{
 		// fetch a unique id
 		uint32_t max_id = 0;
 		for (auto &t : tasks)
 			max_id = std::max(t.id, max_id);
-		Error error = insert(&tasks, {max_id + 1, task_property});
+		id = max_id + 1;
+		Error error = insert(&tasks, {id, task_property});
 		if (error != Error::kSuccess)
-			return error;
+			return {0, error};
 	}
-	return store_tasks(tasks);
+	return {id, store_tasks(tasks)};
 }
 
 Error Schedule::TaskErase(uint32_t id) {

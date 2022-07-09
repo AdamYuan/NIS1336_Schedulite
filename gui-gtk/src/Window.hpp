@@ -9,10 +9,12 @@
 #include <backend/Schedule.hpp>
 #include <gtkmm.h>
 #include <handy.h>
+#include <readerwriterqueue.h>
 
 #include <atomic>
 #include <condition_variable>
 #include <thread>
+#include <vector>
 
 namespace gui {
 
@@ -26,6 +28,7 @@ protected:
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
 
 	void message(Gtk::MessageType type, const char *str);
+	void message_task(Gtk::MessageType msg_type, const char *str, uint32_t id, backend::TaskPriority priority, backend::TaskType type);
 	void message_error(backend::Error error);
 	void message_error(const char *str);
 
@@ -38,7 +41,7 @@ protected:
 	void set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr);
 
 	struct {
-		Glib::Dispatcher sync_dispatcher;
+		Glib::Dispatcher dispatcher;
 		std::atomic_bool run;
 		std::condition_variable cv;
 		std::thread thread;
@@ -47,6 +50,18 @@ protected:
 	void sync_thread_func();
 	void sync_thread_join();
 	void sync_thread_launch();
+
+	struct {
+		Glib::Dispatcher dispatcher;
+		std::atomic_bool run;
+		std::condition_variable cv;
+		std::thread thread;
+		moodycamel::ReaderWriterQueue<backend::TimeInt> queue;
+	} m_remind_thread;
+	void remind_thread_init();
+	void remind_thread_func();
+	void remind_thread_join();
+	void remind_thread_launch();
 
 	void goto_list_page();
 	void goto_user_page();

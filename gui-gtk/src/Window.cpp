@@ -9,12 +9,15 @@ Window::Window() {
 	m_instance_ptr = backend::Instance::Create();
 	sync_thread_init();
 	sync_thread_launch();
+	remind_thread_init();
+	remind_thread_launch();
 	initialize();
 }
 
 Window::~Window() {
 	gtk_widget_destroy(m_body.flap);
 	sync_thread_join();
+	remind_thread_join();
 }
 
 void Window::initialize() {
@@ -47,6 +50,7 @@ void Window::initialize_body() {
 	hdy_flap_set_flap(HDY_FLAP(m_body.flap), GTK_WIDGET(m_body.stack.gobj()));
 	hdy_flap_set_fold_policy(HDY_FLAP(m_body.flap), HDY_FLAP_FOLD_POLICY_ALWAYS);
 	hdy_flap_set_transition_type(HDY_FLAP(m_body.flap), HDY_FLAP_TRANSITION_TYPE_SLIDE);
+	hdy_flap_set_modal(HDY_FLAP(m_body.flap), true);
 	gtk_widget_show(GTK_WIDGET(m_body.flap));
 
 	g_signal_connect(G_OBJECT(m_body.flap), "child-switched", G_CALLBACK(Window::flap_switched), this);
@@ -73,10 +77,12 @@ void Window::initialize_body() {
 	m_body.task_insert_box.signal_task_inserted().connect([this](const backend::TaskProperty &property) {
 		if (!m_schedule_ptr)
 			return;
-		auto error = m_schedule_ptr->TaskInsert(property);
+		auto [id, error] = m_schedule_ptr->TaskInsert(property);
 		if (error == backend::Error::kSuccess) {
 			goto_list_page();
 			m_body.task_insert_box.restore();
+			message_task(Gtk::MESSAGE_INFO, ("Task <b>" + property.name + "</b> has been inserted.").c_str(), id,
+			             property.priority, property.type);
 		} else
 			message_error(error);
 	});
@@ -251,6 +257,12 @@ void Window::user_register(const char *username, const char *password1, const ch
 }
 
 void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
+	/*for (auto *info_bar : m_messages) {
+		info_bar->hide();
+		m_body.box.remove(*info_bar);
+	}
+	m_messages.clear();*/
+
 	std::atomic_store(&m_schedule_ptr, schedule_ptr);
 	if (!schedule_ptr) {
 		m_body.user_box.set_current_user(false);
@@ -261,6 +273,41 @@ void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr
 		m_header.insert_button.set_sensitive(true);
 		m_header.filter_button_box.set_sensitive(true);
 	}
+}
+
+void Window::message_task(Gtk::MessageType msg_type, const char *str, uint32_t id, backend::TaskPriority priority,
+                          backend::TaskType type) {
+	auto info_bar = Gtk::make_managed<Gtk::InfoBar>();
+	info_bar->set_message_type(msg_type);
+	info_bar->set_show_close_button(true);
+	info_bar->add_button("Detail", Gtk::RESPONSE_YES);
+
+	auto icon = Gtk::make_managed<Gtk::Image>();
+	icon->set_from_icon_name(GetTaskPriorityIconName(priority), Gtk::ICON_SIZE_LARGE_TOOLBAR);
+	((Gtk::Box *)info_bar->get_content_area())->pack_start(*icon, Gtk::PACK_SHRINK);
+	icon = Gtk::make_managed<Gtk::Image>();
+	icon->set_from_icon_name(GetTaskTypeIconName(type), Gtk::ICON_SIZE_LARGE_TOOLBAR);
+	((Gtk::Box *)info_bar->get_content_area())->pack_start(*icon, Gtk::PACK_SHRINK);
+	auto label = Gtk::make_managed<Gtk::Label>();
+	label->set_markup(str);
+	label->set_line_wrap(true);
+	((Gtk::Box *)info_bar->get_content_area())->pack_start(*label, Gtk::PACK_SHRINK);
+
+	info_bar->show_all();
+	m_body.box.pack_start(*info_bar, Gtk::PACK_SHRINK);
+	info_bar->show();
+
+	info_bar->signal_response().connect([info_bar, this, id](int response) {
+		if (response == Gtk::RESPONSE_CLOSE) {
+			info_bar->hide();
+			m_body.box.remove(*info_bar);
+		} else if (response == Gtk::RESPONSE_YES) {
+			m_body.task_flow_box.activate_children(id);
+			info_bar->hide();
+			m_body.box.remove(*info_bar);
+		}
+	});
+	// m_messages.push_back(info_bar);
 }
 
 void Window::message(Gtk::MessageType type, const char *str) {
@@ -282,6 +329,7 @@ void Window::message(Gtk::MessageType type, const char *str) {
 			m_body.box.remove(*info_bar);
 		}
 	});
+	// m_messages.push_back(info_bar);
 }
 void Window::message_error(const char *str) { message(Gtk::MESSAGE_ERROR, str); }
 void Window::message_error(backend::Error error) {
@@ -293,7 +341,7 @@ void Window::sync_thread_func() {
 	std::mutex cv_mutex;
 	std::unique_lock cv_lock{cv_mutex};
 	while (m_sync_thread.run.load(std::memory_order_acquire)) {
-		m_sync_thread.sync_dispatcher();
+		m_sync_thread.dispatcher();
 		m_sync_thread.cv.wait_for(cv_lock, std::chrono::milliseconds(100),
 		                          [this]() { return !m_sync_thread.run.load(std::memory_order_acquire); });
 	}
@@ -311,18 +359,15 @@ void Window::sync_thread_launch() {
 }
 
 void Window::sync_thread_init() {
-	m_sync_thread.sync_dispatcher.connect([this]() {
+	m_sync_thread.dispatcher.connect([this]() {
 		auto schedule = std::atomic_load(&m_schedule_ptr);
 		if (!schedule)
 			return;
-		bool updated;
 		std::vector<backend::Task> tasks;
-		tasks = schedule->GetTasks(&updated);
-		if (updated) {
-			m_body.task_flow_box.set_tasks(tasks);
-			if (m_body.task_detail_box.have_task() && !m_body.task_detail_box.update_from_tasks(tasks)) {
-				goto_list_page();
-			}
+		tasks = schedule->GetTasks();
+		m_body.task_flow_box.set_tasks(tasks);
+		if (m_body.task_detail_box.have_task() && !m_body.task_detail_box.update_from_tasks(tasks)) {
+			goto_list_page();
 		}
 	});
 }
@@ -365,6 +410,52 @@ void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window
 		if (window->m_body.task_flow_box.have_active_child()) {
 			window->m_body.task_flow_box.deactivate_children();
 		}
+	}
+}
+
+void Window::remind_thread_init() {
+	m_remind_thread.dispatcher.connect([this]() {
+		backend::TimeInt time_int;
+
+		if (m_remind_thread.queue.try_dequeue(time_int)) {
+			auto schedule = std::atomic_load(&m_schedule_ptr);
+			if (!schedule)
+				return;
+			for (const auto &task : schedule->GetTasks()) {
+				if (task.property.done)
+					continue;
+				if (task.property.remind_time == time_int) {
+					message_task(Gtk::MESSAGE_WARNING, ("Remind task <b>" + task.property.name + "</b>").c_str(),
+					             task.id, task.property.priority, task.property.type);
+				} else if (task.property.begin_time == time_int) {
+					message_task(Gtk::MESSAGE_INFO, ("Task <b>" + task.property.name + "</b> has begun").c_str(),
+					             task.id, task.property.priority, task.property.type);
+				}
+			}
+		}
+	});
+}
+void Window::remind_thread_launch() {
+	m_remind_thread.run.store(true, std::memory_order_release);
+	m_remind_thread.thread = std::thread(&Window::remind_thread_func, this);
+}
+void Window::remind_thread_join() {
+	if (m_remind_thread.thread.joinable()) {
+		m_remind_thread.run.store(false, std::memory_order_release);
+		m_remind_thread.cv.notify_all();
+		m_remind_thread.thread.join();
+	}
+}
+void Window::remind_thread_func() {
+	std::mutex cv_mutex;
+	std::unique_lock cv_lock{cv_mutex};
+	backend::TimeInt time_int = backend::GetTimeIntNow();
+
+	while (m_remind_thread.run.load(std::memory_order_acquire)) {
+		m_remind_thread.queue.enqueue(time_int);
+		m_remind_thread.dispatcher();
+		m_remind_thread.cv.wait_until(cv_lock, backend::ToTimePoint(++time_int),
+		                              [this]() { return !m_remind_thread.run.load(std::memory_order_acquire); });
 	}
 }
 

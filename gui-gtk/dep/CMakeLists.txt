@@ -9,5 +9,5 @@ add_subdirectory(handy)
 add_library(ScheduliteGTK_dep INTERFACE)
 add_library(schedulite::gtk::dep ALIAS ScheduliteGTK_dep)
 
-target_include_directories(ScheduliteGTK_dep INTERFACE)
+target_include_directories(ScheduliteGTK_dep INTERFACE readwritequeue)
 target_link_libraries(ScheduliteGTK_dep INTERFACE gtkmm::interface handy::interface)
