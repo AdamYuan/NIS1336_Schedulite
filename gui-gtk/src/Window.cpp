@@ -206,6 +206,8 @@ void Window::user_login(const char *username, const char *password) {
 	m_body.user_box.clear_login_data();
 	m_body.user_box.goto_current_user_page();
 
+	goto_list_page();
+
 	message_error(backend::Error::kSuccess);
 }
 
@@ -231,6 +233,8 @@ void Window::user_register(const char *username, const char *password1, const ch
 	set_schedule(schedule);
 	m_body.user_box.clear_register_data();
 	m_body.user_box.goto_current_user_page();
+
+	goto_list_page();
 
 	message_error(backend::Error::kSuccess);
 }
@@ -305,7 +309,7 @@ void Window::sync_thread_init() {
 		tasks = schedule->GetTasks(&updated);
 		if (updated) {
 			m_body.task_flow_box.set_tasks(tasks);
-			if (!m_body.task_detail_box.update_from_tasks(tasks)) {
+			if (m_body.task_detail_box.is_visible() && !m_body.task_detail_box.update_from_tasks(tasks)) {
 				goto_list_page();
 			}
 		}

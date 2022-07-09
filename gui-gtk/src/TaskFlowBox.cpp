@@ -28,24 +28,29 @@ void TaskFlowBox::refilter() {
 
 void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 	std::unordered_map<uint32_t, TaskFlowBoxChild *> update_set{}, erase_set = std::move(m_children);
+	int pos = 0;
 	for (const auto &task : tasks) {
 		auto it = erase_set.find(task.id);
 		if (it != erase_set.end()) {
 			// The task ID already exists, modify it
 			update_set.insert(*it);
 			auto child = it->second;
+			bool key_changed = !backend::TaskKeyEqual(child->get_task(), task);
 			if (child->get_task() != task)
 				child->set_task(task);
-			Gtk::FlowBox::remove(*child);
-			Gtk::FlowBox::insert(*child, -1);
+			if (key_changed) {
+				Gtk::FlowBox::remove(*child);
+				Gtk::FlowBox::insert(*child, pos);
+			}
 			erase_set.erase(task.id);
 		} else {
 			// Not exist, insert it
 			auto child = Gtk::make_managed<TaskFlowBoxChild>(task, m_signal_task_selected);
 			update_set.insert({task.id, child});
-			Gtk::FlowBox::insert(*child, -1);
+			Gtk::FlowBox::insert(*child, pos);
 			child->show();
 		}
+		++pos;
 	}
 	for (const auto &p : erase_set) {
 		auto child = p.second;

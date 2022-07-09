@@ -3,7 +3,6 @@ project(Schedulite)
 
 set(UI_SRC
         User
-        Task
         Detail
         Insert
         Time
