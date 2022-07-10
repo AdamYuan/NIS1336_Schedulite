@@ -68,7 +68,7 @@ if (MINGW)
     install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
             DESTINATION etc)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" DESTINATION bin) # install gdbus.exe
-    install(DIRECTORY ${MINGW_PATH}/share/icons/Adwaita
+    install(DIRECTORY ${CMAKE_MINGW_PATH}/share/icons/Adwaita
             DESTINATION share/icons)
     install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
     install(FILES
