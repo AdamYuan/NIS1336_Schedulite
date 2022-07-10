@@ -258,8 +258,8 @@ void Window::user_register(const char *username, const char *password1, const ch
 
 void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr) {
 	/*for (auto *info_bar : m_messages) {
-		info_bar->hide();
-		m_body.box.remove(*info_bar);
+	    info_bar->hide();
+	    m_body.box.remove(*info_bar);
 	}
 	m_messages.clear();*/
 
