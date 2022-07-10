@@ -55,6 +55,13 @@ if (MINGW)
         message("${DEP}")
     endforeach()
     ]])
+    install(FILES
+            ${CMAKE_MINGW_PATH}/share/icons/hicolor/index.theme
+            DESTINATION share/icons/hicolor)
+    install(DIRECTORY ${CMAKE_MINGW_PATH}/share/icons/Adwaita
+            DESTINATION share/icons)
+    install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
+
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
             FILES_MATCHING
@@ -68,10 +75,4 @@ if (MINGW)
     install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
             DESTINATION etc)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" DESTINATION bin) # install gdbus.exe
-    install(DIRECTORY ${CMAKE_MINGW_PATH}/share/icons/Adwaita
-            DESTINATION share/icons)
-    install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
-    install(FILES
-            ${CMAKE_MINGW_PATH}/share/icons/hicolor/index.theme
-            DESTINATION share/icons/hicolor)
 endif ()
