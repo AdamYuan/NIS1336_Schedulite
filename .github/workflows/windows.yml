@@ -43,7 +43,12 @@ jobs:
         with:
           msystem: ${{matrix.config.sys}}
           update: false
-          install: mingw-w64-${{matrix.config.env}}-cmake mingw-w64-${{matrix.config.env}}-ninja mingw-w64-${{matrix.config.env}}-gcc mingw-w64-${{matrix.config.env}}-gtkmm3 mingw-w64-${{matrix.config.env}}-libhandy
+          install: |
+            mingw-w64-${{matrix.config.env}}-cmake
+            mingw-w64-${{matrix.config.env}}-ninja
+            mingw-w64-${{matrix.config.env}}-gcc
+            mingw-w64-${{matrix.config.env}}-gtkmm3
+            mingw-w64-${{matrix.config.env}}-libhandy
 
       - name: Configure
         shell: msys2 {0}
@@ -55,7 +60,7 @@ jobs:
             -B . \
             -DCMAKE_MINGW_BIN="/${{ matrix.config.sys }}/bin" \
             -DCMAKE_MINGW_LIB="/${{ matrix.config.sys }}/lib" \
-            -DCMAKE_MINGW_PATH="/" \
+            -DCMAKE_MINGW_PATH="/${{ matrix.config.sys }}" \
             -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
             -G "${{ matrix.config.generators }}" \
             -DCMAKE_INSTALL_PREFIX:PATH=instdir
