@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 		if (result.count("type"))
 			property.type = backend::TaskTypeFromStr(result["type"].as<std::string>());
 
-		error = schedule->TaskInsert(property);
+		error = std::get<backend::Error>(schedule->TaskInsert(property));
 		cli::PrintError(error);
 		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}

@@ -153,7 +153,7 @@ void Shell::cmd_insert() {
 	    Input((std::string) "Priority (" + MakeOptionStr(backend::GetTaskPriorityStrings()) + ")"));
 	property.type =
 	    backend::TaskTypeFromStr(Input((std::string) "Type (" + MakeOptionStr(backend::GetTaskTypeStrings()) + ")"));
-	PrintError(m_schedule_ptr->TaskInsert(property));
+	PrintError(std::get<backend::Error>(m_schedule_ptr->TaskInsert(property)));
 }
 void Shell::cmd_edit() {
 	if (!m_schedule_ptr) {
