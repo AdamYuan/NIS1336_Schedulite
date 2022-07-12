@@ -65,7 +65,7 @@ if (MINGW)
     #install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 
     install(CODE "execute_process(COMMAND wget 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P \${CMAKE_MINGW_PATH})")
-    install(CODE "execute_process(COMMAND unzip \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
+    install(CODE "execute_process(COMMAND unzip -q \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
     install(DIRECTORY ${CMAKE_MINGW_PATH}/papirus-icon-theme-20220710/Papirus
             DESTINATION share/icons)
     install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Papirus)")
