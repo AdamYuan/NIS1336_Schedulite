@@ -28,6 +28,8 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION bin)
 if (MINGW)
     install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
+    install(CODE "set (CMAKE_MINGW_LIB \"${CMAKE_MINGW_LIB}\")")
+    install(CODE "set (CMAKE_MINGW_PATH \"${CMAKE_MINGW_PATH}\")")
     install(CODE [[
     file(GET_RUNTIME_DEPENDENCIES
         RESOLVED_DEPENDENCIES_VAR RES_DEPS
@@ -58,14 +60,20 @@ if (MINGW)
     install(FILES
             ${CMAKE_MINGW_PATH}/share/icons/hicolor/index.theme
             DESTINATION share/icons/hicolor)
-    install(DIRECTORY ${CMAKE_MINGW_PATH}/share/icons/Adwaita
+    #install(DIRECTORY ${CMAKE_MINGW_PATH}/share/icons/Adwaita
+    #        DESTINATION share/icons)
+    #install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
+
+    install(CODE "execute_process(COMMAND wget 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P \${CMAKE_MINGW_PATH})")
+    install(CODE "execute_process(COMMAND unzip \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
+    install(DIRECTORY ${CMAKE_MINGW_PATH}/papirus-icon-theme-20220710/Papirus
             DESTINATION share/icons)
-    install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
+    install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Papirus)")
 
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
             FILES_MATCHING
-            PATTERN "*.dll"
+            PATTERN " *.dll"
             PATTERN "*.cache")
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gtk-3.0
             DESTINATION lib
@@ -74,5 +82,5 @@ if (MINGW)
             PATTERN "*.cache")
     install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
             DESTINATION etc)
-    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe" DESTINATION bin) # install gdbus.exe
+    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin) # install gdbus.exe
 endif ()
