@@ -74,13 +74,19 @@ if (MINGW)
             panel/user-status-pending
             emblems/emblem-urgent
             )
-    set(SCALES 16 22 32 48 64 96 128)
+    set(SCALES 16 22 32 48 64 96 128 256 512)
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
             DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
         foreach (SCALE IN LISTS SCALES)
-            install(FILES ${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg
-                    DESTINATION share/icons/Adwaita/${SCALE}x${SCALE}/${ICON}.svg)
+            install(CODE "
+                        if(EXISTS \"${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg\")
+                            file(INSTALL
+                                    DESTINATION \"share/icons/Adwaita/${SCALE}x${SCALE}/${ICON}.svg\"
+                                    FILES \"${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg\"
+                                 )
+                        endif()
+                    ")
         endforeach ()
     endforeach ()
     install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
