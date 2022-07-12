@@ -93,6 +93,7 @@ jobs:
         run: cmake --install . --strip
 
       - name: Pack
+        shell: bash
         working-directory: instdir
         run: |
           ls -laR
