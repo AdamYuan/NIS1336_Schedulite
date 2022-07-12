@@ -65,6 +65,7 @@ jobs:
           cd "${{ github.workspace }}/papirus"
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.tar.gz'
           tar -xvzf 20220710.tar.gz
+          sed -i "s/Papirus/Adwaita/g" papirus-icon-theme-20220710/Papirus/index.theme
           rm 20220710.tar.gz
 
       - name: Configure

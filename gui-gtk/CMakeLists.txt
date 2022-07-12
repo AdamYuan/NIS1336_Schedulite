@@ -65,8 +65,6 @@ if (MINGW)
     #install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 
     # Install Papirus icon theme
-    install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
-            DESTINATION share/icons/Adwaita)
     set(ICONS
             apps/preferences-desktop-personal
             actions/document-edit
@@ -102,6 +100,11 @@ if (MINGW)
                     ")
         endforeach ()
     endforeach ()
+    install(FILES "${CMAKE_ICON_THEME_PATH}/index.theme"
+            DESTINATION share/icons/Adwaita)
+    find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache-3.0 gtk-update-icon-cache REQUIRED)
+    install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
+            CODE "message (STATUS \"Generated icon cache in ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita\")")
 
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
@@ -116,7 +119,4 @@ if (MINGW)
     install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
             DESTINATION etc)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin) # install gdbus.exe
-    find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache-3.0 gtk-update-icon-cache REQUIRED)
-    install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
-            CODE "message (STATUS \"Generated icon cache in ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita\")")
 endif ()
