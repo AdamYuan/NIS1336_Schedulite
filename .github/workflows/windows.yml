@@ -54,13 +54,13 @@ jobs:
         id: cache-papirus-icon-theme
         uses: actions/cache@v3
         with:
-          path: D:/papirus
+          path: ${GITHUB_WORKSPACE}/papirus
           key: ${{ runner.os }}-papirus
 
       - name: Download and Unzip Papirus Icon Theme
         if: steps.cache-papirus-icon-theme.outputs.cache-hit != 'true'
         shell: msys2 {0}
-        working-directory: D:/papirus
+        working-directory: ${GITHUB_WORKSPACE}/papirus
         run: |
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip'
           7z x 20220710.zip
@@ -74,7 +74,7 @@ jobs:
           cmake \
             -S . \
             -B . \
-            -DCMAKE_ICON_THEME_PATH="D:/papirus/papirus-icon-theme-20220710/Papirus" \
+            -DCMAKE_ICON_THEME_PATH="${GITHUB_WORKSPACE}/papirus/papirus-icon-theme-20220710/Papirus" \
             -DCMAKE_MINGW_BIN="/${{ matrix.config.sys }}/bin" \
             -DCMAKE_MINGW_LIB="/${{ matrix.config.sys }}/lib" \
             -DCMAKE_MINGW_PATH="/${{ matrix.config.sys }}" \
