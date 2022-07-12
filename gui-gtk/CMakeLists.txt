@@ -78,11 +78,13 @@ if (MINGW)
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
             DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
+        string(REPLACE "/" ";" ICON_LIST ${ICON})
+        list (GET ICON_LIST 0 ICON_DIR)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=])
                             file(INSTALL
-                                    DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}x${SCALE}/]=]
+                                    DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}x${SCALE}/${ICON_DIR}]=]
                                     FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=]
                                  )
                         endif()
