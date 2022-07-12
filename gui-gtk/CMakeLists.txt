@@ -96,7 +96,7 @@ if (MINGW)
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=])
                             file(INSTALL
                                     DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}x${SCALE}/${ICON_DIR}]=]
-                                    FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=]
+                                    FILES [=[\${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=]
                                  )
                         endif()
                     ")
