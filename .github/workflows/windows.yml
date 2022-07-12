@@ -22,7 +22,7 @@ jobs:
             build_type: "Release",
             sys: "mingw32",
             env: "i686",
-            archiver: "tar -czvf",
+            archiver: "7z a",
             generators: "Ninja"
           }
           - {
@@ -32,7 +32,7 @@ jobs:
             build_type: "Release",
             sys: "mingw64",
             env: "x86_64",
-            archiver: "tar -czvf",
+            archiver: "7z a",
             generators: "Ninja"
           }
 
@@ -97,7 +97,7 @@ jobs:
         working-directory: instdir
         run: |
           ls -laR
-          ${{ matrix.config.archiver }} ../${{ matrix.config.artifact }} *
+          ${{ matrix.config.archiver }} ../${{ matrix.config.artifact }} .
 
       - name: Upload
         uses: actions/upload-artifact@v2

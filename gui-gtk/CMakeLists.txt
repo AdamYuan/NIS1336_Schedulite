@@ -94,15 +94,16 @@ if (MINGW)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=])
+                            get_filename_component(RESOLVED_ICON [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=] REALPATH)
                             file(INSTALL
                                     DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}/${ICON_DIR}]=]
-                                    FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=]
+                                    FILES \${RESOLVED_ICON}
                                  )
                         endif()
                     ")
         endforeach ()
     endforeach ()
-    install(FILES ${CMAKE_ICON_THEME_PATH}/index.theme
+    install(FILES "${CMAKE_ICON_THEME_PATH}/index.theme"
             DESTINATION share/icons/Adwaita)
     find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache-3.0 gtk-update-icon-cache REQUIRED)
     install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
