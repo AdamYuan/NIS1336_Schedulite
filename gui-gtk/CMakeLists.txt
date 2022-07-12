@@ -68,6 +68,9 @@ if (MINGW)
     set(ICONS
             apps/preferences-desktop-personal
             actions/document-edit
+            actions/help-about
+            apps/user-info
+
             status/starred
             status/semi-starred
             status/non-starred
@@ -77,13 +80,17 @@ if (MINGW)
             actions/object-select
 
             actions/task-due
+            apps/applications-office
+            apps/accessories-dictionary
+            apps/preferences-desktop-accessibility
+            apps/applications-games
             )
     set(SCALES 16 22 32 48 64 96 128 256 512)
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
             DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
         string(REPLACE "/" ";" ICON_LIST ${ICON})
-        list (GET ICON_LIST 0 ICON_DIR)
+        list(GET ICON_LIST 0 ICON_DIR)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=])
