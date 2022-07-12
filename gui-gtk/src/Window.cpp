@@ -22,6 +22,7 @@ Window::~Window() {
 
 void Window::initialize() {
 	set_title(backend::kAppName);
+	set_icon_name(GetTaskTypeIconName(backend::kDefaultTaskType));
 	set_default_size(640, 480);
 
 	initialize_header_bar();
@@ -162,6 +163,8 @@ void Window::initialize_header_bar() {
 		m_header.about_dialog.set_modal(true);
 		m_header.about_dialog.set_transient_for(*this);
 		m_header.about_dialog.set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
+		m_header.about_dialog.signal_response().connect([this](int response) { m_header.about_dialog.hide(); });
+		m_header.about_dialog.set_icon_name("help-about");
 
 		// Filters
 		m_header.status_filter_popover.add(m_header.status_filter_box);

@@ -124,6 +124,7 @@ if (MINGW)
             FILES_MATCHING
             PATTERN "*.dll"
             PATTERN "*.cache")
+
     # Install gdbus.exe for Gtk signal
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin)
 endif ()
