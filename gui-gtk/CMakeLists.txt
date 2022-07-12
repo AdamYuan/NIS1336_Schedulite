@@ -60,9 +60,6 @@ if (MINGW)
     install(FILES
             ${CMAKE_MINGW_PATH}/share/icons/hicolor/index.theme
             DESTINATION share/icons/hicolor)
-    #install(DIRECTORY ${CMAKE_MINGW_PATH}/share/icons/Adwaita
-    #        DESTINATION share/icons)
-    #install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 
     # Install Papirus icon theme
     set(ICONS
@@ -97,7 +94,7 @@ if (MINGW)
             install(CODE "
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=])
                             file(INSTALL
-                                    DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}x${SCALE}/${ICON_DIR}]=]
+                                    DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}/${ICON_DIR}]=]
                                     FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=]
                                  )
                         endif()
