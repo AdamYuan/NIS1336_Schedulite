@@ -64,6 +64,7 @@ jobs:
         run: |
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip'
           7z x 20220710.zip
+          rm 20220710.zip
 
       - name: Configure
         shell: msys2 {0}
