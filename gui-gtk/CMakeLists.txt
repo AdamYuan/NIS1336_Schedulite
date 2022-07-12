@@ -31,6 +31,8 @@ if (MINGW)
     install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
     install(CODE "set (CMAKE_MINGW_LIB \"${CMAKE_MINGW_LIB}\")")
     install(CODE "set (CMAKE_MINGW_PATH \"${CMAKE_MINGW_PATH}\")")
+
+    # Install DLL dependencies
     install(CODE [[
     file(GET_RUNTIME_DEPENDENCIES
         RESOLVED_DEPENDENCIES_VAR RES_DEPS
@@ -58,16 +60,28 @@ if (MINGW)
         message("${DEP}")
     endforeach()
     ]])
+
+    # Extra libraries for loading SVGs
+    file(GLOB EXTRA_LIBS
+            ${CMAKE_MINGW_BIN}/liblzma-[0-9]*.dll
+            ${CMAKE_MINGW_BIN}/librsvg-2-[0-9]*.dll
+            ${CMAKE_MINGW_BIN}/libxml2-[0-9]*.dll)
+    INSTALL(FILES ${EXTRA_LIBS} DESTINATION bin)
+
+    # Install hicolor index.theme
     install(FILES
             ${CMAKE_MINGW_PATH}/share/icons/hicolor/index.theme
             DESTINATION share/icons/hicolor)
 
-    # Install Papirus icon theme
+    # Install icons
     set(ICONS
+            actions/document-new-symbolic
             apps/preferences-desktop-personal
             actions/document-edit
             actions/help-about
             apps/user-info
+
+            status/dialog-information
 
             status/starred
             status/semi-starred
@@ -87,7 +101,6 @@ if (MINGW)
             128x128 16x16@2x 18x18@2x 22x22@2x 24x24@2x 32x32@2x
             48x48 64x64 84x84 96x96 symbolic 16x16 18x18 22x22
             24x24 32x32 42x42 48x48@2x 64x64@2x 8x8)
-
     foreach (ICON IN LISTS ICONS)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
@@ -105,17 +118,12 @@ if (MINGW)
     install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
             CODE "message (STATUS \"Generated icon cache in ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita\")")
 
-    install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
+    # Install gdk pixbuf cache
+    install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0
             DESTINATION lib
             FILES_MATCHING
             PATTERN "*.dll"
             PATTERN "*.cache")
-    install(DIRECTORY ${CMAKE_MINGW_LIB}/gtk-3.0
-            DESTINATION lib
-            FILES_MATCHING
-            PATTERN "*.dll"
-            PATTERN "*.cache")
-    install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
-            DESTINATION etc)
-    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin) # install gdbus.exe
+    # Install gdbus.exe for Gtk signal
+    install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin)
 endif ()
