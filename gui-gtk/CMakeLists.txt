@@ -101,7 +101,7 @@ if (MINGW)
                     ")
         endforeach ()
     endforeach ()
-    install(FILES "${CMAKE_ICON_THEME_PATH}/index.theme"
+    install(FILES "[=[${CMAKE_ICON_THEME_PATH}/index.theme]=]"
             DESTINATION share/icons/Adwaita)
     find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache-3.0 gtk-update-icon-cache REQUIRED)
     install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
