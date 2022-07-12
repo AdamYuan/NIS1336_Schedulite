@@ -65,7 +65,7 @@ jobs:
           mkdir -p "${{ github.workspace }}/papirus"
           cd "${{ github.workspace }}/papirus"
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip'
-          7z x 20220710.zip
+          7z x 20220710.zip -aoa
           rm 20220710.zip
 
       - name: Configure
