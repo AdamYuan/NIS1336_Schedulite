@@ -64,11 +64,22 @@ if (MINGW)
     #        DESTINATION share/icons)
     #install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 
+    # Install Papirus icon theme
+    set(ICONS
+            apps/preferences-desktop-personal
+            )
+    set(SCALES 16 22 32 48 64 72 96 128)
     install(CODE "execute_process(COMMAND wget 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P \${CMAKE_MINGW_PATH})")
     install(CODE "execute_process(COMMAND unzip -q \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
-    install(DIRECTORY ${CMAKE_MINGW_PATH}/papirus-icon-theme-20220710/Papirus
-            DESTINATION share/icons)
-    install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Papirus)")
+    install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
+            DESTINATION share/icons/Adwaita)
+    foreach (ICON IN LISTS ICONS)
+        foreach (SCALE IN LISTS SCALES)
+            install(FILES ${CMAKE_MINGW_PATH}/papirus-icon-theme-20220710/Papirus/${SCALE}x${SCALE}/${ICON}.svg
+                    DESTINATION share/icons/Adwaita/${SCALE}x${SCALE}/${ICON}.svg)
+        endforeach ()
+    endforeach ()
+    install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
