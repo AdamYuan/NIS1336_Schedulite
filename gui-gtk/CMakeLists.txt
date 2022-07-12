@@ -69,8 +69,8 @@ if (MINGW)
             apps/preferences-desktop-personal
             )
     set(SCALES 16 22 32 48 64 72 96 128)
-    install(CODE "execute_process(COMMAND wget 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P \${CMAKE_MINGW_PATH})")
-    install(CODE "execute_process(COMMAND unzip -q \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
+    install(CODE "execute_process(COMMAND wget -q 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P \${CMAKE_MINGW_PATH})")
+    install(CODE "execute_process(COMMAND unzip -q -n \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
             DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
