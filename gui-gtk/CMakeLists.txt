@@ -89,16 +89,11 @@ if (MINGW)
             24x24 32x32 42x42 48x48@2x 64x64@2x 8x8)
 
     foreach (ICON IN LISTS ICONS)
-        string(REPLACE "/" ";" ICON_LIST ${ICON})
-        list(GET ICON_LIST 0 ICON_DIR)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=])
-                            get_filename_component(RESOLVED_ICON [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=] REALPATH)
-                            file(INSTALL
-                                    DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}/${ICON_DIR}]=]
-                                    FILES \${RESOLVED_ICON}
-                                 )
+                            execute_process(COMMAND [=[echo ${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg > ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}/${ICON}.svg]=])
+                            message(STATUS [=[Copied icon ${SCALE}/${ICON}.svg]=])
                         endif()
                     ")
         endforeach ()
