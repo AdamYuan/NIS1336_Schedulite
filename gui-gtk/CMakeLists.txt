@@ -67,15 +67,17 @@ if (MINGW)
     # Install Papirus icon theme
     set(ICONS
             apps/preferences-desktop-personal
+            actions/document-edit
+            status/starred
+            status/semi-starred
+            status/non-starred
             )
     set(SCALES 16 22 32 48 64 72 96 128)
-    install(CODE "execute_process(COMMAND wget -q -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P \${CMAKE_MINGW_PATH})")
-    install(CODE "execute_process(COMMAND unzip -q -n \${CMAKE_MINGW_PATH}/20220710.zip -d \${CMAKE_MINGW_PATH})")
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
             DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
         foreach (SCALE IN LISTS SCALES)
-            install(FILES ${CMAKE_MINGW_PATH}/papirus-icon-theme-20220710/Papirus/${SCALE}x${SCALE}/${ICON}.svg
+            install(FILES ${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg
                     DESTINATION share/icons/Adwaita/${SCALE}x${SCALE}/${ICON}.svg)
         endforeach ()
     endforeach ()
