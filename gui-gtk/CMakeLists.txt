@@ -102,7 +102,7 @@ if (MINGW)
                     ")
         endforeach ()
     endforeach ()
-    install(CODE "execute_process(COMMAND gtk-update-icon-cache ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
+    install(CODE "execute_process(COMMAND gtk-update-icon-cache -f [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita]=])")
 
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
