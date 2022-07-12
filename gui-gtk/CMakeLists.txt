@@ -116,6 +116,7 @@ if (MINGW)
     install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
             DESTINATION etc)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin) # install gdbus.exe
-    find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache.3.0 gtk-update-icon-cache REQUIRED)
-    install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
+    find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache-3.0 gtk-update-icon-cache REQUIRED)
+    install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
+            CODE "message (STATUS \"Generated icon cache in ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita\")")
 endif ()
