@@ -85,16 +85,20 @@ if (MINGW)
             apps/preferences-desktop-accessibility
             apps/applications-games
             )
-    set(SCALES 16 22 32 48 64 96 128 256 512)
+    set(SCALES
+            128x128 16x16@2x 18x18@2x 22x22@2x 24x24@2x 32x32@2x
+            48x48 64x64 84x84 96x96 symbolic 16x16 18x18 22x22
+            24x24 32x32 42x42 48x48@2x 64x64@2x 8x8)
+
     foreach (ICON IN LISTS ICONS)
         string(REPLACE "/" ";" ICON_LIST ${ICON})
         list(GET ICON_LIST 0 ICON_DIR)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
-                        if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=])
+                        if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=])
                             file(INSTALL
                                     DESTINATION [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}x${SCALE}/${ICON_DIR}]=]
-                                    FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=]
+                                    FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=]
                                  )
                         endif()
                     ")
