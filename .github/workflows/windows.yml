@@ -60,8 +60,8 @@ jobs:
       - name: Download and Unzip Papirus Icon Theme
         if: steps.cache-papirus-icon-theme.outputs.cache-hit != 'true'
         shell: msys2 {0}
-        working-directory: ${{ github.workspace }}/papirus
         run: |
+          cd ${{ github.workspace }}/papirus
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip'
           7z x 20220710.zip
           rm 20220710.zip
