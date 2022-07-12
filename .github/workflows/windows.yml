@@ -18,21 +18,21 @@ jobs:
           - {
             name: "Windows MinGW 32",
             os: windows-latest,
-            artifact: "windows_mingw_32.7z",
+            artifact: "windows_mingw_32.tar.gz",
             build_type: "Release",
             sys: "mingw32",
             env: "i686",
-            archiver: "7z a",
+            archiver: "tar -czvf",
             generators: "Ninja"
           }
           - {
             name: "Windows MinGW 64",
             os: windows-latest,
-            artifact: "windows_mingw_64.7z",
+            artifact: "windows_mingw_64.tar.gz",
             build_type: "Release",
             sys: "mingw64",
             env: "x86_64",
-            archiver: "7z a",
+            archiver: "tar -czvf",
             generators: "Ninja"
           }
 
@@ -92,7 +92,7 @@ jobs:
         run: cmake --install . --strip
 
       - name: Pack
-        shell: bash
+        shell: msys2 {0}
         working-directory: instdir
         run: |
           ls -laR
