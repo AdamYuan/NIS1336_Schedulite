@@ -49,6 +49,7 @@ jobs:
             mingw-w64-${{matrix.config.env}}-gcc
             mingw-w64-${{matrix.config.env}}-gtkmm3
             mingw-w64-${{matrix.config.env}}-libhandy
+            unzip
 
       - name: Cache Papirus Icon Theme
         id: cache-papirus-icon-theme
@@ -59,6 +60,7 @@ jobs:
 
       - name: Download and Unzip Papirus Icon Theme
         if: steps.cache-papirus-icon-theme.outputs.cache-hit != 'true'
+        shell: msys2 {0}
         run: |
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip' -P papirus
           unzip -q -n papirus/20220710.zip -d papirus
