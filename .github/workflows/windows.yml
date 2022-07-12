@@ -44,6 +44,7 @@ jobs:
           msystem: ${{matrix.config.sys}}
           update: false
           install: |
+            unzip
             mingw-w64-${{matrix.config.env}}-cmake
             mingw-w64-${{matrix.config.env}}-ninja
             mingw-w64-${{matrix.config.env}}-gcc
