@@ -122,7 +122,7 @@ void Window::initialize_header_bar() {
 
 		m_header.bar.pack_start(m_header.user_button);
 		m_header.bar.pack_start(m_header.insert_button);
-		m_header.bar.pack_end(m_header.more_button);
+		m_header.bar.pack_end(m_header.about_button);
 
 		m_header.user_button.set_always_show_image(true);
 		m_header.user_button.set_image_from_icon_name("user-info", Gtk::ICON_SIZE_DND);
@@ -148,8 +148,17 @@ void Window::initialize_header_bar() {
 				goto_list_page();
 		});
 
-		m_header.more_button.set_image_from_icon_name("view-more", Gtk::ICON_SIZE_DND);
-		m_header.more_button.set_tooltip_text("More");
+		m_header.about_button.set_image_from_icon_name("help-about", Gtk::ICON_SIZE_DND);
+		m_header.about_button.set_tooltip_text("About");
+		m_header.about_button.signal_clicked().connect([this]() { m_header.about_dialog.show(); });
+		// About dialog
+		m_header.about_dialog.set_logo_icon_name(GetTaskTypeIconName(backend::kDefaultTaskType));
+		m_header.about_dialog.set_license_type(Gtk::LICENSE_GPL_3_0_ONLY);
+		m_header.about_dialog.set_authors({"YiTian Yuan (AdamYuan) <y13916619121@126.com>"});
+		m_header.about_dialog.set_program_name(backend::kAppName);
+		m_header.about_dialog.set_comments("A lightweight schedule program.");
+		m_header.about_dialog.set_website("https://github.com/AdamYuan/NIS1336_Schedulite/tree/yyt");
+		m_header.about_dialog.set_copyright("Copyright \xc2\xa9 2022 Yitian Yuan (AdamYuan)\n");
 
 		// Filters
 		m_header.status_filter_popover.add(m_header.status_filter_box);

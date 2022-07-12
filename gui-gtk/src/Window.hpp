@@ -69,13 +69,15 @@ protected:
 	void goto_detail_page();
 
 	struct {
-		Gtk::MenuButton status_filter_button, priority_filter_button, type_filter_button, more_button;
+		Gtk::MenuButton status_filter_button, priority_filter_button, type_filter_button;
+		Gtk::Button about_button;
 		Gtk::ToggleButton user_button, insert_button;
 		Gtk::HeaderBar bar;
 		Gtk::ButtonBox filter_button_box;
 		Gtk::Popover status_filter_popover, priority_filter_popover, type_filter_popover;
 		EnumFilterBox status_filter_box{backend::GetTaskStatusStrings()},
 		    priority_filter_box{backend::GetTaskPriorityStrings()}, type_filter_box{backend::GetTaskTypeStrings()};
+		Gtk::AboutDialog about_dialog;
 	} m_header;
 
 	struct {
