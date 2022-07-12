@@ -27,6 +27,7 @@ target_include_directories(ScheduliteGTK PRIVATE include)
 
 install(TARGETS ScheduliteGTK RUNTIME DESTINATION bin)
 if (MINGW)
+    string(REPLACE "\\" "/" CMAKE_ICON_THEME_PATH "${CMAKE_ICON_THEME_PATH}")
     install(CODE "set (CMAKE_MINGW_BIN \"${CMAKE_MINGW_BIN}\")")
     install(CODE "set (CMAKE_MINGW_LIB \"${CMAKE_MINGW_LIB}\")")
     install(CODE "set (CMAKE_MINGW_PATH \"${CMAKE_MINGW_PATH}\")")
@@ -101,7 +102,7 @@ if (MINGW)
                     ")
         endforeach ()
     endforeach ()
-    install(FILES "[=[${CMAKE_ICON_THEME_PATH}/index.theme]=]"
+    install(FILES ${CMAKE_ICON_THEME_PATH}/index.theme
             DESTINATION share/icons/Adwaita)
     find_program(GTK_UPDATE_ICON_CACHE NAMES gtk-update-icon-cache-3.0 gtk-update-icon-cache REQUIRED)
     install(CODE "execute_process(COMMAND ${GTK_UPDATE_ICON_CACHE} -t -f ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)"
