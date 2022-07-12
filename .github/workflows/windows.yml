@@ -49,7 +49,6 @@ jobs:
             mingw-w64-${{matrix.config.env}}-gcc
             mingw-w64-${{matrix.config.env}}-gtkmm3
             mingw-w64-${{matrix.config.env}}-libhandy
-            p7zip
 
       - name: Cache Papirus Icon Theme
         id: cache-papirus-icon-theme
@@ -64,9 +63,9 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/papirus"
           cd "${{ github.workspace }}/papirus"
-          wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.zip'
-          7z x 20220710.zip -aoa
-          rm 20220710.zip
+          wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.tar.gz'
+          tar -xvzf 20220710.tar.gz
+          rm 20220710.tar.gz
 
       - name: Configure
         shell: msys2 {0}

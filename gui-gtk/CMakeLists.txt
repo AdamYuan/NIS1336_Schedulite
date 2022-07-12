@@ -71,6 +71,8 @@ if (MINGW)
             status/starred
             status/semi-starred
             status/non-starred
+            panel/user-status-pending
+            emblems/emblem-urgent
             )
     set(SCALES 16 22 32 48 64 96 128)
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
