@@ -28,7 +28,8 @@ protected:
 	std::shared_ptr<backend::Schedule> m_schedule_ptr;
 
 	void message(Gtk::MessageType type, const char *str);
-	void message_task(Gtk::MessageType msg_type, const char *str, uint32_t id, backend::TaskPriority priority, backend::TaskType type);
+	void message_task(Gtk::MessageType msg_type, const char *str, uint32_t id, backend::TaskPriority priority,
+	                  backend::TaskType type);
 	void message_error(backend::Error error);
 	void message_error(const char *str);
 
@@ -45,6 +46,7 @@ protected:
 		std::atomic_bool run;
 		std::condition_variable cv;
 		std::thread thread;
+		moodycamel::ReaderWriterQueue<std::vector<backend::Task>> queue;
 	} m_sync_thread;
 	void sync_thread_init();
 	void sync_thread_func();
@@ -56,7 +58,7 @@ protected:
 		std::atomic_bool run;
 		std::condition_variable cv;
 		std::thread thread;
-		moodycamel::ReaderWriterQueue<backend::TimeInt> queue;
+		moodycamel::ReaderWriterQueue<std::pair<std::shared_ptr<backend::Schedule>, backend::TimeInt>> queue;
 	} m_remind_thread;
 	void remind_thread_init();
 	void remind_thread_func();

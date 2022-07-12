@@ -8,9 +8,7 @@ namespace gui {
 Window::Window() {
 	m_instance_ptr = backend::Instance::Create();
 	sync_thread_init();
-	sync_thread_launch();
 	remind_thread_init();
-	remind_thread_launch();
 	initialize();
 }
 
@@ -277,8 +275,11 @@ void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr
 	    m_body.box.remove(*info_bar);
 	}
 	m_messages.clear();*/
+	sync_thread_join();
+	remind_thread_join();
 
-	std::atomic_store(&m_schedule_ptr, schedule_ptr);
+	m_schedule_ptr = schedule_ptr;
+
 	if (!schedule_ptr) {
 		m_body.user_box.set_current_user(false);
 		m_header.insert_button.set_sensitive(false);
@@ -287,6 +288,9 @@ void Window::set_schedule(const std::shared_ptr<backend::Schedule> &schedule_ptr
 		m_body.user_box.set_current_user(true, m_schedule_ptr->GetUserPtr()->GetName().c_str());
 		m_header.insert_button.set_sensitive(true);
 		m_header.filter_button_box.set_sensitive(true);
+
+		sync_thread_launch();
+		remind_thread_launch();
 	}
 }
 
@@ -354,9 +358,16 @@ void Window::message_error(backend::Error error) {
 
 void Window::sync_thread_func() {
 	std::mutex cv_mutex;
-	std::unique_lock cv_lock{cv_mutex};
+	std::shared_ptr<backend::Schedule> schedule = m_schedule_ptr;
+
 	while (m_sync_thread.run.load(std::memory_order_acquire)) {
-		m_sync_thread.dispatcher();
+		bool updated;
+		const auto &tasks = schedule->GetTasks(&updated);
+		if (updated) {
+			m_sync_thread.queue.enqueue(tasks);
+			m_sync_thread.dispatcher();
+		}
+		std::unique_lock cv_lock{cv_mutex};
 		m_sync_thread.cv.wait_for(cv_lock, std::chrono::milliseconds(100),
 		                          [this]() { return !m_sync_thread.run.load(std::memory_order_acquire); });
 	}
@@ -375,14 +386,12 @@ void Window::sync_thread_launch() {
 
 void Window::sync_thread_init() {
 	m_sync_thread.dispatcher.connect([this]() {
-		auto schedule = std::atomic_load(&m_schedule_ptr);
-		if (!schedule)
-			return;
 		std::vector<backend::Task> tasks;
-		tasks = schedule->GetTasks();
-		m_body.task_flow_box.set_tasks(tasks);
-		if (m_body.task_detail_box.have_task() && !m_body.task_detail_box.update_from_tasks(tasks)) {
-			goto_list_page();
+		if (m_sync_thread.queue.try_dequeue(tasks)) {
+			m_body.task_flow_box.set_tasks(tasks);
+			if (m_body.task_detail_box.have_task() && !m_body.task_detail_box.update_from_tasks(tasks)) {
+				goto_list_page();
+			}
 		}
 	});
 }
@@ -430,20 +439,27 @@ void Window::flap_switched(GtkWidget *flap, guint index, gint64 duration, Window
 
 void Window::remind_thread_init() {
 	m_remind_thread.dispatcher.connect([this]() {
-		backend::TimeInt time_int;
+		std::pair<std::shared_ptr<backend::Schedule>, backend::TimeInt> data;
 
-		if (m_remind_thread.queue.try_dequeue(time_int)) {
-			auto schedule = std::atomic_load(&m_schedule_ptr);
+		if (m_remind_thread.queue.try_dequeue(data)) {
+			auto schedule = data.first;
 			if (!schedule)
 				return;
+			auto time_int = data.second;
 			for (const auto &task : schedule->GetTasks()) {
 				if (task.property.done)
 					continue;
 				if (task.property.remind_time == time_int) {
-					message_task(Gtk::MESSAGE_WARNING, ("Remind task <b>" + task.property.name + "</b>").c_str(),
+					message_task(Gtk::MESSAGE_WARNING,
+					             ("Remind task <b>" + task.property.name + "</b> at " +
+					              backend::ToTimeStr(task.property.remind_time))
+					                 .c_str(),
 					             task.id, task.property.priority, task.property.type);
 				} else if (task.property.begin_time == time_int) {
-					message_task(Gtk::MESSAGE_INFO, ("Task <b>" + task.property.name + "</b> has begun").c_str(),
+					message_task(Gtk::MESSAGE_INFO,
+					             ("Task <b>" + task.property.name + "</b> has begun at " +
+					              backend::ToTimeStr(task.property.begin_time))
+					                 .c_str(),
 					             task.id, task.property.priority, task.property.type);
 				}
 			}
@@ -463,12 +479,13 @@ void Window::remind_thread_join() {
 }
 void Window::remind_thread_func() {
 	std::mutex cv_mutex;
-	std::unique_lock cv_lock{cv_mutex};
 	backend::TimeInt time_int = backend::GetTimeIntNow();
+	std::shared_ptr<backend::Schedule> schedule = m_schedule_ptr;
 
 	while (m_remind_thread.run.load(std::memory_order_acquire)) {
-		m_remind_thread.queue.enqueue(time_int);
+		m_remind_thread.queue.enqueue({schedule, time_int});
 		m_remind_thread.dispatcher();
+		std::unique_lock cv_lock{cv_mutex};
 		m_remind_thread.cv.wait_until(cv_lock, backend::ToTimePoint(++time_int),
 		                              [this]() { return !m_remind_thread.run.load(std::memory_order_acquire); });
 	}
