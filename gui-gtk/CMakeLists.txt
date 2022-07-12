@@ -80,10 +80,10 @@ if (MINGW)
     foreach (ICON IN LISTS ICONS)
         foreach (SCALE IN LISTS SCALES)
             install(CODE "
-                        if(EXISTS \"${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg\")
+                        if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=])
                             file(INSTALL
-                                    DESTINATION \"share/icons/Adwaita/${SCALE}x${SCALE}/${ICON}.svg\"
-                                    FILES \"${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg\"
+                                    DESTINATION [=[share/icons/Adwaita/${SCALE}x${SCALE}/${ICON}.svg]=]
+                                    FILES [=[${CMAKE_ICON_THEME_PATH}/${SCALE}x${SCALE}/${ICON}.svg]=]
                                  )
                         endif()
                     ")
