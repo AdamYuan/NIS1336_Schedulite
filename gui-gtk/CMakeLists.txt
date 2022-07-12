@@ -93,6 +93,7 @@ if (MINGW)
             install(CODE "
                         if(EXISTS [=[${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=])
                             execute_process(COMMAND [=[${CMAKE_COMMAND} -E echo ${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg > ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}/${ICON}.svg]=])
+                            execute_process(COMMAND [=[${CMAKE_COMMAND} -E echo ${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg]=])
                             message(STATUS [=[Copied icon ${SCALE}/${ICON}.svg]=])
                             message(STATUS [=[${CMAKE_COMMAND} -E echo ${CMAKE_ICON_THEME_PATH}/${SCALE}/${ICON}.svg > ${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita/${SCALE}/${ICON}.svg]=])
                         endif()
