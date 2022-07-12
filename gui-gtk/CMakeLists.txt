@@ -72,7 +72,7 @@ if (MINGW)
             status/semi-starred
             status/non-starred
             )
-    set(SCALES 16 22 32 48 64 72 96 128)
+    set(SCALES 16 22 32 48 64 96 128)
     install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
             DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
