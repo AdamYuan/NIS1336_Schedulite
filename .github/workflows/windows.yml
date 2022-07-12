@@ -49,6 +49,7 @@ jobs:
             mingw-w64-${{matrix.config.env}}-gcc
             mingw-w64-${{matrix.config.env}}-gtkmm3
             mingw-w64-${{matrix.config.env}}-libhandy
+            p7zip
 
       - name: Cache Papirus Icon Theme
         id: cache-papirus-icon-theme
