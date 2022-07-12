@@ -65,6 +65,8 @@ if (MINGW)
     #install(CODE "execute_process(COMMAND gtk-update-icon-cache \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 
     # Install Papirus icon theme
+    install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
+            DESTINATION share/icons/Adwaita)
     set(ICONS
             apps/preferences-desktop-personal
             actions/document-edit
@@ -86,8 +88,6 @@ if (MINGW)
             apps/applications-games
             )
     set(SCALES 16 22 32 48 64 96 128 256 512)
-    install(FILES ${CMAKE_MINGW_PATH}/share/icons/Adwaita/index.theme
-            DESTINATION share/icons/Adwaita)
     foreach (ICON IN LISTS ICONS)
         string(REPLACE "/" ";" ICON_LIST ${ICON})
         list(GET ICON_LIST 0 ICON_DIR)
@@ -102,7 +102,6 @@ if (MINGW)
                     ")
         endforeach ()
     endforeach ()
-    install(CODE "execute_process(COMMAND gtk-update-icon-cache -f [=[${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita]=])")
 
     install(DIRECTORY ${CMAKE_MINGW_LIB}/gdk-pixbuf-2.0 # install gdk pixbuf cache
             DESTINATION lib
@@ -117,4 +116,6 @@ if (MINGW)
     install(DIRECTORY ${CMAKE_MINGW_PATH}/etc/gtk-3.0
             DESTINATION etc)
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin) # install gdbus.exe
+
+    install(CODE "execute_process(COMMAND gtk-update-icon-cache -f \${CMAKE_INSTALL_PREFIX}/share/icons/Adwaita)")
 endif ()
