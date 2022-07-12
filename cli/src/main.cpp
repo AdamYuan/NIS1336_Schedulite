@@ -137,6 +137,9 @@ int main(int argc, char **argv) {
 			cli::PrintError(error);
 			exit(EXIT_FAILURE);
 		}
+	} else {
+		cli::PrintError("User not determined");
+		exit(EXIT_FAILURE);
 	}
 
 	std::tie(schedule, error) = backend::Schedule::Acquire(user);
