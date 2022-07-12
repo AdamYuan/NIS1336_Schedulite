@@ -18,7 +18,7 @@ jobs:
           - {
             name: "Windows MinGW 32",
             os: windows-latest,
-            artifact: "windows_mingw_32.tar.gz",
+            artifact: "windows_mingw_32.7z",
             build_type: "Release",
             sys: "mingw32",
             env: "i686",
@@ -28,7 +28,7 @@ jobs:
           - {
             name: "Windows MinGW 64",
             os: windows-latest,
-            artifact: "windows_mingw_64.tar.gz",
+            artifact: "windows_mingw_64.7z",
             build_type: "Release",
             sys: "mingw64",
             env: "x86_64",
