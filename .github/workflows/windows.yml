@@ -55,7 +55,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/papirus
-          key: ${{ runner.os }}-papirus
+          key: papirus-2
 
       - name: Download and Unzip Papirus Icon Theme
         if: steps.cache-papirus-icon-theme.outputs.cache-hit != 'true'
