@@ -55,7 +55,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/papirus
-          key: papirus-2
+          key: papirus-3
 
       - name: Download and Unzip Papirus Icon Theme
         if: steps.cache-papirus-icon-theme.outputs.cache-hit != 'true'
@@ -65,7 +65,7 @@ jobs:
           cd "${{ github.workspace }}/papirus"
           wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.tar.gz'
           tar -xvzf 20220710.tar.gz
-          sed -i "s/Papirus/Adwaita/g" papirus-icon-theme-20220710/Papirus/index.theme
+          sed -i "s/Papirus-Light/Adwaita/g" papirus-icon-theme-20220710/Papirus-Light/index.theme
           rm 20220710.tar.gz
 
       - name: Configure
@@ -76,7 +76,7 @@ jobs:
           cmake \
             -S . \
             -B . \
-            -DCMAKE_ICON_THEME_PATH="${{ github.workspace }}/papirus/papirus-icon-theme-20220710/Papirus" \
+            -DCMAKE_ICON_THEME_PATH="${{ github.workspace }}/papirus/papirus-icon-theme-20220710/Papirus-Light" \
             -DCMAKE_MINGW_BIN="/${{ matrix.config.sys }}/bin" \
             -DCMAKE_MINGW_LIB="/${{ matrix.config.sys }}/lib" \
             -DCMAKE_MINGW_PATH="/${{ matrix.config.sys }}" \
