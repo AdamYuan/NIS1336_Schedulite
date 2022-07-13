@@ -35,9 +35,10 @@ struct Schedule::SyncObject {
 
 Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 	m_user_ptr = user_ptr;
-	m_file_path = ghc::filesystem::path{m_user_ptr->GetInstancePtr()->GetScheduleDirPath()}
-	                  .append(m_user_ptr->GetName())
-	                  .string();
+	m_file_path =
+	    ghc::filesystem::absolute(
+	        ghc::filesystem::path{m_user_ptr->GetInstancePtr()->GetScheduleDirPath()}.append(m_user_ptr->GetName()))
+	        .string();
 	// Generate Identifier
 	uuids::uuid_name_generator gen(uuids::uuid::from_string("20c75eb5-1270-43f4-8af2-1ab7dc7e025e").value());
 	m_identifier = uuids::to_string(gen(m_file_path));

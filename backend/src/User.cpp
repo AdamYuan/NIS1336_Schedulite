@@ -24,7 +24,8 @@ struct User::SyncObject {
 User::User(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password) {
 	m_instance_ptr = instance_ptr;
 	m_name = username;
-	m_file_path = ghc::filesystem::path{instance_ptr->GetUserDirPath()}.append(m_name).string();
+	m_file_path =
+	    ghc::filesystem::absolute(ghc::filesystem::path{instance_ptr->GetUserDirPath()}.append(m_name)).string();
 	// Generate Key
 	m_key.resize(picosha2::k_digest_size);
 	picosha2::hash256(password, m_key);
