@@ -6,7 +6,7 @@
 namespace gui {
 
 Window::Window() {
-	m_instance_ptr = backend::Instance::Create(u8"测试");
+	m_instance_ptr = backend::Instance::Create();
 	sync_thread_init();
 	remind_thread_init();
 	initialize();
