@@ -82,12 +82,18 @@ public:
 	 */
 	Error TaskToggleDone(uint32_t id);
 
+	/**
+	 * Get an unique identifier of the Schedule.
+	 * @return Identifier string.
+	 */
+	inline const std::string &GetIdentifier() const { return m_identifier; }
+
 private:
 	inline static constexpr const char *kStringHeader = "Schedule";
 	inline static constexpr uint32_t kStringHeaderLength = std::string_view(kStringHeader).length();
 
 	std::shared_ptr<User> m_user_ptr;
-	std::string m_file_path;
+	std::string m_file_path, m_identifier;
 
 	struct SyncObject;
 	std::unique_ptr<SyncObject> m_sync_object;
