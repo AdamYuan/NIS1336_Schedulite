@@ -73,7 +73,7 @@ if (MINGW)
             ${CMAKE_MINGW_PATH}/share/icons/hicolor/index.theme
             DESTINATION share/icons/hicolor)
 
-    # Install icons
+    # Install Papirus icons
     set(ICONS
             actions/document-new-symbolic
             apps/preferences-desktop-personal
