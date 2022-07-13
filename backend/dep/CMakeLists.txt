@@ -7,9 +7,10 @@ add_subdirectory(PlatformFolders)
 add_subdirectory(cpp-ipc)
 add_subdirectory(filesystem)
 add_subdirectory(stduuid)
+add_subdirectory(nowide)
 
 add_library(ScheduliteBackend_dep INTERFACE)
 add_library(schedulite::backend::dep ALIAS ScheduliteBackend_dep)
 
 target_include_directories(ScheduliteBackend_dep INTERFACE picosha2 plusaes)
-target_link_libraries(ScheduliteBackend_dep INTERFACE sago::platform_folders ipc ghc_filesystem stduuid)
+target_link_libraries(ScheduliteBackend_dep INTERFACE sago::platform_folders ipc ghc_filesystem stduuid nowide::nowide)

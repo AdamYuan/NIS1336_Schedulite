@@ -8,6 +8,7 @@
 
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
+#include <nowide/fstream.hpp>
 #include <picosha2.h>
 #include <uuid.h>
 
@@ -54,11 +55,11 @@ std::tuple<std::shared_ptr<User>, Error> User::Register(const std::shared_ptr<In
 	{
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		{
-			ghc::filesystem::ifstream in{user->m_file_path};
+			nowide::ifstream in{user->m_file_path};
 			if (in.is_open())
 				return {nullptr, Error::kUserAlreadyExist};
 		}
-		ghc::filesystem::ofstream out{user->m_file_path};
+		nowide::ofstream out{user->m_file_path};
 		if (!out.is_open())
 			return {nullptr, Error::kFileIOError};
 
@@ -82,13 +83,13 @@ std::tuple<std::shared_ptr<User>, Error> User::Login(const std::shared_ptr<Insta
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		std::string key;
 		{
-			ghc::filesystem::ifstream in{user->m_file_path};
+			nowide::ifstream in{user->m_file_path};
 			if (!in.is_open())
 				return {nullptr, Error::kUserNotFound};
 			// get length of file
-			in.seekg(0, ghc::filesystem::ifstream::end);
+			in.seekg(0, nowide::ifstream::end);
 			std::streamsize length = in.tellg();
-			in.seekg(0, ghc::filesystem::ifstream::beg);
+			in.seekg(0, nowide::ifstream::beg);
 			// read file
 			if (length > 0) {
 				key.resize(length);
