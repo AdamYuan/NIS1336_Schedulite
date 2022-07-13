@@ -5,6 +5,7 @@
 
 #include "TaskFlowBoxChild.hpp"
 #include <backend/Schedule.hpp>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace gui {
@@ -40,6 +41,7 @@ protected:
 private:
 	TaskFlowBoxChild *m_active_child{};
 	std::unordered_map<uint32_t, TaskFlowBoxChild *> m_children;
+	std::shared_mutex m_children_mutex;
 	void init_widget();
 
 	uint32_t m_status_filter = -1, m_type_filter = -1, m_priority_filter = -1;

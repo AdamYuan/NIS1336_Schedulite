@@ -27,7 +27,14 @@ void TaskFlowBox::refilter() {
 }
 
 void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
-	std::unordered_map<uint32_t, TaskFlowBoxChild *> update_set{}, erase_set = std::move(m_children);
+	std::unordered_map<uint32_t, TaskFlowBoxChild *> update_set{}, erase_set;
+
+	{
+		std::unique_lock write_lock{m_children_mutex};
+		erase_set = std::move(m_children);
+		m_children.clear();
+	}
+
 	int pos = 0;
 	for (const auto &task : tasks) {
 		auto it = erase_set.find(task.id);
@@ -60,7 +67,12 @@ void TaskFlowBox::set_tasks(const std::vector<backend::Task> &tasks) {
 		}
 		Gtk::FlowBox::remove(*child);
 	}
-	m_children = std::move(update_set);
+
+	{
+		std::unique_lock write_lock{m_children_mutex};
+		m_children = std::move(update_set);
+	}
+
 	refilter();
 }
 
@@ -77,6 +89,7 @@ void TaskFlowBox::set_priority_filter(backend::TaskPriority priority, bool activ
 	m_priority_filter = (m_priority_filter & mask) | ((uint32_t)activate << d);
 }
 bool TaskFlowBox::activate_children(uint32_t id) {
+	std::shared_lock read_lock{m_children_mutex};
 	auto it = m_children.find(id);
 	if (it == m_children.end())
 		return false;
