@@ -47,11 +47,11 @@ std::tuple<std::shared_ptr<User>, Error> User::Register(const std::shared_ptr<In
 	{
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		{
-			std::ifstream in{user->m_file_path};
+			ghc::filesystem::ifstream in{user->m_file_path};
 			if (in.is_open())
 				return {nullptr, Error::kUserAlreadyExist};
 		}
-		std::ofstream out{user->m_file_path};
+		ghc::filesystem::ofstream out{user->m_file_path};
 		if (!out.is_open())
 			return {nullptr, Error::kFileIOError};
 
@@ -75,13 +75,13 @@ std::tuple<std::shared_ptr<User>, Error> User::Login(const std::shared_ptr<Insta
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		std::string key;
 		{
-			std::ifstream in{user->m_file_path};
+			ghc::filesystem::ifstream in{user->m_file_path};
 			if (!in.is_open())
 				return {nullptr, Error::kUserNotFound};
 			// get length of file
-			in.seekg(0, std::ifstream::end);
+			in.seekg(0, ghc::filesystem::ifstream::end);
 			std::streamsize length = in.tellg();
-			in.seekg(0, std::ifstream::beg);
+			in.seekg(0, ghc::filesystem::ifstream::beg);
 			// read file
 			if (length > 0) {
 				key.resize(length);

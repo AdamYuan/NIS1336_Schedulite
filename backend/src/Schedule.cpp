@@ -182,14 +182,14 @@ Error Schedule::initialize_shm_locked() {
 
 			std::string encrypted;
 			{
-				std::ifstream in{m_file_path, std::ios::binary};
+				ghc::filesystem::ifstream in{m_file_path, std::ios::binary};
 				if (!in.is_open()) {
 					return Error::kSuccess;
 				}
 				// get length of file
-				in.seekg(0, std::ifstream::end);
+				in.seekg(0, ghc::filesystem::ifstream::end);
 				std::streamsize length = in.tellg();
-				in.seekg(0, std::ifstream::beg);
+				in.seekg(0, ghc::filesystem::ifstream::beg);
 				// read file
 				if (length > 0) {
 					encrypted.resize(length);
@@ -227,7 +227,7 @@ Error Schedule::store_tasks(const std::vector<Task> &tasks) {
 		if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 			return Error::kFileIOError;
 		std::string encrypted = Encrypt(raw, m_user_ptr->GetKey());
-		std::ofstream out{m_file_path, std::ios::binary};
+		ghc::filesystem::ofstream out{m_file_path, std::ios::binary};
 		if (!out.is_open())
 			return Error::kFileIOError;
 		out.write(encrypted.data(), (std::streamsize)encrypted.size());
