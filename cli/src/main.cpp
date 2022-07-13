@@ -106,9 +106,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	if (result.count("env")) {
-		printf("App directory: %s\nUser directory: %s\nSchedule directory: %s\nLocal time: %s\n",
-		       instance->GetAppDirPath().c_str(), instance->GetUserDirPath().c_str(),
-		       instance->GetScheduleDirPath().c_str(), time_str_now.c_str());
+		nowide::cout << "App directory: " << instance->GetAppDirPath() << std::endl;
+		nowide::cout << "User directory: " << instance->GetUserDirPath() << std::endl;
+		nowide::cout << "Schedule directory: " << instance->GetScheduleDirPath() << std::endl;
+		printf("Local time: %s\n", time_str_now.c_str());
 		return 0;
 	}
 

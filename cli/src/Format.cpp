@@ -1,6 +1,7 @@
 #include <cli/Format.hpp>
 
 #include <iostream>
+#include <nowide/convert.hpp>
 #include <nowide/iostream.hpp>
 #include <tabulate/table.hpp>
 

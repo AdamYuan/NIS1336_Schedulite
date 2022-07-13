@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
-#include <nowide/convert.hpp>
+#include <nowide/iostream.hpp>
 
 // From https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
 #ifdef WIN32
@@ -48,7 +48,9 @@ std::string Input(const char *prompt, bool echo) {
 	std::string ret;
 	if (!echo)
 		SetStdinEcho(false);
-	std::getline(std::cin, ret);
+	char c;
+	while ((c = nowide::cin.get()) != '\n')
+		ret += c;
 	if (!echo) {
 		SetStdinEcho(true);
 		putchar('\n');

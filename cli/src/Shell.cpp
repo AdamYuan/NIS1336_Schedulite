@@ -10,15 +10,17 @@
 #include <cctype>
 #include <iostream>
 
+#include <nowide/iostream.hpp>
 #include <tinyfiledialogs.h>
 
 namespace cli {
 
 void Shell::Run() {
-	printf("%s CLI shell\nApp directory: %s\nUser directory: %s\nSchedule directory: %s\nLocal time: %s\nEnter "
-	       "\"help\" for usage hints.\n",
-	       backend::kAppName, m_instance_ptr->GetAppDirPath().c_str(), m_instance_ptr->GetUserDirPath().c_str(),
-	       m_instance_ptr->GetScheduleDirPath().c_str(), backend::GetTimeStrNow().c_str());
+	printf("%s CLI shell\n", backend::kAppName);
+	nowide::cout << "App directory: " << m_instance_ptr->GetAppDirPath() << std::endl;
+	nowide::cout << "User directory: " << m_instance_ptr->GetUserDirPath() << std::endl;
+	nowide::cout << "Schedule directory: " << m_instance_ptr->GetScheduleDirPath() << std::endl;
+	printf("Local time: %s\nEnter \"help\" for usage hints.\n", backend::GetTimeStrNow().c_str());
 	std::string cmd;
 	print_prompt();
 	for (char c = (char)getchar(); c != EOF; c = (char)getchar()) {
