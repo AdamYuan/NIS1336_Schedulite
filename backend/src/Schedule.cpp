@@ -8,12 +8,13 @@
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
 #include <libipc/shm.h>
+#include <uuid.h>
 
 namespace backend {
 
 struct Schedule::SyncObject {
-	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_SCHEDULE_MUTEX__";
-	static constexpr const char *kIPCSHMHeader = "__SCHEDULITE_SCHEDULE_SHM__";
+	static constexpr const char *kIPCMutexHeader = "_SCHEDULITE_MUTEX_";
+	static constexpr const char *kIPCSHMHeader = "_SCHEDULITE_SHM_";
 
 	// Named IPC mutex
 	ipc::sync::mutex ipc_mutex;
@@ -37,7 +38,11 @@ Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 	m_file_path = ghc::filesystem::path{m_user_ptr->GetInstancePtr()->GetScheduleDirPath()}
 	                  .append(m_user_ptr->GetName())
 	                  .string();
-	m_sync_object = std::make_unique<SyncObject>(m_user_ptr->GetIdentifier());
+	// Generate Identifier
+	uuids::uuid_name_generator gen(uuids::uuid::from_string("20c75eb5-1270-43f4-8af2-1ab7dc7e025e").value());
+	m_identifier = uuids::to_string(gen(m_file_path));
+	// Create sync object
+	m_sync_object = std::make_unique<SyncObject>(m_identifier);
 }
 
 std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Acquire(const std::shared_ptr<User> &user_ptr) {
@@ -150,7 +155,7 @@ Error Schedule::initialize_shm_locked() {
 	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 		return Error::kFileIOError;
 
-	std::string shm_name = SyncObject::kIPCSHMHeader + m_user_ptr->GetIdentifier();
+	std::string shm_name = SyncObject::kIPCSHMHeader + m_identifier;
 	{
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 		m_sync_object->shm_id = ipc::shm::acquire(shm_name.c_str(), kMaxSharedScheduleMemory + 8, ipc::shm::open);
