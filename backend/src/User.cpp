@@ -55,11 +55,11 @@ std::tuple<std::shared_ptr<User>, Error> User::Register(const std::shared_ptr<In
 	{
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		{
-			nowide::ifstream in{user->m_file_path};
+			nowide::ifstream in{user->m_file_path, std::ios::binary};
 			if (in.is_open())
 				return {nullptr, Error::kUserAlreadyExist};
 		}
-		nowide::ofstream out{user->m_file_path};
+		nowide::ofstream out{user->m_file_path, std::ios::binary};
 		if (!out.is_open())
 			return {nullptr, Error::kFileIOError};
 
@@ -83,7 +83,7 @@ std::tuple<std::shared_ptr<User>, Error> User::Login(const std::shared_ptr<Insta
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		std::string key;
 		{
-			nowide::ifstream in{user->m_file_path};
+			nowide::ifstream in{user->m_file_path, std::ios::binary};
 			if (!in.is_open())
 				return {nullptr, Error::kUserNotFound};
 			// get length of file
