@@ -8,12 +8,12 @@ namespace detail {
 
 template <typename O>
 void print(O out, char const * str) {
-    std::fprintf(out, "%s", str);
+    // std::fprintf(out, "%s", str);
 }
 
 template <typename O, typename P1, typename... P>
 void print(O out, char const * fmt, P1&& p1, P&&... params) {
-    std::fprintf(out, fmt, std::forward<P1>(p1), std::forward<P>(params)...);
+    // std::fprintf(out, fmt, std::forward<P1>(p1), std::forward<P>(params)...);
 }
 
 } // namespace detail
