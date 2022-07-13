@@ -90,7 +90,7 @@ private:
 	std::string m_file_path;
 
 	struct SyncObject;
-	std::shared_ptr<SyncObject> m_sync_object;
+	std::unique_ptr<SyncObject> m_sync_object;
 
 	// Objects to sync local tasks
 	mutable std::mutex m_local_tasks_mutex;

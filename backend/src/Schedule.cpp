@@ -23,8 +23,8 @@ struct Schedule::SyncObject {
 	uint32_t *shared_size{}, *shared_version{};
 	unsigned char *shared_data{};
 
-	explicit SyncObject(std::string_view username)
-	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(username)}.c_str()) {}
+	explicit SyncObject(std::string_view identifier)
+	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(identifier)}.c_str()) {}
 	~SyncObject() {
 		if (shm_id) {
 			ipc::shm::release(shm_id);
@@ -37,7 +37,7 @@ Schedule::Schedule(const std::shared_ptr<User> &user_ptr) {
 	m_file_path = ghc::filesystem::path{m_user_ptr->GetInstancePtr()->GetScheduleDirPath()}
 	                  .append(m_user_ptr->GetName())
 	                  .string();
-	m_sync_object = std::make_shared<SyncObject>(m_user_ptr->GetName());
+	m_sync_object = std::make_unique<SyncObject>(m_user_ptr->GetIdentifier());
 }
 
 std::tuple<std::shared_ptr<Schedule>, Error> Schedule::Acquire(const std::shared_ptr<User> &user_ptr) {
@@ -150,7 +150,7 @@ Error Schedule::initialize_shm_locked() {
 	if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 		return Error::kFileIOError;
 
-	std::string shm_name = SyncObject::kIPCSHMHeader + m_user_ptr->GetName();
+	std::string shm_name = SyncObject::kIPCSHMHeader + m_user_ptr->GetIdentifier();
 	{
 		std::scoped_lock ipc_lock{m_sync_object->ipc_mutex};
 		m_sync_object->shm_id = ipc::shm::acquire(shm_name.c_str(), kMaxSharedScheduleMemory + 8, ipc::shm::open);
@@ -182,14 +182,14 @@ Error Schedule::initialize_shm_locked() {
 
 			std::string encrypted;
 			{
-				std::ifstream in{m_file_path, std::ios::binary};
+				ghc::filesystem::ifstream in{m_file_path, std::ios::binary};
 				if (!in.is_open()) {
 					return Error::kSuccess;
 				}
 				// get length of file
-				in.seekg(0, std::ifstream::end);
+				in.seekg(0, ghc::filesystem::ifstream::end);
 				std::streamsize length = in.tellg();
-				in.seekg(0, std::ifstream::beg);
+				in.seekg(0, ghc::filesystem::ifstream::beg);
 				// read file
 				if (length > 0) {
 					encrypted.resize(length);
@@ -227,7 +227,7 @@ Error Schedule::store_tasks(const std::vector<Task> &tasks) {
 		if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 			return Error::kFileIOError;
 		std::string encrypted = Encrypt(raw, m_user_ptr->GetKey());
-		std::ofstream out{m_file_path, std::ios::binary};
+		ghc::filesystem::ofstream out{m_file_path, std::ios::binary};
 		if (!out.is_open())
 			return Error::kFileIOError;
 		out.write(encrypted.data(), (std::streamsize)encrypted.size());

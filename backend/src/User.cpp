@@ -9,14 +9,15 @@
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
 #include <picosha2.h>
+#include <uuid.h>
 
 namespace backend {
 
 struct User::SyncObject {
 	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_USER_MUTEX__";
 	ipc::sync::mutex ipc_mutex;
-	explicit SyncObject(std::string_view username)
-	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(username)}.c_str()) {}
+	explicit SyncObject(std::string_view identifier)
+	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(identifier)}.c_str()) {}
 	~SyncObject() = default;
 };
 
@@ -24,9 +25,11 @@ User::User(const std::shared_ptr<Instance> &instance_ptr, std::string_view usern
 	m_instance_ptr = instance_ptr;
 	m_name = username;
 	m_file_path = ghc::filesystem::path{instance_ptr->GetUserDirPath()}.append(m_name).string();
+	uuids::uuid_name_generator gen(uuids::uuid::from_string("6bee57f3-7b4a-477b-8b3e-9797ddf842da").value());
+	m_identifier = uuids::to_string(gen(m_file_path));
 	m_key.resize(picosha2::k_digest_size);
 	picosha2::hash256(password, m_key);
-	m_sync_object = std::make_unique<SyncObject>(m_name);
+	m_sync_object = std::make_unique<SyncObject>(m_identifier);
 }
 
 bool User::ValidateUsername(std::string_view username) {
@@ -47,11 +50,11 @@ std::tuple<std::shared_ptr<User>, Error> User::Register(const std::shared_ptr<In
 	{
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		{
-			std::ifstream in{user->m_file_path};
+			ghc::filesystem::ifstream in{user->m_file_path};
 			if (in.is_open())
 				return {nullptr, Error::kUserAlreadyExist};
 		}
-		std::ofstream out{user->m_file_path};
+		ghc::filesystem::ofstream out{user->m_file_path};
 		if (!out.is_open())
 			return {nullptr, Error::kFileIOError};
 
@@ -75,13 +78,13 @@ std::tuple<std::shared_ptr<User>, Error> User::Login(const std::shared_ptr<Insta
 		std::scoped_lock ipc_lock{user->m_sync_object->ipc_mutex};
 		std::string key;
 		{
-			std::ifstream in{user->m_file_path};
+			ghc::filesystem::ifstream in{user->m_file_path};
 			if (!in.is_open())
 				return {nullptr, Error::kUserNotFound};
 			// get length of file
-			in.seekg(0, std::ifstream::end);
+			in.seekg(0, ghc::filesystem::ifstream::end);
 			std::streamsize length = in.tellg();
-			in.seekg(0, std::ifstream::beg);
+			in.seekg(0, ghc::filesystem::ifstream::beg);
 			// read file
 			if (length > 0) {
 				key.resize(length);
