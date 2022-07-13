@@ -9,6 +9,8 @@
 #include <cli/Util.hpp>
 
 #include <cxxopts.hpp>
+#include <nowide/args.hpp>
+#include <nowide/iostream.hpp>
 
 static constexpr const char *kExampleShell = " --shell";
 static constexpr const char *kExampleUserRegister = " -u USER_NAME -r";
@@ -22,6 +24,8 @@ static constexpr const char *kExampleEraseTasks = " -u USER_NAME -s TASK_ID";
 static constexpr const char *kExampleDoneTasks = " -u USER_NAME -d TASK_ID";
 
 int main(int argc, char **argv) {
+	nowide::args _(argc, argv);
+
 	cxxopts::Options options{backend::kAppName, "A simple schedule program"};
 	options.add_options()             //
 	    ("h,cmd_help", "Print usage") //
@@ -67,7 +71,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (result.count("cmd_help") || result.arguments().empty()) {
-		printf("%s\n", options.help().c_str());
+		nowide::cout << options.help() << std::endl;
 		std::cout << (                                                      //
 		    std::string{"Examples:"} +                                      //
 		    "\n  Open Shell: " +                                            //
@@ -102,9 +106,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	if (result.count("env")) {
-		printf("App directory: %s\nUser directory: %s\nSchedule directory: %s\nLocal time: %s\n",
-		       instance->GetAppDirPath().c_str(), instance->GetUserDirPath().c_str(),
-		       instance->GetScheduleDirPath().c_str(), time_str_now.c_str());
+		nowide::cout << "App directory: " << instance->GetAppDirPath() << std::endl;
+		nowide::cout << "User directory: " << instance->GetUserDirPath() << std::endl;
+		nowide::cout << "Schedule directory: " << instance->GetScheduleDirPath() << std::endl;
+		printf("Local time: %s\n", time_str_now.c_str());
 		return 0;
 	}
 

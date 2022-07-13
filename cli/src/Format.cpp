@@ -1,6 +1,8 @@
 #include <cli/Format.hpp>
 
 #include <iostream>
+#include <nowide/convert.hpp>
+#include <nowide/iostream.hpp>
 #include <tabulate/table.hpp>
 
 namespace cli {
@@ -39,7 +41,7 @@ void PrintTasks(const std::vector<backend::Task> &tasks) {
 			table.row(i).format().border_top(" ").border_bottom(" ").border_left("").border_right("").corner("");
 		table.row(row - 1).format().border_top(" ").border_bottom("-").border_left("").border_right("").corner("");
 	}
-	std::cout << table << std::endl;
+	nowide::cout << table << std::endl;
 }
 void PrintError(backend::Error error) {
 	if (error != backend::Error::kSuccess)

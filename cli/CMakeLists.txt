@@ -15,7 +15,7 @@ add_executable(ScheduliteCLI
         src/Shell.cpp
         )
 
-target_link_libraries(ScheduliteCLI PRIVATE schedulite::cli::dep schedulite::backend)
+target_link_libraries(ScheduliteCLI PRIVATE schedulite::cli::dep schedulite::backend schedulite::backend::nowide)
 target_include_directories(ScheduliteCLI PRIVATE include)
 
 # install(TARGETS ScheduliteCLI RUNTIME DESTINATION)
