@@ -128,7 +128,6 @@ if (MINGW)
     # Install gdbus.exe for Gtk signal
     install(FILES "${CMAKE_MINGW_BIN}/gdbus.exe " DESTINATION bin)
 
-
     # Necessary to run extensions on windows if it is not in the path
     if ("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
         install(FILES
@@ -141,6 +140,4 @@ if (MINGW)
                 ${CMAKE_MINGW_BIN}/gspawn-win32-helper-console.exe
                 DESTINATION bin)
     endif ()
-
-
 endif ()
