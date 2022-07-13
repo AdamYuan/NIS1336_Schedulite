@@ -69,9 +69,15 @@ public:
 	 */
 	inline const std::string &GetKey() const { return m_key; }
 
+	/**
+	 * Get an unique identifier of the User.
+	 * @return Identifier string.
+	 */
+	inline const std::string &GetIdentifier() const { return m_identifier; }
+
 private:
 	std::shared_ptr<Instance> m_instance_ptr;
-	std::string m_name, m_key, m_file_path;
+	std::string m_name, m_key, m_file_path, m_identifier;
 
 	struct SyncObject;
 	std::shared_ptr<SyncObject> m_sync_object;

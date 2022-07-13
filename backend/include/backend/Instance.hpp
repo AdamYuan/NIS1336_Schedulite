@@ -58,8 +58,14 @@ public:
 	 */
 	inline const std::string &GetScheduleDirPath() const { return m_schedule_dir_path; }
 
+	/**
+	 * Get an unique identifier of the Instance.
+	 * @return Identifier string.
+	 */
+	inline const std::string &GetIdentifier() const { return m_identifier; }
+
 private:
-	std::string m_app_dir_path, m_user_dir_path, m_schedule_dir_path;
+	std::string m_app_dir_path, m_user_dir_path, m_schedule_dir_path, m_identifier;
 };
 } // namespace backend
 

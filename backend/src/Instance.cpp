@@ -4,6 +4,7 @@
 #include <backend/User.hpp>
 
 #include <ghc/filesystem.hpp>
+#include <uuid.h>
 
 namespace backend {
 
@@ -11,6 +12,8 @@ Instance::Instance(std::string_view app_dir_path) {
 	m_app_dir_path = ghc::filesystem::path{app_dir_path}.string();
 	m_user_dir_path = ghc::filesystem::path{app_dir_path}.append(kUserDirName).string();
 	m_schedule_dir_path = ghc::filesystem::path{app_dir_path}.append(kScheduleDirName).string();
+	uuids::uuid_name_generator gen(uuids::uuid::from_string("e7060683-2911-40b1-9d4d-8950c49b1d0e").value());
+	m_identifier = uuids::to_string(gen(m_app_dir_path));
 }
 
 std::shared_ptr<Instance> Instance::Create() {
