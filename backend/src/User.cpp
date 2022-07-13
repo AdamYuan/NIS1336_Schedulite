@@ -14,7 +14,7 @@
 namespace backend {
 
 struct User::SyncObject {
-	static constexpr const char *kIPCMutexHeader = "__SCHEDULITE_USER_MUTEX__";
+	static constexpr const char *kIPCMutexHeader = "_SCHEDULITE_MUTEX_";
 	ipc::sync::mutex ipc_mutex;
 	explicit SyncObject(std::string_view identifier)
 	    : ipc_mutex(std::string{kIPCMutexHeader + std::string(identifier)}.c_str()) {}
@@ -24,11 +24,15 @@ struct User::SyncObject {
 User::User(const std::shared_ptr<Instance> &instance_ptr, std::string_view username, std::string_view password) {
 	m_instance_ptr = instance_ptr;
 	m_name = username;
-	m_file_path = ghc::filesystem::path{instance_ptr->GetUserDirPath()}.append(m_name).string();
-	uuids::uuid_name_generator gen(uuids::uuid::from_string("6bee57f3-7b4a-477b-8b3e-9797ddf842da").value());
-	m_identifier = uuids::to_string(gen(m_file_path));
+	m_file_path =
+	    ghc::filesystem::absolute(ghc::filesystem::path{instance_ptr->GetUserDirPath()}.append(m_name)).string();
+	// Generate Key
 	m_key.resize(picosha2::k_digest_size);
 	picosha2::hash256(password, m_key);
+	// Generate Identifier
+	uuids::uuid_name_generator gen(uuids::uuid::from_string("6bee57f3-7b4a-477b-8b3e-9797ddf842da").value());
+	m_identifier = uuids::to_string(gen(m_file_path));
+	// Create sync object
 	m_sync_object = std::make_unique<SyncObject>(m_identifier);
 }
 
