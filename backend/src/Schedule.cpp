@@ -8,6 +8,7 @@
 #include <ghc/filesystem.hpp>
 #include <libipc/mutex.h>
 #include <libipc/shm.h>
+#include <nowide/fstream.hpp>
 #include <uuid.h>
 
 namespace backend {
@@ -188,14 +189,14 @@ Error Schedule::initialize_shm_locked() {
 
 			std::string encrypted;
 			{
-				ghc::filesystem::ifstream in{m_file_path, std::ios::binary};
+				nowide::ifstream in{m_file_path, std::ios::binary};
 				if (!in.is_open()) {
 					return Error::kSuccess;
 				}
 				// get length of file
-				in.seekg(0, ghc::filesystem::ifstream::end);
+				in.seekg(0, nowide::ifstream::end);
 				std::streamsize length = in.tellg();
-				in.seekg(0, ghc::filesystem::ifstream::beg);
+				in.seekg(0, nowide::ifstream::beg);
 				// read file
 				if (length > 0) {
 					encrypted.resize(length);
@@ -233,7 +234,7 @@ Error Schedule::store_tasks(const std::vector<Task> &tasks) {
 		if (!m_user_ptr->GetInstancePtr()->MaintainDirs())
 			return Error::kFileIOError;
 		std::string encrypted = Encrypt(raw, m_user_ptr->GetKey());
-		ghc::filesystem::ofstream out{m_file_path, std::ios::binary};
+		nowide::ofstream out{m_file_path, std::ios::binary};
 		if (!out.is_open())
 			return Error::kFileIOError;
 		out.write(encrypted.data(), (std::streamsize)encrypted.size());
