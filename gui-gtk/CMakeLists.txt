@@ -22,12 +22,6 @@ add_executable(ScheduliteGTK
         src/EnumSelectPopover.cpp
         )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    if (MINGW)
-        target_compile_options(ScheduliteGTK PRIVATE -mwindows)
-    endif ()
-endif ()
-
 target_link_libraries(ScheduliteGTK PRIVATE schedulite::gtk::dep schedulite::gtk::ui schedulite::backend)
 target_include_directories(ScheduliteGTK PRIVATE include)
 
