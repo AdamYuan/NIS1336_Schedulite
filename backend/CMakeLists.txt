@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(dep)
 
+add_library(ScheduliteBackend_nowide INTERFACE)
+add_library(schedulite::backend::nowide ALIAS ScheduliteBackend_nowide)
+target_link_libraries(ScheduliteBackend_nowide INTERFACE schedulite::backend::dep::nowide)
+
 add_library(ScheduliteBackend STATIC
         src/Environment.cpp
         src/User.cpp

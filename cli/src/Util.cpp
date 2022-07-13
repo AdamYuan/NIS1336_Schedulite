@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <nowide/convert.hpp>
 
 // From https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
 #ifdef WIN32

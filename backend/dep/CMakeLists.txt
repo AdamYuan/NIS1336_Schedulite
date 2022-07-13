@@ -12,5 +12,9 @@ add_subdirectory(nowide)
 add_library(ScheduliteBackend_dep INTERFACE)
 add_library(schedulite::backend::dep ALIAS ScheduliteBackend_dep)
 
+add_library(ScheduliteBackend_dep_nowide INTERFACE)
+add_library(schedulite::backend::dep::nowide ALIAS ScheduliteBackend_dep_nowide)
+target_link_libraries(ScheduliteBackend_dep_nowide INTERFACE nowide::nowide)
+
 target_include_directories(ScheduliteBackend_dep INTERFACE picosha2 plusaes)
-target_link_libraries(ScheduliteBackend_dep INTERFACE sago::platform_folders ipc ghc_filesystem stduuid nowide::nowide)
+target_link_libraries(ScheduliteBackend_dep INTERFACE sago::platform_folders ipc ghc_filesystem stduuid ScheduliteBackend_dep_nowide)
