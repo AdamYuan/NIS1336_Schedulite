@@ -155,7 +155,7 @@ void Window::initialize_header_bar() {
 		m_header.about_dialog.set_license_type(Gtk::LICENSE_GPL_3_0_ONLY);
 		m_header.about_dialog.set_authors({"Yitian Yuan (AdamYuan) <y13916619121@126.com>"});
 		m_header.about_dialog.set_program_name(backend::kAppName);
-		m_header.about_dialog.set_comments("A lightweight schedule program.");
+		m_header.about_dialog.set_comments("A lightweight schedule program written with C++ and Gtk3.");
 		m_header.about_dialog.set_website("https://github.com/AdamYuan/NIS1336_Schedulite/tree/yyt");
 		m_header.about_dialog.set_copyright("Copyright \xc2\xa9 2022 Yitian Yuan (AdamYuan)\n");
 		m_header.about_dialog.set_modal(true);
