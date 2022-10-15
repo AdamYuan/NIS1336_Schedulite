@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 		result = options.parse(argc, argv);
 	} catch (cxxopts::OptionException &e) {
 		printf("%s\n", e.what());
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	if (result.count("cmd_help") || result.arguments().empty()) {
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 		instance = backend::Instance::Create(path);
 		if (!instance) {
 			printf("ERROR: Invalid data directory path \"%s\"\n", path.c_str());
-			exit(EXIT_FAILURE);
+			return EXIT_FAILURE;
 		}
 	}
 	if (result.count("env")) {
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 		if (result.count("register")) {
 			if (password != cli::Input("Repeat Password", false)) {
 				cli::PrintError("Not equal");
-				exit(EXIT_FAILURE);
+				return EXIT_FAILURE;
 			}
 			std::tie(user, error) = backend::User::Register(instance, username, password);
 		} else {
@@ -140,17 +140,17 @@ int main(int argc, char **argv) {
 
 		if (!user) {
 			cli::PrintError(error);
-			exit(EXIT_FAILURE);
+			return EXIT_FAILURE;
 		}
 	} else {
 		cli::PrintError("User not determined");
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	std::tie(schedule, error) = backend::Schedule::Acquire(user);
 	if (!schedule) {
 		cli::PrintError(error);
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	if (result.count("list")) {
@@ -162,20 +162,20 @@ int main(int argc, char **argv) {
 		auto id = result["erase"].as<uint32_t>();
 		error = schedule->TaskErase(id);
 		cli::PrintError(error);
-		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+		return (error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
 	if (result.count("done")) {
 		auto id = result["done"].as<uint32_t>();
 		error = schedule->TaskToggleDone(id);
 		cli::PrintError(error);
-		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+		return (error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
 	if (result.count("insert")) {
 		if (!result.count("taskname")) {
 			cli::PrintError("Task name not provided");
-			exit(EXIT_FAILURE);
+			return EXIT_FAILURE;
 		}
 
 		backend::TaskProperty property{};
@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
 
 		error = std::get<backend::Error>(schedule->TaskInsert(property));
 		cli::PrintError(error);
-		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+		return (error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
 	if (result.count("edit")) {
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
 
 		error = schedule->TaskEdit(id, property, edit_mask);
 		cli::PrintError(error);
-		exit(error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
+		return (error == backend::Error::kSuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
 
 	return 0;
