@@ -1,11 +1,11 @@
 name: Linux
 
-on: 
+on:
   push:
   pull_request:
   release:
-    # tags:
-    # - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  # tags:
+  # - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
@@ -14,8 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: 
-        - {
+        config:
+          - {
             name: "Linux X11 64",
             os: ubuntu-latest,
             artifact: "linux_x11_64.7z",
@@ -31,9 +31,10 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo add-apt-repository ppa:apandada1/libhandy-1
           sudo apt-get update
-          sudo apt-get install ninja-build xorg-dev
-          
+          sudo apt-get install ninja-build libhandy-1-dev libgtkmm-3.0-dev
+
       - name: Configure
         shell: bash
         run: |

@@ -13,6 +13,8 @@
 #include <nowide/iostream.hpp>
 #include <tinyfiledialogs.h>
 
+#include <random>
+
 namespace cli {
 
 void Shell::Run() {
@@ -70,6 +72,14 @@ void Shell::run_cmd(std::string_view cmd) {
 		cmd_edit();
 	} else if (cmd == "erase") {
 		cmd_erase();
+	} else if (cmd == "test") {
+		backend::TaskProperty p{};
+		p.name = "Test";
+		p.begin_time = std::random_device{}();
+		for (uint32_t i = 0; i < 1000; ++i) {
+			++p.begin_time;
+			PrintError(m_schedule_ptr->TaskInsert(p));
+		}
 	} else if (cmd == "done") {
 		cmd_done();
 	} else {

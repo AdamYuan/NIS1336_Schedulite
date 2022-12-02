@@ -1,11 +1,11 @@
 name: Windows
 
-on: 
+on:
   push:
   pull_request:
   release:
-    # tags:
-    # - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  # tags:
+  # - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
@@ -14,52 +14,82 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: 
-        - {
-            name: "Windows MSVC 64",
+        config:
+          - {
+            name: "Windows MinGW 32",
             os: windows-latest,
-            artifact: "windows_msvc_64.7z",
+            artifact: "windows_mingw_32.7z",
             build_type: "Release",
-            cc: "cl",
-            cxx: "cl",
-            arch: "x64",
+            sys: "mingw32",
+            env: "i686",
             archiver: "7z a",
-            generators: "Visual Studio 17 2022"
+            generators: "Ninja"
           }
-        - {
-            name: "Windows MSVC 32",
+          - {
+            name: "Windows MinGW 64",
             os: windows-latest,
-            artifact: "windows_msvc_32.7z",
+            artifact: "windows_mingw_64.7z",
             build_type: "Release",
-            cc: "cl",
-            cxx: "cl",
-            arch: "Win32",
+            sys: "mingw64",
+            env: "x86_64",
             archiver: "7z a",
-            generators: "Visual Studio 17 2022"
+            generators: "Ninja"
           }
 
     steps:
       - uses: actions/checkout@v2
-          
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.config.sys}}
+          update: false
+          install: |
+            mingw-w64-${{matrix.config.env}}-cmake
+            mingw-w64-${{matrix.config.env}}-ninja
+            mingw-w64-${{matrix.config.env}}-gcc
+            mingw-w64-${{matrix.config.env}}-gtkmm3
+            mingw-w64-${{matrix.config.env}}-libhandy
+
+      - name: Cache Papirus Icon Theme
+        id: cache-papirus-icon-theme
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/papirus
+          key: papirus-3
+
+      - name: Download and Unzip Papirus Icon Theme
+        if: steps.cache-papirus-icon-theme.outputs.cache-hit != 'true'
+        shell: msys2 {0}
+        run: |
+          mkdir -p "${{ github.workspace }}/papirus"
+          cd "${{ github.workspace }}/papirus"
+          wget -N 'https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20220710.tar.gz'
+          tar -xvzf 20220710.tar.gz
+          sed -i "s/Papirus-Light/Adwaita/g" papirus-icon-theme-20220710/Papirus-Light/index.theme
+          rm 20220710.tar.gz
+
       - name: Configure
-        shell: bash
+        shell: msys2 {0}
         run: |
           mkdir build
           mkdir instdir
           cmake \
             -S . \
             -B . \
-            -A ${{ matrix.config.arch }} \
+            -DCMAKE_ICON_THEME_PATH="${{ github.workspace }}/papirus/papirus-icon-theme-20220710/Papirus-Light" \
+            -DCMAKE_MINGW_BIN="/${{ matrix.config.sys }}/bin" \
+            -DCMAKE_MINGW_LIB="/${{ matrix.config.sys }}/lib" \
+            -DCMAKE_MINGW_PATH="/${{ matrix.config.sys }}" \
             -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
             -G "${{ matrix.config.generators }}" \
             -DCMAKE_INSTALL_PREFIX:PATH=instdir
 
       - name: Build
-        shell: bash
+        shell: msys2 {0}
         run: cmake --build . --config ${{ matrix.config.build_type }}
 
       - name: Install Strip
-        shell: bash
+        shell: msys2 {0}
         run: cmake --install . --strip
 
       - name: Pack
